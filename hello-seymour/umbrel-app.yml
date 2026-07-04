@@ -1,0 +1,23 @@
+manifestVersion: 1
+id: hello-seymour
+name: Hello Seymour
+tagline: First Seymour Mining Suite test app
+icon: https://raw.githubusercontent.com/getumbrel/umbrel-apps/master/bitcoin/icon.svg
+category: Development
+version: "0.1.0"
+port: 3456
+description: >-
+  Hello Seymour is the first test app for the Seymour Mining Suite on Umbrel.
+developer: Seymour Mining Suite
+website: https://github.com/imdmanuc2/seymour-miningcore
+submitter: Seymour Mitchell
+submission: https://github.com/imdmanuc2/seymour-miningcore
+repo: https://github.com/imdmanuc2/seymour-miningcore
+support: https://github.com/imdmanuc2/seymour-miningcore/issues
+gallery: []
+releaseNotes: >-
+  Initial Hello Seymour test app.
+dependencies: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""
