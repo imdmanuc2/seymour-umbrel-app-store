@@ -1,0 +1,25 @@
+manifestVersion: 1
+id: seymour-dashboard
+name: Seymour Dashboard
+tagline: Mining command center for Umbrel
+icon: https://raw.githubusercontent.com/getumbrel/umbrel-apps/master/bitcoin/icon.svg
+category: Development
+version: "0.1.0"
+port: 8559
+description: >-
+  Seymour Dashboard is the mining command center for the Seymour Mining Suite.
+  It provides a modern dashboard for MiningCore, ASIC fleets, solo mining stats,
+  alerts, achievements, and future pool/farm management.
+developer: Seymour Mining Suite
+website: https://github.com/imdmanuc2/seymour-miningcore
+submitter: Seymour Mitchell
+submission: https://github.com/imdmanuc2/seymour-miningcore
+repo: https://github.com/imdmanuc2/seymour-miningcore
+support: https://github.com/imdmanuc2/seymour-miningcore/issues
+gallery: []
+releaseNotes: >-
+  Initial Seymour Dashboard Umbrel app.
+dependencies: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""
