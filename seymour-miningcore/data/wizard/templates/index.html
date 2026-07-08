@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+  <title>Seymour MiningCore Setup</title>
+  <style>
+    body {
+      margin: 0;
+      background: #050b16;
+      color: #f8fafc;
+      font-family: Arial, sans-serif;
+    }
+    .wrap {
+      max-width: 900px;
+      margin: 50px auto;
+      padding: 30px;
+    }
+    .card {
+      background: #0b1220;
+      border: 1px solid #1e3a5f;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 0 40px rgba(0, 145, 255, .15);
+    }
+    h1 { margin-top: 0; font-size: 36px; }
+    p { color: #94a3b8; }
+    label {
+      display: block;
+      margin-top: 18px;
+      color: #93c5fd;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 13px;
+      margin-top: 8px;
+      border-radius: 10px;
+      border: 1px solid #2563eb;
+      background: #020617;
+      color: white;
+      font-size: 16px;
+    }
+    button {
+      margin-top: 26px;
+      padding: 14px 22px;
+      border: 0;
+      border-radius: 10px;
+      background: #16a34a;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .existing {
+      margin-top: 24px;
+      padding: 16px;
+      background: #071629;
+      border: 1px solid #1d4ed8;
+      border-radius: 12px;
+      color: #bfdbfe;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Seymour MiningCore Setup Wizard</h1>
+      <p>Create your first solo or public mining pool configuration.</p>
+
+      <form method="post">
+        <label>Coin</label>
+        <select name="coin">
+          <option value="BCH">Bitcoin Cash</option>
+          <option value="BTC">Bitcoin</option>
+        </select>
+
+        <label>Pool Type</label>
+        <select name="pool_type">
+          <option value="solo">Solo Pool</option>
+          <option value="public">Public Pool</option>
+        </select>
+
+        <label>Pool Name</label>
+        <input name="pool_name" placeholder="BCH Solo Pool">
+
+        <label>Wallet Address</label>
+        <input name="wallet" placeholder="Enter payout wallet address">
+
+        <label>Stratum Port</label>
+        <input name="stratum_port" value="3333">
+
+        <button type="submit">Generate MiningCore Config</button>
+      </form>
+
+      {% if existing %}
+      <div class="existing">
+        Existing config found: {{ existing.poolName }} / {{ existing.coin }} / {{ existing.poolType }}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>
