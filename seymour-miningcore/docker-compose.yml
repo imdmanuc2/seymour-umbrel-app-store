@@ -5,9 +5,12 @@ services:
       APP_PORT: 8080
 
   web:
-    build: ./data/wizard
+    image: python:3.12-alpine
     restart: on-failure
+    working_dir: /app
+    command: sh -c "pip install flask && python app.py"
     volumes:
+      - ${APP_DATA_DIR}/data/wizard:/app
       - ${APP_DATA_DIR}/data/configs:/configs
     environment:
       MININGCORE_REPO: https://github.com/imdmanuc2/seymour-miningcore
