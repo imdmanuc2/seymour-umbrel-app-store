@@ -1,9 +1,9 @@
 manifestVersion: 1
 id: seymour-redis
 name: Redis
-tagline: Cache and queue backend for mining services
+tagline: Redis cache and message broker for Seymour Mining Suite
 icon: https://raw.githubusercontent.com/getumbrel/umbrel-apps/master/bitcoin/icon.svg
-category: Development
+category: Infrastructure
 version: "0.1.0"
 port: 8565
 description: >-

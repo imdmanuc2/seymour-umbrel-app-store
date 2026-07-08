@@ -1,7 +1,7 @@
 manifestVersion: 1
 id: seymour-bch-node
 name: Bitcoin Cash Node
-tagline: Bitcoin Cash full node for BCH mining
+tagline: Official Bitcoin Cash full node
 icon: https://raw.githubusercontent.com/getumbrel/umbrel-apps/master/bitcoin/icon.svg
 category: Bitcoin
 version: "0.1.0"

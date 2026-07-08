@@ -1,9 +1,9 @@
 manifestVersion: 1
 id: seymour-dozzle
 name: Dozzle
-tagline: Simple Docker log viewer
+tagline: Docker log viewer
 icon: https://raw.githubusercontent.com/getumbrel/umbrel-apps/master/bitcoin/icon.svg
-category: Development
+category: Utilities
 version: "0.1.0"
 port: 8566
 description: >-

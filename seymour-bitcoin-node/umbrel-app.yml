@@ -1,7 +1,7 @@
 manifestVersion: 1
 id: seymour-bitcoin-node
-name: Bitcoin Node
-tagline: Bitcoin full node for solo and public mining
+name: Bitcoin Core
+tagline: Official Bitcoin Core full node
 icon: https://raw.githubusercontent.com/getumbrel/umbrel-apps/master/bitcoin/icon.svg
 category: Bitcoin
 version: "0.1.0"

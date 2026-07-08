@@ -1,9 +1,9 @@
 manifestVersion: 1
 id: seymour-postgres
 name: Postgres
-tagline: Database backend for MiningCore and Nexus
+tagline: PostgreSQL database for Seymour Mining Suite
 icon: https://raw.githubusercontent.com/getumbrel/umbrel-apps/master/bitcoin/icon.svg
-category: Development
+category: Infrastructure
 version: "0.1.0"
 port: 8564
 description: >-
