@@ -3,7 +3,7 @@ id: seymour-backup-manager
 name: Backup Manager
 tagline: Backup configs, wallets, pool files, and data
 icon: https://raw.githubusercontent.com/getumbrel/umbrel-apps/master/bitcoin/icon.svg
-category: Development
+category: 3 - Utilities
 version: "0.1.0"
 port: 8568
 description: >-

@@ -3,7 +3,7 @@ id: seymour-bitcoin-node
 name: Bitcoin Core
 tagline: Official Bitcoin Core full node
 icon: https://raw.githubusercontent.com/getumbrel/umbrel-apps/master/bitcoin/icon.svg
-category: Bitcoin
+category: 2 - Blockchain
 version: "0.1.0"
 port: 8562
 description: >-
