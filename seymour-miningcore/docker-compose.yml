@@ -1,10 +1,10 @@
 services:
   app_proxy:
     environment:
-      APP_HOST: seymour-miningcore_wizard_1
+      APP_HOST: seymour-miningcore_web_1
       APP_PORT: 8080
 
-  wizard:
+  web:
     build: ./data/wizard
     restart: on-failure
     volumes:
