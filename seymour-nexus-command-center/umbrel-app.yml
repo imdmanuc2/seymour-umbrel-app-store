@@ -2,7 +2,7 @@ manifestVersion: 1
 id: seymour-nexus-command-center
 name: Nexus Command Center
 tagline: Complete command center for miners, pools, nodes and infrastructure
-icon: https://raw.githubusercontent.com/getumbrel/umbrel-apps/master/bitcoin/icon.svg
+icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/master/assets/icons/nexus-command-center.svg
 category: 1 - Seymour Mining Suite
 version: "0.1.0"
 port: 8560

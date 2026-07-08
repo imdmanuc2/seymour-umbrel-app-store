@@ -2,7 +2,7 @@ manifestVersion: 1
 id: seymour-bch-node
 name: Bitcoin Cash Node
 tagline: Official Bitcoin Cash full node
-icon: https://raw.githubusercontent.com/getumbrel/umbrel-apps/master/bitcoin/icon.svg
+icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/master/assets/icons/bitcoin-cash-node.svg
 category: 2 - Blockchain
 version: "0.1.0"
 port: 8563
