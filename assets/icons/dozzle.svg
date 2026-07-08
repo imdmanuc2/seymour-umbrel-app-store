@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Dozzle</title>
+  <desc id="desc">Blue Docker log cube icon.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#061B2E"/><stop offset="1" stop-color="#020617"/></linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7DD3FC"/><stop offset=".5" stop-color="#0EA5E9"/><stop offset="1" stop-color="#2563EB"/></linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="9" result="b"/><feColorMatrix in="b" type="matrix" values="0 0 0 0 .05 0 0 0 0 .65 0 0 0 0 .91 0 0 0 .8 0"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <path d="M256 42 439 148v216L256 470 73 364V148Z" fill="#0F172A" stroke="url(#blue)" stroke-width="16" filter="url(#glow)"/>
+  <path d="M142 205h228v74c0 56-44 101-101 101h-26c-56 0-101-45-101-101Z" fill="url(#blue)" opacity=".9"/>
+  <path d="M165 176h42v29h-42zm52 0h42v29h-42zm52 0h42v29h-42zm-52-39h42v29h-42zm52 39h42v29h-42zm52 0h42v29h-42z" fill="#BAE6FD"/>
+  <path d="M138 305c41 22 190 22 236 0" stroke="#E0F2FE" stroke-width="18" stroke-linecap="round" opacity=".85"/>
+</svg>

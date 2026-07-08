@@ -1,8 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-<defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#22c55e"/><stop offset="1" stop-color="#16a34a"/></linearGradient></defs>
-<rect width="512" height="512" rx="96" fill="#06150d"/>
-<path d="M256 38 442 146v220L256 474 70 366V146z" fill="#0f172a" stroke="url(#g)" stroke-width="18"/>
-<path d="M148 350 338 160l34 34-190 190z" fill="url(#g)"/>
-<path d="M300 132c48 8 83 36 104 78-45-20-82-18-112 6z" fill="#86efac"/>
-<path d="M122 394h268" stroke="url(#g)" stroke-width="20" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Seymour MiningCore</title>
+  <desc id="desc">Emerald mining pickaxe and mountain icon for Seymour MiningCore.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#06150D"/><stop offset="1" stop-color="#020617"/></linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#86EFAC"/><stop offset=".5" stop-color="#22C55E"/><stop offset="1" stop-color="#16A34A"/></linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="9" result="b"/><feColorMatrix in="b" type="matrix" values="0 0 0 0 .13 0 0 0 0 .77 0 0 0 0 .37 0 0 0 .8 0"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <path d="M256 42 439 148v216L256 470 73 364V148Z" fill="#0F172A" stroke="url(#green)" stroke-width="16" filter="url(#glow)"/>
+  <path d="M118 370 203 285l40 40 52-62 99 107" fill="none" stroke="url(#green)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>
+  <path d="M154 348 336 166l36 36-182 182z" fill="url(#green)" filter="url(#glow)"/>
+  <path d="M293 132c58 10 99 43 121 95-49-25-91-24-126 4Z" fill="#BBF7D0" opacity=".95"/>
+  <path d="M126 395h260" stroke="url(#green)" stroke-width="18" stroke-linecap="round"/>
 </svg>

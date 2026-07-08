@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Backup Manager</title>
+  <desc id="desc">Purple shield and backup arrow icon.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#140A2E"/><stop offset="1" stop-color="#020617"/></linearGradient>
+    <linearGradient id="purple" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#C084FC"/><stop offset=".5" stop-color="#8B5CF6"/><stop offset="1" stop-color="#6D28D9"/></linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="9" result="b"/><feColorMatrix in="b" type="matrix" values="0 0 0 0 .55 0 0 0 0 .36 0 0 0 0 .96 0 0 0 .8 0"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <path d="M256 58 405 116v115c0 97-57 172-149 224-92-52-149-127-149-224V116Z" fill="#111827" stroke="url(#purple)" stroke-width="16" filter="url(#glow)"/>
+  <path d="M323 214a82 82 0 1 0 7 92" fill="none" stroke="url(#purple)" stroke-width="26" stroke-linecap="round"/>
+  <path d="M332 166v72h-72" fill="none" stroke="#E9D5FF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
