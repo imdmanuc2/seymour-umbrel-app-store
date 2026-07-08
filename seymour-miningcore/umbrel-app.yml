@@ -3,7 +3,7 @@ id: seymour-miningcore
 name: Seymour MiningCore
 tagline: MiningCore pool engine for solo and public mining
 icon: https://raw.githubusercontent.com/getumbrel/umbrel-apps/master/bitcoin/icon.svg
-category: Development
+category: Featured
 version: "0.1.0"
 port: 8561
 description: >-

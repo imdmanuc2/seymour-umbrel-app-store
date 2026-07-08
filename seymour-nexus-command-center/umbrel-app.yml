@@ -3,7 +3,7 @@ id: seymour-nexus-command-center
 name: Nexus Command Center
 tagline: Complete command center for miners, pools, nodes and infrastructure
 icon: https://raw.githubusercontent.com/getumbrel/umbrel-apps/master/bitcoin/icon.svg
-category: Seymour Applications
+category: Featured
 version: "0.1.0"
 port: 8560
 description: >-
