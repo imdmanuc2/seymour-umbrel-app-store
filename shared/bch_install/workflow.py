@@ -14,7 +14,7 @@ from uuid import uuid4
 
 
 APP_ID = "seymour-bch-node"
-EXPECTED_VERSION = "0.2.1-alpha"
+EXPECTED_VERSION = "0.2.2-alpha"
 DEFAULT_MINIMUM_FREE_BYTES = 600_000_000_000
 
 

@@ -31,7 +31,7 @@ for relative in "${required[@]}"; do
     || fail "Missing prerequisite: $relative"
 done
 
-grep -q 'version: "0.2.1-alpha"' \
+grep -q 'version: "0.2.2-alpha"' \
   "$REPO/seymour-bch-node/umbrel-app.yml" \
   || fail "Unexpected BCH app version."
 
