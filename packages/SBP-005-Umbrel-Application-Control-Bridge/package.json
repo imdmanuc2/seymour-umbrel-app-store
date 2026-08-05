@@ -1,0 +1,16 @@
+{
+  "package": "SBP-005",
+  "id": "umbrel-application-control-bridge",
+  "name": "Umbrel Application Control Bridge",
+  "repository": "seymour-umbrel-app-store",
+  "requires": {
+    "branch": "master",
+    "previousPackage": "SBP-004"
+  },
+  "safety": {
+    "defaultMode": "plan",
+    "writeRequiresExecute": true,
+    "writeRequiresExactConfirmation": true,
+    "directDockerLifecycleForbidden": true
+  }
+}
