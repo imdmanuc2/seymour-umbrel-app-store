@@ -5,3 +5,17 @@ __pycache__/
 
 # Package rollback backups
 backups/
+
+# Runtime-generated evidence
+runtime-evidence/
+
+# Package rollback backups
+backups/
+
+# Python-generated files
+__pycache__/
+*.pyc
+
+# Temporary local validation files
+*.before-*
+*.tmp
