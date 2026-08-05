@@ -22,9 +22,6 @@ services:
       BCH_RPC_USER: ${BCH_RPC_USER:-seymour_rpc}
       BCH_RPC_PASSWORD: ${BCH_RPC_PASSWORD:-change-me-before-production}
 
-    command:
-      - /usr/local/bin/seymour-entrypoint
-
     ports:
       - "8333:8333"
 

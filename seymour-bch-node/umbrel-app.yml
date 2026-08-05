@@ -4,7 +4,7 @@ name: Seymour Bitcoin Cash Node
 tagline: Managed Bitcoin Cash infrastructure for Seymour
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/master/assets/icons/bitcoin-cash-node.svg
 category: Blockchain
-version: "0.2.2-alpha"
+version: "0.2.3-alpha"
 port: 8563
 description: >-
   Managed Bitcoin Cash full-node foundation with persistent storage, RPC,
