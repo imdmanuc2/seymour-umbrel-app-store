@@ -1,0 +1,12 @@
+{
+  "package": "SBP-003",
+  "id": "bch-fresh-sync-provisioning",
+  "name": "BCH Fresh Sync Provisioning",
+  "repository": "seymour-umbrel-app-store",
+  "requires": {
+    "branch": "master",
+    "baselineCommit": "a37ddd5",
+    "previousPackage": "SBP-002"
+  },
+  "safeSourceOnly": true
+}
