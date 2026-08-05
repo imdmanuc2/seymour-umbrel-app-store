@@ -1,0 +1,45 @@
+{
+  "operation_id": "77762810-6b1c-4707-8bc3-9ec39633300a",
+  "mode": "execute",
+  "app_id": "seymour-bch-node",
+  "created_at": "2026-08-05T16:10:27.459059+00:00",
+  "started_at": "2026-08-05T16:10:27.460999+00:00",
+  "completed_at": "2026-08-05T16:10:28.964942+00:00",
+  "status": "failed",
+  "preflight": {
+    "compatible": true,
+    "checks": {
+      "repositoryManifest": true,
+      "localVersion": "0.2.0-alpha",
+      "expectedVersion": "0.2.0-alpha",
+      "localVersionValid": true,
+      "appStoreCopyFound": true,
+      "appStoreCopy": "/home/umbrel/umbrel/app-stores/imdmanuc2-seymour-umbrel-app-store-github-27c9011b/seymour-bch-node",
+      "appStoreVersion": "0.2.0-alpha",
+      "appStoreVersionValid": true,
+      "controlBridgeAvailable": true,
+      "runtimeBridgeAvailable": true,
+      "umbrelJwtAvailable": true,
+      "storage": {
+        "healthy": true,
+        "path": "/home/umbrel/umbrel",
+        "totalBytes": 5952693100544,
+        "usedBytes": 5867098112,
+        "freeBytes": 5646750552064,
+        "minimumFreeBytes": 600000000000
+      }
+    }
+  },
+  "install_result": null,
+  "final_state": null,
+  "runtime": null,
+  "health": null,
+  "cleanup_recommendation": {
+    "automaticCleanupPerformed": false,
+    "recommendedAction": "Inspect state and logs before running guarded uninstall.",
+    "stateCommand": "./scripts/seymour-umbrel-app state seymour-bch-node",
+    "logsCommand": "./scripts/seymour-umbrel-app logs seymour-bch-node",
+    "uninstallCommand": "./scripts/seymour-umbrel-app uninstall seymour-bch-node --execute --confirm UNINSTALL-seymour-bch-node"
+  },
+  "error": "Umbrel TRPC apps.state failed: 400 {\"error\":{\"message\":\"[\\n  {\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"received\\\": \\\"undefined\\\",\\n    \\\"path\\\": [\\n      \\\"appId\\\"\\n    ],\\n    \\\"message\\\": \\\"Required\\\"\\n  }\\n]\",\"code\":-32600,\"data\":{\"code\":\"BAD_REQUEST\",\"httpStatus\":400,\"stack\":\"TRPCError: [\\n  {\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"received\\\": \\\"undefined\\\",\\n    \\\"path\\\": [\\n      \\\"appId\\\"\\n    ],\\n    \\\"message\\\": \\\"Required\\\"\\n  }\\n]\\n    at inputValidatorMiddleware (file:///opt/umbreld/node_modules/@trpc/server/dist/unstable-core-do-not-import/middleware.mjs:46:19)\\n    at async callRecursive (file:///opt/umbreld/node_modules/@trpc/server/dist/unstable-core-do-not-import/procedureBuilder.mjs:146:24)\\n    at async callRecursive (file:///opt/umbreld/node_modules/@trpc/server/dist/unstable-core-do-not-import/procedureBuilder.mjs:146:24)\\n    at async callRecursive (file:///opt/umbreld/node_modules/@trpc/server/dist/unstable-core-do-not-import/procedureBuilder.mjs:146:24)\\n    at async procedure (file:///opt/umbreld/node_modules/@trpc/server/dist/unstable-core-do-not-import/procedureBuilder.mjs:179:24)\\n    at async file:///opt/umbreld/node_modules/@trpc/server/dist/unstable-core-do-not-import/http/resolveResponse.mjs:249:30\\n    at async resolveResponse (file:///opt/umbreld/node_modules/@trpc/server/dist/unstable-core-do-not-import/http/resolveResponse.mjs:282:37)\\n    at async file:///opt/umbreld/node_modules/@trpc/server/dist/adapters/node-http/nodeHTTPRequestHandler.mjs:70:34\",\"path\":\"apps.state\",\"zodError\":{\"formErrors\":[],\"fieldErrors\":{\"appId\":[\"Required\"]}}}}}\\n"
+}

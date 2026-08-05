@@ -14,7 +14,7 @@ from uuid import uuid4
 
 
 APP_ID = "seymour-bch-node"
-EXPECTED_VERSION = "0.2.0-alpha"
+EXPECTED_VERSION = "0.2.1-alpha"
 DEFAULT_MINIMUM_FREE_BYTES = 600_000_000_000
 
 
@@ -365,6 +365,15 @@ class BchInstallWorkflow:
                 ],
                 timeout=timeout_seconds,
             )
+
+            install_api_result = operation.install_result.get(
+                "result"
+            )
+
+            if install_api_result is not True:
+                raise RuntimeError(
+                    "Umbrel reported that the app installation failed."
+                )
 
             deadline = (
                 time.monotonic()

@@ -33,7 +33,7 @@ with tempfile.TemporaryDirectory() as temp:
 
     (store / "umbrel-app.yml").write_text(
         'id: seymour-bch-node\n'
-        'version: "0.2.0-alpha"\n'
+        'version: "0.2.1-alpha"\n'
     )
 
     workflow = BchInstallWorkflow(
@@ -62,7 +62,7 @@ with tempfile.TemporaryDirectory() as temp:
         preflight["checks"][
             "appStoreVersion"
         ]
-        == "0.2.0-alpha"
+        == "0.2.1-alpha"
     )
 
     plan = workflow.installation_plan()

@@ -1,0 +1,16 @@
+{
+  "operation_id": "d85ae467-e01c-40e8-bf45-00d4def1b90d",
+  "action": "state",
+  "app_id": "seymour-bch-node",
+  "mode": "execute",
+  "created_at": "2026-08-05T16:08:18.367508+00:00",
+  "executed": true,
+  "success": false,
+  "result": {
+    "writeOperation": false,
+    "requiredConfirmation": null,
+    "nativeApi": true,
+    "directDockerLifecycle": false
+  },
+  "error": "[esbuild Error]: Top-level await is currently not supported with the \"cjs\" output format\n    at /home/umbrel/seymour-umbrel-app-store-git/shared/umbrel_control/native-client.ts:141:15"
+}

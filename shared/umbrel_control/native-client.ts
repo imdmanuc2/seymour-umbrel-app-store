@@ -1,20 +1,26 @@
-import fs from 'node:fs/promises'
 import process from 'node:process'
-import * as jwt from '/opt/umbreld/source/modules/jwt.ts'
 
-type Args = {
+
+type ParsedArguments = {
 	dataDirectory: string
 	endpoint: string
 	action: string
 	appId?: string
 }
 
-function parseArgs(argv: string[]): Args {
+
+function parseArguments(
+	argv: string[],
+): ParsedArguments {
 	let dataDirectory = '/home/umbrel/umbrel'
-	let endpoint = 'http://localhost/trpc'
+	let endpoint = 'ws://localhost/trpc'
 	const positional: string[] = []
 
-	for (let index = 0; index < argv.length; index += 1) {
+	for (
+		let index = 0;
+		index < argv.length;
+		index += 1
+	) {
 		const value = argv[index]
 
 		if (value === '--data-directory') {
@@ -44,99 +50,90 @@ function parseArgs(argv: string[]): Args {
 	}
 }
 
-async function token(dataDirectory: string): Promise<string> {
-	const secret = await fs.readFile(
-		`${dataDirectory}/secrets/jwt`,
-		'utf8',
-	)
-	return jwt.sign(secret)
-}
 
-function procedure(action: string): {
-	path: string
-	method: 'GET' | 'POST'
-	input: unknown
-} {
-	switch (action) {
-		case 'list':
-			return {path: 'apps.list', method: 'GET', input: undefined}
-		case 'state':
-			return {path: 'apps.state', method: 'GET', input: null}
-		case 'logs':
-			return {path: 'apps.logs', method: 'GET', input: null}
-		case 'install':
-			return {path: 'apps.install', method: 'POST', input: null}
-		case 'uninstall':
-			return {path: 'apps.uninstall', method: 'POST', input: null}
-		case 'restart':
-			return {path: 'apps.restart', method: 'POST', input: null}
-		case 'start':
-			return {path: 'apps.start', method: 'POST', input: null}
-		case 'stop':
-			return {path: 'apps.stop', method: 'POST', input: null}
-		case 'update':
-			return {path: 'apps.update', method: 'POST', input: null}
-		default:
-			throw new Error(`Unsupported action: ${action}`)
-	}
-}
-
-async function call(args: Args): Promise<unknown> {
-	const spec = procedure(args.action)
-
-	if (args.action !== 'list' && !args.appId) {
-		throw new Error(`${args.action} requires appId`)
+function queryForAction(
+	action: string,
+): string {
+	const queries: Record<string, string> = {
+		list: 'apps.list.query',
+		state: 'apps.state.query',
+		logs: 'apps.logs.query',
+		install: 'apps.install.mutate',
+		uninstall: 'apps.uninstall.mutate',
+		restart: 'apps.restart.mutate',
+		start: 'apps.start.mutate',
+		stop: 'apps.stop.mutate',
+		update: 'apps.update.mutate',
 	}
 
-	const input =
-		args.action === 'list'
-			? undefined
-			: {appId: args.appId}
+	const query = queries[action]
 
-	const authToken = await token(args.dataDirectory)
-	const base = `${args.endpoint}/${spec.path}`
-
-	const headers: Record<string, string> = {
-		Authorization: `Bearer ${authToken}`,
-		'Content-Type': 'application/json',
-	}
-
-	let response: Response
-
-	if (spec.method === 'GET') {
-		const url =
-			input === undefined
-				? base
-				: `${base}?input=${encodeURIComponent(
-						JSON.stringify({json: input}),
-					)}`
-		response = await fetch(url, {headers})
-	} else {
-		response = await fetch(base, {
-			method: 'POST',
-			headers,
-			body: JSON.stringify({json: input}),
-		})
-	}
-
-	const text = await response.text()
-	let payload: unknown
-
-	try {
-		payload = JSON.parse(text)
-	} catch {
-		payload = {raw: text}
-	}
-
-	if (!response.ok) {
+	if (!query) {
 		throw new Error(
-			`Umbrel TRPC ${spec.path} failed: ${response.status} ${text}`,
+			`Unsupported action: ${action}`,
 		)
 	}
 
-	return payload
+	return query
 }
 
-const args = parseArgs(process.argv.slice(2))
-const result = await call(args)
-process.stdout.write(JSON.stringify(result, null, 2) + '\n')
+
+async function main(): Promise<void> {
+	const parsed = parseArguments(
+		process.argv.slice(2),
+	)
+
+	process.env.UMBREL_DATA_DIR =
+		parsed.dataDirectory
+
+	process.env.UMBREL_TRPC_ENDPOINT =
+		parsed.endpoint
+
+	const {cliClient} = await import(
+		'/opt/umbreld/source/modules/cli-client.ts'
+	)
+
+	if (
+		parsed.action !== 'list'
+		&& !parsed.appId
+	) {
+		throw new Error(
+			`${parsed.action} requires appId`,
+		)
+	}
+
+	const args =
+		parsed.action === 'list'
+			? []
+			: [
+					'--appId',
+					parsed.appId!,
+				]
+
+	await cliClient({
+		query: queryForAction(
+			parsed.action,
+		),
+		args,
+	})
+
+	await new Promise<void>((resolve) => {
+		setTimeout(resolve, 500)
+	})
+
+	process.exit(0)
+}
+
+
+main().catch((error) => {
+	const message =
+		error instanceof Error
+			? error.message
+			: String(error)
+
+	process.stderr.write(
+		message + '\n',
+	)
+
+	process.exit(1)
+})

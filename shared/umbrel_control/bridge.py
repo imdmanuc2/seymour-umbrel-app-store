@@ -42,7 +42,7 @@ class UmbrelAppControlBridge:
         *,
         helper_path: Path,
         data_directory: Path = Path("/home/umbrel/umbrel"),
-        endpoint: str = "http://localhost/trpc",
+        endpoint: str = "ws://localhost/trpc",
         evidence_directory: Path | None = None,
     ) -> None:
         self.helper_path = helper_path

@@ -1,0 +1,16 @@
+{
+  "operation_id": "8c4fbdc5-0cca-4a80-bc87-e2539c081138",
+  "action": "state",
+  "app_id": "seymour-bch-node",
+  "mode": "execute",
+  "created_at": "2026-08-05T16:10:27.628216+00:00",
+  "executed": true,
+  "success": false,
+  "result": {
+    "writeOperation": false,
+    "requiredConfirmation": null,
+    "nativeApi": true,
+    "directDockerLifecycle": false
+  },
+  "error": "Umbrel TRPC apps.state failed: 400 {\"error\":{\"message\":\"[\\n  {\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"received\\\": \\\"undefined\\\",\\n    \\\"path\\\": [\\n      \\\"appId\\\"\\n    ],\\n    \\\"message\\\": \\\"Required\\\"\\n  }\\n]\",\"code\":-32600,\"data\":{\"code\":\"BAD_REQUEST\",\"httpStatus\":400,\"stack\":\"TRPCError: [\\n  {\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"received\\\": \\\"undefined\\\",\\n    \\\"path\\\": [\\n      \\\"appId\\\"\\n    ],\\n    \\\"message\\\": \\\"Required\\\"\\n  }\\n]\\n    at inputValidatorMiddleware (file:///opt/umbreld/node_modules/@trpc/server/dist/unstable-core-do-not-import/middleware.mjs:46:19)\\n    at async callRecursive (file:///opt/umbreld/node_modules/@trpc/server/dist/unstable-core-do-not-import/procedureBuilder.mjs:146:24)\\n    at async callRecursive (file:///opt/umbreld/node_modules/@trpc/server/dist/unstable-core-do-not-import/procedureBuilder.mjs:146:24)\\n    at async callRecursive (file:///opt/umbreld/node_modules/@trpc/server/dist/unstable-core-do-not-import/procedureBuilder.mjs:146:24)\\n    at async procedure (file:///opt/umbreld/node_modules/@trpc/server/dist/unstable-core-do-not-import/procedureBuilder.mjs:179:24)\\n    at async file:///opt/umbreld/node_modules/@trpc/server/dist/unstable-core-do-not-import/http/resolveResponse.mjs:249:30\\n    at async resolveResponse (file:///opt/umbreld/node_modules/@trpc/server/dist/unstable-core-do-not-import/http/resolveResponse.mjs:282:37)\\n    at async file:///opt/umbreld/node_modules/@trpc/server/dist/adapters/node-http/nodeHTTPRequestHandler.mjs:70:34\",\"path\":\"apps.state\",\"zodError\":{\"formErrors\":[],\"fieldErrors\":{\"appId\":[\"Required\"]}}}}}\\n"
+}

@@ -1,0 +1,14 @@
+{
+  "operation_id": "afb36410-8d6e-49a7-bd05-4e70ccb7267b",
+  "action": "state",
+  "app_id": "seymour-bch-node",
+  "mode": "execute",
+  "created_at": "2026-08-05T16:58:50.905481+00:00",
+  "executed": true,
+  "success": true,
+  "result": {
+    "state": "not-installed",
+    "progress": 0
+  },
+  "error": null
+}

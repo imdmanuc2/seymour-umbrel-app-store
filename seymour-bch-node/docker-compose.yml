@@ -8,26 +8,35 @@ services:
     image: zquestz/bitcoin-cash-node:latest
     restart: on-failure
     stop_grace_period: 2m
+
     volumes:
       - ${APP_DATA_DIR}/data/node:/data
       - ${APP_DATA_DIR}/data/generated:/generated
       - ${APP_DATA_DIR}/data/state:/state
-      - ./data/node/entrypoint.sh:/usr/local/bin/seymour-entrypoint:ro
+      - ${APP_DATA_DIR}/data/node/entrypoint.sh:/usr/local/bin/seymour-entrypoint:ro
+
     environment:
       BCH_DATA_DIR: /data
       BCH_CONFIG_DIR: /generated
       BCH_STATE_DIR: /state
       BCH_RPC_USER: ${BCH_RPC_USER:-seymour_rpc}
       BCH_RPC_PASSWORD: ${BCH_RPC_PASSWORD:-change-me-before-production}
+
     command:
       - /usr/local/bin/seymour-entrypoint
+
     ports:
       - "8333:8333"
 
   status:
-    build:
-      context: ./data/status
+    image: python:3.12-alpine
     restart: on-failure
+    working_dir: /app
+
+    command:
+      - python
+      - /app/app.py
+
     environment:
       BCH_RPC_HOST: node
       BCH_RPC_PORT: "8332"
@@ -35,10 +44,13 @@ services:
       BCH_RPC_PASSWORD: ${BCH_RPC_PASSWORD:-change-me-before-production}
       BCH_DATA_PATH: /node-data
       BCH_PROVISIONING_STATE_DIR: /state
+
     volumes:
+      - ${APP_DATA_DIR}/data/status:/app:ro
       - ${APP_DATA_DIR}/data/node:/node-data
       - ${APP_DATA_DIR}/data/state:/state
-      - ./data/contracts:/contracts:ro
-      - ./data/provisioning:/provisioning:ro
+      - ${APP_DATA_DIR}/data/contracts:/contracts:ro
+      - ${APP_DATA_DIR}/data/provisioning:/provisioning:ro
+
     depends_on:
       - node
