@@ -1,0 +1,12 @@
+{
+  "package": "SBP-004",
+  "id": "umbrel-runtime-integration",
+  "name": "Umbrel Runtime Integration",
+  "repository": "seymour-umbrel-app-store",
+  "requires": {
+    "branch": "master",
+    "baselineCommit": "cad8822",
+    "previousPackage": "SBP-003"
+  },
+  "safeSourceOnly": true
+}
