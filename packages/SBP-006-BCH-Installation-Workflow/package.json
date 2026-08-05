@@ -1,0 +1,16 @@
+{
+  "package": "SBP-006",
+  "id": "bch-installation-workflow",
+  "name": "BCH Installation Workflow",
+  "repository": "seymour-umbrel-app-store",
+  "requires": {
+    "branch": "master",
+    "previousPackage": "SBP-005"
+  },
+  "safety": {
+    "defaultMode": "plan",
+    "liveInstallRequiresExecute": true,
+    "liveInstallRequiresConfirmation": "INSTALL-seymour-bch-node",
+    "automaticUninstallOnFailure": false
+  }
+}

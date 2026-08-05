@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+
+REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(
+    0,
+    str(REPO / "shared"),
+)
+
+from bch_install import BchInstallWorkflow
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Guarded Seymour BCH Umbrel "
+            "installation workflow."
+        )
+    )
+
+    parser.add_argument(
+        "--execute",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--confirm",
+    )
+    parser.add_argument(
+        "--data-directory",
+        type=Path,
+        default=Path(
+            "/home/umbrel/umbrel"
+        ),
+    )
+    parser.add_argument(
+        "--dashboard-host",
+        default="127.0.0.1",
+    )
+    parser.add_argument(
+        "--dashboard-port",
+        type=int,
+        default=8563,
+    )
+    parser.add_argument(
+        "--minimum-free-bytes",
+        type=int,
+        default=600_000_000_000,
+    )
+    parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=1800,
+    )
+
+    args = parser.parse_args()
+
+    workflow = BchInstallWorkflow(
+        repository=REPO,
+        data_directory=args.data_directory,
+        control_script=(
+            REPO
+            / "scripts"
+            / "seymour-umbrel-app"
+        ),
+        runtime_script=(
+            REPO
+            / "scripts"
+            / "seymour-umbrel-runtime"
+        ),
+        evidence_directory=(
+            REPO
+            / "runtime-evidence"
+            / "bch-install"
+        ),
+        dashboard_host=args.dashboard_host,
+        dashboard_port=args.dashboard_port,
+        minimum_free_bytes=(
+            args.minimum_free_bytes
+        ),
+    )
+
+    if not args.execute:
+        print(
+            json.dumps(
+                workflow.installation_plan(),
+                indent=2,
+            )
+        )
+        return
+
+    try:
+        evidence = workflow.install(
+            execute=True,
+            confirmation=args.confirm,
+            timeout_seconds=(
+                args.timeout_seconds
+            ),
+        )
+    except Exception as exc:
+        print(
+            json.dumps(
+                {
+                    "success": False,
+                    "error": str(exc),
+                },
+                indent=2,
+            )
+        )
+        raise SystemExit(1)
+
+    payload = evidence.to_dict()
+    print(
+        json.dumps(
+            payload,
+            indent=2,
+        )
+    )
+
+    if evidence.status not in {
+        "installed",
+    }:
+        raise SystemExit(1)
+
+
+if __name__ == "__main__":
+    main()
