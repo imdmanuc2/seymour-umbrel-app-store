@@ -1,0 +1,30 @@
+{
+  "contractVersion": 1,
+  "service": {
+    "id": "seymour-bitcoin-cash-node",
+    "type": "blockchain-node",
+    "network": "bitcoin-cash-mainnet",
+    "implementation": "bitcoin-cash-node",
+    "profile": "seymour-recommended"
+  },
+  "capabilities": [
+    "json-rpc",
+    "zmq-rawblock",
+    "zmq-rawtx",
+    "persistent-storage",
+    "sync-monitoring"
+  ],
+  "endpoints": {
+    "rpc": {
+      "host": "node",
+      "port": 8332
+    },
+    "zmq": {
+      "rawblock": "tcp://node:28332",
+      "rawtx": "tcp://node:28333"
+    },
+    "p2p": {
+      "port": 8333
+    }
+  }
+}

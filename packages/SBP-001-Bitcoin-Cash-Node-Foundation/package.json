@@ -1,0 +1,8 @@
+{
+  "package": "SBP-001",
+  "name": "Bitcoin Cash Node Foundation",
+  "repository": "seymour-umbrel-app-store",
+  "branch": "master",
+  "baseline": "b980055",
+  "safeSourceOnly": true
+}

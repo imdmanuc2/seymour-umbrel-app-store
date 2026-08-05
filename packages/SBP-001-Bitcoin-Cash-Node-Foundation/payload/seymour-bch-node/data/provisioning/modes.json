@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "defaultExperience": "recommended",
+  "defaultProvisioning": "fresh-sync",
+  "modes": [
+    {
+      "id": "fresh-sync",
+      "label": "Synchronize a new BCH node"
+    },
+    {
+      "id": "copy-existing",
+      "label": "Copy from an existing BCH node"
+    },
+    {
+      "id": "restore-backup",
+      "label": "Restore from a verified backup"
+    },
+    {
+      "id": "remote-rpc",
+      "label": "Connect to a remote BCH node"
+    }
+  ]
+}
