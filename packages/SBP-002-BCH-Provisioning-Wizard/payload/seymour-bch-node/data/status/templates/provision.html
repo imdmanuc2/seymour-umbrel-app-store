@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Provision Bitcoin Cash</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<main>
+<p class="eyebrow">SEYMOUR BLOCKCHAIN PLATFORM</p>
+<h1>Provision Bitcoin Cash</h1>
+<p class="subtitle">Create a validated provisioning plan.</p>
+
+<form id="wizard">
+<section class="panel">
+<h2>Setup Experience</h2>
+<label><input type="radio" name="experience" value="recommended" checked> Recommended</label>
+<label><input type="radio" name="experience" value="advanced"> Advanced</label>
+</section>
+
+<section class="panel">
+<h2>Blockchain Source</h2>
+<label><input type="radio" name="mode" value="fresh-sync" checked> Synchronize a new BCH node</label>
+<label><input type="radio" name="mode" value="copy-existing"> Copy from an existing BCH node</label>
+<label><input type="radio" name="mode" value="restore-backup"> Restore from a verified backup</label>
+<label><input type="radio" name="mode" value="remote-rpc"> Connect to a remote BCH node</label>
+</section>
+
+<section class="panel advanced">
+<h2>Advanced</h2>
+<label>Version profile
+<select name="versionProfile">
+<option value="seymour-recommended">Seymour Recommended</option>
+<option value="latest-stable">Latest Stable</option>
+<option value="specific">Specific Version</option>
+</select>
+</label>
+<label>Specific version <input name="specificVersion"></label>
+<label>Storage path <input name="storagePath" value="/data"></label>
+</section>
+
+<section class="panel fields" data-mode="copy-existing">
+<label>Source host <input name="sourceHost"></label>
+<label>Source path <input name="sourcePath"></label>
+</section>
+
+<section class="panel fields" data-mode="restore-backup">
+<label>Backup path <input name="backupPath"></label>
+</section>
+
+<section class="panel fields" data-mode="remote-rpc">
+<label>RPC host <input name="rpcHost"></label>
+<label>RPC port <input name="rpcPort" value="8332"></label>
+<label>RPC user <input name="rpcUser"></label>
+<label>RPC password <input name="rpcPassword" type="password"></label>
+<label>ZMQ raw block <input name="zmqRawBlock"></label>
+<label>ZMQ raw tx <input name="zmqRawTx"></label>
+</section>
+
+<section class="panel">
+<button type="submit">Create Provisioning Plan</button>
+</section>
+</form>
+
+<section class="panel">
+<h2>Plan</h2>
+<pre id="result">No plan created.</pre>
+</section>
+</main>
+
+<script>
+const form=document.getElementById('wizard');
+const result=document.getElementById('result');
+function refresh(){
+ const data=new FormData(form);
+ document.querySelector('.advanced').style.display=
+   data.get('experience')==='advanced'?'block':'none';
+ document.querySelectorAll('.fields').forEach((e)=>{
+   e.style.display=e.dataset.mode===data.get('mode')?'block':'none';
+ });
+}
+form.addEventListener('change',refresh);
+form.addEventListener('submit',async(e)=>{
+ e.preventDefault();
+ const response=await fetch('/api/provisioning/plan',{
+   method:'POST',
+   body:new URLSearchParams(new FormData(form))
+ });
+ result.textContent=JSON.stringify(await response.json(),null,2);
+});
+refresh();
+</script>
+</body>
+</html>

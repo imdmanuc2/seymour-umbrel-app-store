@@ -1,0 +1,7 @@
+
+# Python generated files
+__pycache__/
+*.pyc
+
+# Package rollback backups
+backups/

@@ -1,0 +1,6 @@
+{
+  "package": "SBP-002",
+  "name": "BCH Provisioning Wizard",
+  "requires": "SBP-001",
+  "safeSourceOnly": true
+}
