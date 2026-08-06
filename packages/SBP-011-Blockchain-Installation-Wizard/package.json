@@ -1,0 +1,9 @@
+{
+  "package": "SBP-011",
+  "name": "Blockchain Installation Wizard",
+  "branch": "master",
+  "requires": {"previousPackage": "SBP-010"},
+  "providerId": "bitcoin-cash-mainnet",
+  "appId": "seymour-bch-node",
+  "confirmation": "INSTALL-seymour-bch-node"
+}

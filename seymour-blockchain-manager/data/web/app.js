@@ -334,3 +334,16 @@ async function executeLifecycle(provider, action) {
   await refreshTelemetry();
   return payload;
 }
+async function openInstallWizard(providerId) {
+  const provider = state.providers.find((item) => item.providerId === providerId);
+  const preflight = await (await fetch("/api/install/preflight", {cache: "no-store"})).json();
+  const credentials = await (await fetch("/api/install/credentials", {cache: "no-store"})).json();
+  dialogContent.innerHTML = `<p class="provider-family">installation wizard</p><h2>${provider.displayName}</h2><ol class="wizard-steps"><li class="active">Validate</li><li>Configure</li><li>Review</li><li>Install</li><li>Verify</li></ol><section class="wizard-section"><pre>${JSON.stringify(preflight,null,2)}</pre></section><section class="wizard-section"><label>Node name<input id="wizardNodeName" value="Seymour Bitcoin Cash Node"></label><label>RPC user<input id="wizardRpcUser" value="${credentials.rpcUser}"></label><label>RPC password<input id="wizardRpcPassword" type="password" value="${credentials.rpcPassword}"></label><label>RPC port<input id="wizardRpcPort" type="number" value="${provider.defaultPorts.rpc}"></label><label>P2P port<input id="wizardP2pPort" type="number" value="${provider.defaultPorts.p2p}"></label></section><button id="wizardInstall" class="primary wizard-install" ${preflight.compatible ? "" : "disabled"}>Install Bitcoin Cash</button><pre id="wizardResult" class="operation-result"></pre>`;
+  document.getElementById("wizardInstall")?.addEventListener("click", async () => {
+    if (!confirm(`Install ${provider.displayName}?\n\n${provider.installAction.confirmation}`)) return;
+    const response = await fetch("/api/install/execute", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({providerId:provider.providerId,appId:provider.installAction.appId,nodeName:document.getElementById("wizardNodeName").value,rpcUser:document.getElementById("wizardRpcUser").value,rpcPassword:document.getElementById("wizardRpcPassword").value,rpcPort:Number(document.getElementById("wizardRpcPort").value),p2pPort:Number(document.getElementById("wizardP2pPort").value),confirmation:provider.installAction.confirmation})});
+    document.getElementById("wizardResult").textContent = JSON.stringify(await response.json(), null, 2);
+    await refreshTelemetry();
+  });
+  dialog.showModal();
+}

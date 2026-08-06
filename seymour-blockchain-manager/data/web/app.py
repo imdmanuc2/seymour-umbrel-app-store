@@ -23,6 +23,7 @@ BCH_APP_ID = os.environ.get(
 )
 WEB_ROOT = Path(__file__).resolve().parent
 LIFECYCLE = GuardedLifecycleService()
+INSTALLER = Installer()
 
 
 def load_catalog() -> dict:
@@ -38,7 +39,8 @@ def provider_payload(provider: dict) -> dict:
             "type": "umbrel-app",
             "appId": BCH_APP_ID,
             "available": True,
-            "label": "Manage Bitcoin Cash",
+            "label": "Install Bitcoin Cash",
+            "confirmation": f"INSTALL-{BCH_APP_ID}",
         }
 
     return payload
@@ -89,6 +91,14 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self) -> None:
+        if self.path == "/api/install/preflight":
+            self.send_json(preflight())
+            return
+
+        if self.path == "/api/install/credentials":
+            self.send_json(generate_credentials())
+            return
+
         if self.path == "/api/health":
             catalog = load_catalog()
             self.send_json({
@@ -161,6 +171,17 @@ class Handler(BaseHTTPRequestHandler):
 
 
     def do_POST(self) -> None:
+        if self.path == "/api/install/execute":
+            try:
+                operation = INSTALLER.execute(InstallRequest.from_dict(self.read_json_body()))
+                status = HTTPStatus.OK if operation.status.value == "succeeded" else HTTPStatus.BAD_REQUEST
+                self.send_json(operation.to_dict(), status=status)
+            except ValueError as exc:
+                self.send_json({"error": "invalid-install-request", "message": str(exc)}, status=HTTPStatus.BAD_REQUEST)
+            except Exception as exc:
+                self.send_json({"error": "installation-failure", "message": str(exc)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return
+
         prefix = "/api/lifecycle/"
         if not self.path.startswith(prefix):
             self.send_error(HTTPStatus.NOT_FOUND)
