@@ -1,0 +1,10 @@
+{
+  "package": "SBP-008",
+  "name": "Seymour Blockchain Manager UI Foundation",
+  "repository": "seymour-umbrel-app-store",
+  "branch": "master",
+  "requires": {
+    "previousPackage": "SBP-007"
+  },
+  "liveProvider": "bitcoin-cash-mainnet"
+}

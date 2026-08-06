@@ -1,0 +1,24 @@
+manifestVersion: 1
+id: seymour-blockchain-manager
+name: Seymour Blockchain Manager
+tagline: Install and manage supported blockchain nodes
+category: bitcoin
+version: "0.1.0-alpha"
+port: 8570
+description: >-
+  Catalog-driven blockchain management for Bitcoin, Bitcoin Cash, Litecoin,
+  Dogecoin, Dash, Zcash, Monero, Kaspa, and Ergo.
+developer: Seymour
+website: https://github.com/imdmanuc2
+submitter: Seymour
+submission: https://github.com/imdmanuc2/seymour-umbrel-app-store
+repo: https://github.com/imdmanuc2/seymour-umbrel-app-store
+support: https://github.com/imdmanuc2/seymour-umbrel-app-store/issues
+gallery: []
+releaseNotes: >-
+  Initial multi-chain catalog UI. Bitcoin Cash is available; remaining
+  providers are visible as coming soon.
+dependencies: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""

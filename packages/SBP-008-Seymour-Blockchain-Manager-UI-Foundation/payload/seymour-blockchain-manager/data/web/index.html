@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Seymour Blockchain Manager</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">SEYMOUR PLATFORM</p>
+        <h1>Blockchain Manager</h1>
+        <p class="subtitle">
+          Install and manage supported blockchain nodes from one catalog.
+        </p>
+      </div>
+      <div class="hero-status">
+        <span id="catalogStatus">Loading catalog…</span>
+      </div>
+    </header>
+
+    <section class="summary" aria-label="Catalog summary">
+      <article>
+        <span class="summary-label">Providers</span>
+        <strong id="providerCount">—</strong>
+      </article>
+      <article>
+        <span class="summary-label">Available now</span>
+        <strong id="liveCount">—</strong>
+      </article>
+      <article>
+        <span class="summary-label">Coming soon</span>
+        <strong id="plannedCount">—</strong>
+      </article>
+    </section>
+
+    <section class="toolbar">
+      <div class="filters" id="filters"></div>
+      <input
+        id="search"
+        type="search"
+        placeholder="Search chains, tickers, algorithms…"
+        aria-label="Search providers"
+      >
+    </section>
+
+    <section id="providerGrid" class="provider-grid">
+      <p class="loading">Loading provider catalog…</p>
+    </section>
+  </main>
+
+  <dialog id="providerDialog">
+    <button class="dialog-close" id="closeDialog" aria-label="Close">×</button>
+    <div id="dialogContent"></div>
+  </dialog>
+
+  <script src="/app.js"></script>
+</body>
+</html>
