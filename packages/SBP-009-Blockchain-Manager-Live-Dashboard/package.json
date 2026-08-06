@@ -1,0 +1,10 @@
+{
+  "package": "SBP-009",
+  "name": "Blockchain Manager Live Dashboard",
+  "repository": "seymour-umbrel-app-store",
+  "branch": "master",
+  "requires": {
+    "previousPackage": "SBP-008"
+  },
+  "mode": "read-only"
+}
