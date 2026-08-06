@@ -1,0 +1,15 @@
+{
+  "package": "SBP-010",
+  "name": "Guarded Blockchain Lifecycle Actions",
+  "repository": "seymour-umbrel-app-store",
+  "branch": "master",
+  "requires": {
+    "previousPackage": "SBP-009"
+  },
+  "allowedActions": [
+    "state",
+    "start",
+    "stop",
+    "restart"
+  ]
+}

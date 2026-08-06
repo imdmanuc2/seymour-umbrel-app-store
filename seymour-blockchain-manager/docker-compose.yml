@@ -20,9 +20,13 @@ services:
       BCH_STATUS_URL: http://seymour-bch-node_status_1:8080/api/status
       BCH_DATA_PATH: /bch-data
       DOCKER_SOCKET: /var/run/docker.sock
+      SEYMOUR_UMBREL_CONTROL_SCRIPT: /control/seymour-umbrel-app
+      LIFECYCLE_EVIDENCE_PATH: /evidence/lifecycle.jsonl
 
     volumes:
       - ${APP_DATA_DIR}/data/web:/app:ro
       - ${APP_DATA_DIR}/data/catalog:/catalog:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${APP_DATA_DIR}/data/evidence:/evidence
+      - /home/umbrel/seymour-umbrel-app-store-git/scripts:/control:ro
       - /home/umbrel/umbrel/app-data/seymour-bch-node/data/node:/bch-data:ro

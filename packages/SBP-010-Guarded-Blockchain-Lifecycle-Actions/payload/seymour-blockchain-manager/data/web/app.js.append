@@ -1,0 +1,18 @@
+function requiredConfirmation(action, appId) {
+  return action === "state" ? null : `${action.toUpperCase()}-${appId}`;
+}
+
+async function executeLifecycle(provider, action) {
+  const appId = provider.installAction.appId;
+  const confirmation = requiredConfirmation(action, appId);
+  if (confirmation && !window.confirm(`${action.toUpperCase()} ${provider.displayName}?\n\n${confirmation}`)) return;
+  const response = await fetch(`/api/lifecycle/${action}`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({providerId: provider.providerId, appId, confirmation}),
+  });
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.error || "Lifecycle operation failed");
+  await refreshTelemetry();
+  return payload;
+}

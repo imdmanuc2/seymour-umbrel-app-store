@@ -8,6 +8,7 @@ from pathlib import Path
 from urllib.parse import unquote
 
 from telemetry import dashboard_payload
+from lifecycle import GuardedLifecycleService, LifecycleAction
 
 
 CATALOG_PATH = Path(
@@ -21,6 +22,7 @@ BCH_APP_ID = os.environ.get(
     "seymour-bch-node",
 )
 WEB_ROOT = Path(__file__).resolve().parent
+LIFECYCLE = GuardedLifecycleService()
 
 
 def load_catalog() -> dict:
@@ -156,6 +158,23 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         self.send_error(HTTPStatus.NOT_FOUND)
+
+
+    def do_POST(self) -> None:
+        prefix = "/api/lifecycle/"
+        if not self.path.startswith(prefix):
+            self.send_error(HTTPStatus.NOT_FOUND)
+            return
+        action = LifecycleAction(self.path[len(prefix):])
+        length = int(self.headers.get("Content-Length", "0"))
+        body = json.loads(self.rfile.read(length).decode()) if length else {}
+        result = LIFECYCLE.execute(
+            provider_id=str(body.get("providerId", "")),
+            app_id=str(body.get("appId", "")),
+            action=action,
+            confirmation=body.get("confirmation"),
+        )
+        self.send_json(result.to_dict(), status=HTTPStatus.OK if result.status.value == "succeeded" else HTTPStatus.BAD_REQUEST)
 
     def log_message(
         self,
