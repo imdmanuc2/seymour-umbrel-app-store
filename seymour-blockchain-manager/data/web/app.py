@@ -25,6 +25,7 @@ BCH_APP_ID = os.environ.get(
 WEB_ROOT = Path(__file__).resolve().parent
 LIFECYCLE = GuardedLifecycleService()
 INSTALLER = Installer()
+ADOPTION = AdoptionService()
 
 
 def load_catalog() -> dict:
@@ -92,6 +93,14 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self) -> None:
+        if self.path.startswith("/api/adoption/plans/"):
+            operation_id = self.path.rsplit("/", 1)[-1]
+            try:
+                self.send_json(ADOPTION.load(operation_id))
+            except KeyError:
+                self.send_json({"error": "adoption-plan-not-found"}, status=HTTPStatus.NOT_FOUND)
+            return
+
         if self.path == "/api/install/preflight":
             self.send_json(preflight())
             return
@@ -176,6 +185,18 @@ class Handler(BaseHTTPRequestHandler):
 
 
     def do_POST(self) -> None:
+        if self.path == "/api/adoption/plan":
+            body = self.read_json_body()
+            self.send_json(ADOPTION.plan(Path(str(body.get("sourcePath", "")))).to_dict())
+            return
+
+        if self.path == "/api/adoption/execute":
+            body = self.read_json_body()
+            result = ADOPTION.execute(str(body.get("operationId", "")), str(body.get("confirmation", "")))
+            status = HTTPStatus.OK if result.status.value == "succeeded" else HTTPStatus.BAD_REQUEST
+            self.send_json(result.to_dict(), status=status)
+            return
+
         if self.path == "/api/install/execute":
             try:
                 operation = INSTALLER.execute(InstallRequest.from_dict(self.read_json_body()))

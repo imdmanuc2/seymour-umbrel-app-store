@@ -28,6 +28,9 @@ services:
       SYNC_HISTORY_PATH: /evidence/sync-history.jsonl
       SYNC_STALL_SECONDS: "600"
       SYNC_LOW_PEERS: "3"
+      BCH_MANAGED_DATA_PATH: /adopted-bch-data
+      ADOPTION_EVIDENCE_PATH: /evidence/adoptions.jsonl
+      ADOPTION_PLAN_DIRECTORY: /evidence/adoption-plans
 
     volumes:
       - ${APP_DATA_DIR}/data/web:/app:ro

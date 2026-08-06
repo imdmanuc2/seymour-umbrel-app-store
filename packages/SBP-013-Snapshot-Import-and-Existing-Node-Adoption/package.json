@@ -1,0 +1,8 @@
+{
+  "package": "SBP-013",
+  "name": "Snapshot Import and Existing Node Adoption",
+  "branch": "master",
+  "requires": {"previousPackage": "SBP-012"},
+  "providerId": "bitcoin-cash-mainnet",
+  "confirmation": "ADOPT-seymour-bch-node"
+}
