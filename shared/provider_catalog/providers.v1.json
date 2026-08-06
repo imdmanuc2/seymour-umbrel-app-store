@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "1.0.0",
+  "release": "SBR-v1.0",
+  "frozen": true,
+  "providers": [
+    {
+      "providerId": "bitcoin-mainnet",
+      "displayName": "Bitcoin",
+      "ticker": "BTC",
+      "family": "bitcoin",
+      "implementation": "Bitcoin Core",
+      "nodeVersion": "29.0.0",
+      "network": "mainnet",
+      "miningAlgorithm": "SHA-256",
+      "supportedArchitectures": [
+        "amd64",
+        "arm64"
+      ],
+      "defaultPorts": {
+        "rpc": 8332,
+        "p2p": 8333
+      },
+      "estimatedDiskBytes": 800000000000,
+      "availability": "planned",
+      "selectable": false,
+      "productionImage": null
+    },
+    {
+      "providerId": "bitcoin-cash-mainnet",
+      "displayName": "Bitcoin Cash",
+      "ticker": "BCH",
+      "family": "bitcoin",
+      "implementation": "Bitcoin Cash Node",
+      "nodeVersion": "29.1.0",
+      "network": "mainnet",
+      "miningAlgorithm": "SHA-256",
+      "supportedArchitectures": [
+        "amd64",
+        "arm64"
+      ],
+      "defaultPorts": {
+        "rpc": 8332,
+        "p2p": 8333
+      },
+      "estimatedDiskBytes": 600000000000,
+      "availability": "live",
+      "selectable": true,
+      "productionImage": "ghcr.io/imdmanuc2/seymour-bitcoin-cash-node:29.1.0"
+    },
+    {
+      "providerId": "litecoin-mainnet",
+      "displayName": "Litecoin",
+      "ticker": "LTC",
+      "family": "bitcoin",
+      "implementation": "Litecoin Core",
+      "nodeVersion": "0.21.4",
+      "network": "mainnet",
+      "miningAlgorithm": "Scrypt",
+      "supportedArchitectures": [
+        "amd64",
+        "arm64"
+      ],
+      "defaultPorts": {
+        "rpc": 9332,
+        "p2p": 9333
+      },
+      "estimatedDiskBytes": 300000000000,
+      "availability": "planned",
+      "selectable": false,
+      "productionImage": null
+    },
+    {
+      "providerId": "dogecoin-mainnet",
+      "displayName": "Dogecoin",
+      "ticker": "DOGE",
+      "family": "bitcoin",
+      "implementation": "Dogecoin Core",
+      "nodeVersion": "1.14.9",
+      "network": "mainnet",
+      "miningAlgorithm": "Scrypt",
+      "supportedArchitectures": [
+        "amd64",
+        "arm64"
+      ],
+      "defaultPorts": {
+        "rpc": 22555,
+        "p2p": 22556
+      },
+      "estimatedDiskBytes": 250000000000,
+      "availability": "planned",
+      "selectable": false,
+      "productionImage": null
+    },
+    {
+      "providerId": "dash-mainnet",
+      "displayName": "Dash",
+      "ticker": "DASH",
+      "family": "bitcoin",
+      "implementation": "Dash Core",
+      "nodeVersion": "23.1.7",
+      "network": "mainnet",
+      "miningAlgorithm": "X11",
+      "supportedArchitectures": [
+        "amd64",
+        "arm64"
+      ],
+      "defaultPorts": {
+        "rpc": 9998,
+        "p2p": 9999
+      },
+      "estimatedDiskBytes": 150000000000,
+      "availability": "planned",
+      "selectable": false,
+      "productionImage": null
+    },
+    {
+      "providerId": "zcash-mainnet",
+      "displayName": "Zcash",
+      "ticker": "ZEC",
+      "family": "bitcoin",
+      "implementation": "Zebra",
+      "nodeVersion": "6.0.0",
+      "network": "mainnet",
+      "miningAlgorithm": "Equihash",
+      "supportedArchitectures": [
+        "amd64",
+        "arm64"
+      ],
+      "defaultPorts": {
+        "rpc": 8232,
+        "p2p": 8233
+      },
+      "estimatedDiskBytes": 350000000000,
+      "availability": "planned",
+      "selectable": false,
+      "productionImage": null
+    },
+    {
+      "providerId": "monero-mainnet",
+      "displayName": "Monero",
+      "ticker": "XMR",
+      "family": "cryptonote",
+      "implementation": "monerod",
+      "nodeVersion": "0.18.5.1",
+      "network": "mainnet",
+      "miningAlgorithm": "RandomX",
+      "supportedArchitectures": [
+        "amd64",
+        "arm64"
+      ],
+      "defaultPorts": {
+        "rpc": 18081,
+        "p2p": 18080
+      },
+      "estimatedDiskBytes": 250000000000,
+      "availability": "planned",
+      "selectable": false,
+      "productionImage": null
+    },
+    {
+      "providerId": "kaspa-mainnet",
+      "displayName": "Kaspa",
+      "ticker": "KAS",
+      "family": "blockdag",
+      "implementation": "Rusty Kaspa",
+      "nodeVersion": "2.0.1",
+      "network": "mainnet",
+      "miningAlgorithm": "kHeavyHash",
+      "supportedArchitectures": [
+        "amd64",
+        "arm64"
+      ],
+      "defaultPorts": {
+        "rpc": 16110,
+        "p2p": 16111
+      },
+      "estimatedDiskBytes": 250000000000,
+      "availability": "planned",
+      "selectable": false,
+      "productionImage": null
+    },
+    {
+      "providerId": "ergo-mainnet",
+      "displayName": "Ergo",
+      "ticker": "ERG",
+      "family": "extended-utxo",
+      "implementation": "Ergo Node",
+      "nodeVersion": "6.0.3",
+      "network": "mainnet",
+      "miningAlgorithm": "Autolykos",
+      "supportedArchitectures": [
+        "amd64",
+        "arm64"
+      ],
+      "defaultPorts": {
+        "restApi": 9053,
+        "p2p": 9030
+      },
+      "estimatedDiskBytes": 100000000000,
+      "availability": "planned",
+      "selectable": false,
+      "productionImage": null
+    }
+  ]
+}

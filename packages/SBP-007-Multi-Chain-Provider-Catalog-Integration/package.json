@@ -1,0 +1,11 @@
+{
+  "package": "SBP-007",
+  "name": "Multi-Chain Provider Catalog Integration",
+  "repository": "seymour-umbrel-app-store",
+  "branch": "master",
+  "requires": {
+    "previousPackage": "SBP-006",
+    "catalogSource": "SBR-017"
+  },
+  "liveProvider": "bitcoin-cash-mainnet"
+}
