@@ -8,6 +8,7 @@ from pathlib import Path
 from urllib.parse import unquote
 
 from telemetry import dashboard_payload
+from sync_manager import analyze
 from lifecycle import GuardedLifecycleService, LifecycleAction
 
 
@@ -111,6 +112,10 @@ class Handler(BaseHTTPRequestHandler):
 
         if self.path == "/api/dashboard":
             self.send_json(dashboard_payload())
+            return
+
+        if self.path == "/api/sync":
+            self.send_json(analyze(dashboard_payload()))
             return
 
         if self.path == "/api/providers":

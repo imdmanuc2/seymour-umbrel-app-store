@@ -25,6 +25,9 @@ services:
       SEYMOUR_BCH_INSTALL_SCRIPT: /control/seymour-install-bch
       INSTALL_EVIDENCE_PATH: /evidence/installations.jsonl
       INSTALL_OPERATION_DIRECTORY: /evidence/install-operations
+      SYNC_HISTORY_PATH: /evidence/sync-history.jsonl
+      SYNC_STALL_SECONDS: "600"
+      SYNC_LOW_PEERS: "3"
 
     volumes:
       - ${APP_DATA_DIR}/data/web:/app:ro

@@ -1,0 +1,9 @@
+{
+  "package": "SBP-012",
+  "name": "Initial Blockchain Sync Manager",
+  "repository": "seymour-umbrel-app-store",
+  "branch": "master",
+  "requires": {"previousPackage": "SBP-011"},
+  "providerId": "bitcoin-cash-mainnet",
+  "mode": "read-only-guidance"
+}

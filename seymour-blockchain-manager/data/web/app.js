@@ -105,6 +105,12 @@ function renderFilters() {
 
   filters.innerHTML = families.map((family) => `
     <button
+      class="secondary"
+      data-sync="${provider.providerId}"
+    >
+      Sync
+    </button>
+    <button
       class="${family === state.family ? "active" : ""}"
       data-family="${family}"
     >
@@ -196,6 +202,12 @@ function renderProviders() {
   grid.querySelectorAll("[data-details]").forEach((button) => {
     button.addEventListener("click", () => {
       showDetails(button.dataset.details);
+    });
+  });
+
+  grid.querySelectorAll("[data-sync]").forEach((button) => {
+    button.addEventListener("click", () => {
+      showSyncManager(button.dataset.sync);
     });
   });
 
@@ -345,5 +357,42 @@ async function openInstallWizard(providerId) {
     document.getElementById("wizardResult").textContent = JSON.stringify(await response.json(), null, 2);
     await refreshTelemetry();
   });
+  dialog.showModal();
+}
+function formatDuration(seconds) {
+  if (seconds === null || seconds === undefined) return "Calculating…";
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours}h ${minutes % 60}m`;
+}
+
+async function showSyncManager(providerId) {
+  const provider = state.providers.find((item) => item.providerId === providerId);
+  const response = await fetch("/api/sync", {cache: "no-store"});
+  const sync = await response.json();
+  const recommendations = sync.recommendations.map((item) => `
+    <li class="recommendation ${item.severity}">
+      <strong>${item.code}</strong><span>${item.message}</span>
+    </li>`).join("");
+  dialogContent.innerHTML = `
+    <p class="provider-family">initial sync manager</p>
+    <h2>${provider.displayName}</h2>
+    <div class="sync-kpis">
+      <article><span>Progress</span><strong>${sync.snapshot.progress_percent ?? "—"}%</strong></article>
+      <article><span>Blocks remaining</span><strong>${sync.blocksRemaining ?? "—"}</strong></article>
+      <article><span>Rate</span><strong>${sync.blocksPerSecond ?? "—"} blk/s</strong></article>
+      <article><span>ETA</span><strong>${formatDuration(sync.etaSeconds)}</strong></article>
+    </div>
+    <dl class="dialog-metadata">
+      <div><dt>Height</dt><dd>${sync.snapshot.height ?? "—"}</dd></div>
+      <div><dt>Headers</dt><dd>${sync.snapshot.headers ?? "—"}</dd></div>
+      <div><dt>Peers</dt><dd>${sync.snapshot.peers ?? "—"}</dd></div>
+      <div><dt>Peer quality</dt><dd>${sync.peerQuality.state}</dd></div>
+      <div><dt>Stalled</dt><dd>${sync.stall.stalled ? "Yes" : "No"}</dd></div>
+    </dl>
+    <h3>Recommendations</h3>
+    <ul class="recommendations">${recommendations}</ul>`;
   dialog.showModal();
 }

@@ -1,0 +1,9 @@
+.sync-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}
+.sync-kpis article{padding:14px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.03)}
+.sync-kpis span{display:block;margin-bottom:6px;color:var(--muted);font-size:12px}
+.recommendations{display:grid;gap:10px;padding:0;list-style:none}
+.recommendation{display:grid;gap:4px;padding:12px;border:1px solid var(--border);border-radius:9px}
+.recommendation.warning{border-color:rgba(245,185,66,.4)}
+.recommendation.critical{border-color:rgba(255,119,119,.45)}
+.recommendation.info{border-color:rgba(56,217,150,.35)}
+@media(max-width:620px){.sync-kpis{grid-template-columns:1fr 1fr}}
