@@ -9,7 +9,22 @@ from urllib.parse import unquote
 
 from telemetry import dashboard_payload
 from sync_manager import analyze
-from operations_center import OperationKind, diagnostics, execute_backup, plan, recent_logs, recommendations
+from installer import Installer
+from adoption import AdoptionService
+from nexus_integration import (
+    append_registration_evidence,
+    discovery_document,
+    registration_payload,
+)
+from nexus_delivery import deliver, load_status
+from operations_center import (
+    OperationKind,
+    diagnostics,
+    execute_backup,
+    plan,
+    recent_logs,
+    recommendations,
+)
 from lifecycle import GuardedLifecycleService, LifecycleAction
 
 
@@ -51,6 +66,27 @@ def provider_payload(provider: dict) -> dict:
 
 class Handler(BaseHTTPRequestHandler):
     server_version = "SeymourBlockchainManager/0.2"
+
+
+    def read_json_body(self) -> dict:
+        length = int(
+            self.headers.get(
+                "Content-Length",
+                "0",
+            )
+        )
+
+        if length <= 0:
+            return {}
+
+        raw = self.rfile.read(length)
+
+        if not raw:
+            return {}
+
+        return json.loads(
+            raw.decode("utf-8")
+        )
 
     def send_json(
         self,
