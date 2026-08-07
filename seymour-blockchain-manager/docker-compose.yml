@@ -36,6 +36,13 @@ services:
       BCH_BACKUP_ROOT: /evidence/backups
       BCH_NODE_CONTAINER: seymour-bch-node_node_1
       NEXUS_REGISTRATION_EVIDENCE_PATH: /evidence/nexus-registration.jsonl
+      NEXUS_REGISTRATION_URL: ${NEXUS_REGISTRATION_URL:-}
+      NEXUS_REGISTRATION_TOKEN: ${NEXUS_REGISTRATION_TOKEN:-}
+      NEXUS_REGISTRATION_TIMEOUT_SECONDS: "15"
+      NEXUS_REGISTRATION_MAX_ATTEMPTS: "4"
+      NEXUS_REGISTRATION_BACKOFF_SECONDS: "2"
+      NEXUS_DELIVERY_EVIDENCE_PATH: /evidence/nexus-delivery.jsonl
+      NEXUS_DELIVERY_STATUS_PATH: /evidence/nexus-delivery-status.json
 
     volumes:
       - ${APP_DATA_DIR}/data/web:/app:ro

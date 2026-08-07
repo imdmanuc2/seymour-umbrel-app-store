@@ -124,6 +124,10 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(dashboard_payload())
             return
 
+        if self.path == "/api/nexus/delivery/status":
+            self.send_json(load_status())
+            return
+
         if self.path == "/api/nexus/discovery":
             dashboard = dashboard_payload()
             sync = analyze(dashboard)
@@ -211,6 +215,42 @@ class Handler(BaseHTTPRequestHandler):
 
 
     def do_POST(self) -> None:
+        if self.path == "/api/nexus/delivery":
+            body = self.read_json_body()
+
+            dashboard = dashboard_payload()
+            sync = analyze(dashboard)
+
+            payload = registration_payload(
+                dashboard,
+                sync,
+            )
+
+            result = deliver(
+                payload,
+                dry_run=bool(
+                    body.get(
+                        "dryRun",
+                        False,
+                    )
+                ),
+            )
+
+            status = (
+                HTTPStatus.OK
+                if result.status in {
+                    "succeeded",
+                    "dry-run",
+                }
+                else HTTPStatus.BAD_GATEWAY
+            )
+
+            self.send_json(
+                result.to_dict(),
+                status=status,
+            )
+            return
+
         if self.path == "/api/operations/plan":
             body = self.read_json_body()
             self.send_json(plan(OperationKind(str(body.get("kind", ""))), dict(body.get("details", {}))).to_dict())

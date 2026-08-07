@@ -1,0 +1,9 @@
+{
+  "package": "SBP-016",
+  "name": "Nexus Registration Delivery",
+  "branch": "master",
+  "requires": {
+    "previousPackage": "SBP-015"
+  },
+  "mode": "authenticated-idempotent-delivery"
+}
