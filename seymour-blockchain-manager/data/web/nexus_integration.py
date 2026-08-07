@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from bch_runtime_probe import probe as probe_bch_runtime
+
 from datetime import UTC, datetime
 import hashlib
 import json
@@ -170,3 +172,29 @@ def append_registration_evidence(
     EVIDENCE_PATH.parent.mkdir(parents=True, exist_ok=True)
     with EVIDENCE_PATH.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(payload, sort_keys=True) + "\n")
+
+
+# SBP-020 runtime normalization
+_sbp020_registration_payload = registration_payload
+
+def registration_payload(dashboard, sync):
+    payload = _sbp020_registration_payload(dashboard, sync)
+    runtime = probe_bch_runtime()
+    document = payload.get("document") if isinstance(payload, dict) else None
+    assets = document.get("assets") if isinstance(document, dict) else None
+    if not isinstance(assets, list):
+        return payload
+    for asset in assets:
+        if not isinstance(asset, dict) or asset.get("providerId") != "bitcoin-cash-mainnet":
+            continue
+        telemetry = asset.get("telemetry")
+        if not isinstance(telemetry, dict):
+            telemetry = {}
+            asset["telemetry"] = telemetry
+        telemetry["installed"] = runtime["installed"]
+        telemetry["running"] = runtime["running"]
+        telemetry["container"] = runtime["container"]
+        telemetry["lifecycleStatus"] = runtime["lifecycleStatus"]
+        telemetry["rpc"] = runtime["rpc"]
+        asset["status"] = runtime["lifecycleStatus"]
+    return payload

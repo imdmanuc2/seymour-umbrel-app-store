@@ -1,0 +1,8 @@
+{
+  "package": "SBP-020",
+  "name": "BCH Runtime Health & RPC Detection",
+  "targetBranch": "master",
+  "requires": {
+    "package": "SBP-019"
+  }
+}
