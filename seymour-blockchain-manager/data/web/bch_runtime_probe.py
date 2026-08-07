@@ -10,10 +10,68 @@ BCH_NODE_CONTAINER=os.environ.get("BCH_NODE_CONTAINER","seymour-bch-node_node_1"
 BCH_HEALTH_URL=os.environ.get("BCH_HEALTH_URL","http://seymour-bch-node_status_1:8080/api/health")
 BCH_STATUS_URL=os.environ.get("BCH_STATUS_URL","http://seymour-bch-node_status_1:8080/api/status")
 
+def _decode_chunked(body: bytes) -> bytes:
+ out = bytearray()
+ pos = 0
+
+ while pos < len(body):
+  line_end = body.find(b"\r\n", pos)
+  if line_end == -1:
+   break
+
+  size_line = body[pos:line_end].split(b";", 1)[0]
+
+  try:
+   size = int(size_line, 16)
+  except ValueError:
+   break
+
+  pos = line_end + 2
+
+  if size == 0:
+   break
+
+  out.extend(
+   body[pos:pos + size]
+  )
+
+  pos += size + 2
+
+ return bytes(out)
+
+
 def _decode(raw: bytes):
  head,_,body=raw.partition(b"\r\n\r\n")
- try: code=int(head.splitlines()[0].split()[1])
- except Exception: code=0
+
+ try:
+  code=int(
+   head.splitlines()[0].split()[1]
+  )
+ except Exception:
+  code=0
+
+ headers = {}
+
+ for line in head.splitlines()[1:]:
+  if b":" not in line:
+   continue
+
+  key, value = line.split(b":", 1)
+
+  headers[
+   key.decode(
+    "latin-1"
+   ).strip().lower()
+  ] = value.decode(
+   "latin-1"
+  ).strip().lower()
+
+ if (
+  headers.get("transfer-encoding")
+  == "chunked"
+ ):
+  body = _decode_chunked(body)
+
  return code,body
 
 def docker_container_inspect(name: str=BCH_NODE_CONTAINER)->dict[str,Any]:
