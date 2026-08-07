@@ -124,6 +124,20 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(dashboard_payload())
             return
 
+        if self.path == "/api/nexus/discovery":
+            dashboard = dashboard_payload()
+            sync = analyze(dashboard)
+            self.send_json(discovery_document(dashboard, sync))
+            return
+
+        if self.path == "/api/nexus/registration":
+            dashboard = dashboard_payload()
+            sync = analyze(dashboard)
+            payload = registration_payload(dashboard, sync)
+            append_registration_evidence(payload)
+            self.send_json(payload)
+            return
+
         if self.path == "/api/operations/diagnostics":
             result = diagnostics()
             payload = result.to_dict()

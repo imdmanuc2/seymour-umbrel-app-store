@@ -1,0 +1,10 @@
+{
+  "package": "SBP-015",
+  "name": "Nexus Integration",
+  "branch": "master",
+  "requires": {
+    "previousPackage": "SBP-014A"
+  },
+  "providerId": "bitcoin-cash-mainnet",
+  "managementPlane": "Nexus Command Center"
+}

@@ -35,6 +35,7 @@ services:
       HEALTH_HISTORY_PATH: /evidence/health-history.jsonl
       BCH_BACKUP_ROOT: /evidence/backups
       BCH_NODE_CONTAINER: seymour-bch-node_node_1
+      NEXUS_REGISTRATION_EVIDENCE_PATH: /evidence/nexus-registration.jsonl
 
     volumes:
       - ${APP_DATA_DIR}/data/web:/app:ro
