@@ -13,6 +13,9 @@ services:
       - python
       - /app/app.py
 
+    env_file:
+      - /home/umbrel/seymour-umbrel-app-store-git/private/nexus-registration.env
+
     environment:
       PROVIDER_CATALOG_PATH: /catalog/providers.v1.json
       BCH_APP_ID: seymour-bch-node
@@ -36,8 +39,6 @@ services:
       BCH_BACKUP_ROOT: /evidence/backups
       BCH_NODE_CONTAINER: seymour-bch-node_node_1
       NEXUS_REGISTRATION_EVIDENCE_PATH: /evidence/nexus-registration.jsonl
-      NEXUS_REGISTRATION_URL: ${NEXUS_REGISTRATION_URL:-}
-      NEXUS_REGISTRATION_TOKEN: ${NEXUS_REGISTRATION_TOKEN:-}
       NEXUS_REGISTRATION_TIMEOUT_SECONDS: "15"
       NEXUS_REGISTRATION_MAX_ATTEMPTS: "4"
       NEXUS_REGISTRATION_BACKOFF_SECONDS: "2"

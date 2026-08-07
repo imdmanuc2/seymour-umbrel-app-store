@@ -19,3 +19,10 @@ __pycache__/
 # Temporary local validation files
 *.before-*
 *.tmp
+
+# Private runtime credentials
+private/
+*.env
+
+# Local compose backups
+*.before-*
