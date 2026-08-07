@@ -9,6 +9,7 @@ from urllib.parse import unquote
 
 from telemetry import dashboard_payload
 from bch_runtime_probe import probe as probe_bch_runtime
+from bch_rpc_probe import probe as probe_bch_rpc
 from sync_manager import analyze
 from installer import Installer
 from adoption import AdoptionService
@@ -164,6 +165,10 @@ class Handler(BaseHTTPRequestHandler):
 
         if self.path == "/api/dashboard":
             self.send_json(dashboard_payload())
+            return
+
+        if self.path == "/api/runtime/bch-rpc":
+            self.send_json(probe_bch_rpc())
             return
 
         if self.path == "/api/runtime/bch-health":

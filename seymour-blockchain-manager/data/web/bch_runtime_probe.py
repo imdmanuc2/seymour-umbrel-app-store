@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 from urllib import error, request
 from urllib.parse import quote
+from bch_rpc_probe import probe as probe_bch_rpc
 
 DOCKER_SOCKET=Path(os.environ.get("DOCKER_SOCKET","/var/run/docker.sock"))
 BCH_NODE_CONTAINER=os.environ.get("BCH_NODE_CONTAINER","seymour-bch-node_node_1")
@@ -109,9 +110,11 @@ def http_json(url: str)->dict[str,Any]:
  return out
 
 def probe()->dict[str,Any]:
- container=docker_container_inspect(); health=http_json(BCH_HEALTH_URL); status=http_json(BCH_STATUS_URL)
- hp=health.get("payload") if isinstance(health.get("payload"),dict) else {}; sp=status.get("payload") if isinstance(status.get("payload"),dict) else {}
- rpc=bool(health.get("reachable") and hp.get("healthy",True)) or sp.get("healthy") is True
+ container=docker_container_inspect()
+ legacy_health=http_json(BCH_HEALTH_URL)
+ legacy_status=http_json(BCH_STATUS_URL)
+ rpc_probe=probe_bch_rpc()
  installed=bool(container.get("found")); running=bool(container.get("running"))
+ rpc=bool(rpc_probe.get("reachable") and rpc_probe.get("healthy"))
  lifecycle="not-installed" if not installed else "stopped" if not running else "running" if rpc else "degraded"
- return {"providerId":"bitcoin-cash-mainnet","appId":"seymour-bch-node","installed":installed,"running":running,"lifecycleStatus":lifecycle,"container":container,"rpc":{"reachable":rpc,"health":health,"status":status}}
+ return {"providerId":"bitcoin-cash-mainnet","appId":"seymour-bch-node","installed":installed,"running":running,"lifecycleStatus":lifecycle,"container":container,"rpc":{"reachable":rpc,"probe":rpc_probe,"health":legacy_health,"status":legacy_status}}

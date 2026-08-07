@@ -1,0 +1,7 @@
+{
+  "package": "SBP-021",
+  "name": "BCH RPC Health Repair & Status Contract",
+  "targetRepository": "seymour-umbrel-app-store",
+  "targetBranch": "master",
+  "requires": {"package": "SBP-020"}
+}

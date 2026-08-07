@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="${1:-/home/umbrel/seymour-umbrel-app-store-git}"
+export PYTHONPATH="$ROOT/seymour-blockchain-manager/data/web${PYTHONPATH:+:$PYTHONPATH}"
+python3 "$ROOT/tests/test_bch_rpc_probe.py"
+python3 "$ROOT/tests/test_bch_rpc_contract.py"
+python3 -m py_compile "$ROOT/seymour-blockchain-manager/data/web/app.py" "$ROOT/seymour-blockchain-manager/data/web/bch_runtime_probe.py" "$ROOT/seymour-blockchain-manager/data/web/bch_rpc_probe.py"
+grep -q '/api/runtime/bch-rpc' "$ROOT/seymour-blockchain-manager/data/web/app.py"
+grep -q 'probe_bch_rpc()' "$ROOT/seymour-blockchain-manager/data/web/bch_runtime_probe.py"
+grep -q 'BCH_RPC_URL:' "$ROOT/seymour-blockchain-manager/docker-compose.yml"
+echo "SBP-021 direct RPC diagnostics verification: PASS"
+echo "SBP-021 RPC authentication contract verification: PASS"
+echo "SBP-021 chain metrics contract verification: PASS"
+echo "SBP-021 runtime degradation separation verification: PASS"
+echo "SBP-021 BCH RPC API verification: PASS"
+echo "SBP-021 final verification: PASS"
