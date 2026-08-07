@@ -74,8 +74,27 @@ def delivery_id(registration_id: str) -> str:
     return f"nexus-delivery-{digest}"
 
 
-def idempotency_key(registration_id: str) -> str:
-    return f"seymour-registration-{registration_id}"
+def idempotency_key(
+    registration_id: str,
+    payload: dict[str, Any] | None = None,
+) -> str:
+    if payload is None:
+        return f"seymour-registration-{registration_id}"
+
+    canonical = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+
+    digest = hashlib.sha256(
+        canonical
+    ).hexdigest()[:20]
+
+    return (
+        f"seymour-registration-"
+        f"{registration_id}-{digest}"
+    )
 
 
 def _write_result(result: DeliveryResult) -> None:
@@ -157,7 +176,7 @@ def deliver(
             "urlConfigured": bool(REGISTRATION_URL),
             "tokenConfigured": bool(REGISTRATION_TOKEN),
             "idempotencyKey": (
-                idempotency_key(registration_id)
+                idempotency_key(registration_id, payload)
             ),
             "payloadBytes": len(
                 json.dumps(payload).encode()

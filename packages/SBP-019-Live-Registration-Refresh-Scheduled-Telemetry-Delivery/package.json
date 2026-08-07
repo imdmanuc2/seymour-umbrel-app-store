@@ -1,0 +1,12 @@
+{
+  "package": "SBP-019",
+  "name": "Live Registration Refresh & Scheduled Telemetry Delivery",
+  "targetRepository": "seymour-umbrel-app-store",
+  "targetBranch": "master",
+  "requires": {
+    "package": "SBP-016",
+    "nexusPackage": "SBP-018"
+  },
+  "defaultIntervalSeconds": 60,
+  "defaultInitialDelaySeconds": 15
+}

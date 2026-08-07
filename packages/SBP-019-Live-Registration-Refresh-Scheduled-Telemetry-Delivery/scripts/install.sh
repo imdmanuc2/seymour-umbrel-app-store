@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+REPO="${1:-/home/umbrel/seymour-umbrel-app-store-git}"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+BACKUP="$REPO/backups/sbp-019-$STAMP"
+"$ROOT/scripts/doctor.sh" "$REPO"
+mkdir -p "$BACKUP"; cp -a "$REPO/seymour-blockchain-manager" "$BACKUP/"
+cp "$ROOT/payload/nexus_scheduler.py" "$REPO/seymour-blockchain-manager/data/web/nexus_scheduler.py"
+cd "$REPO"
+python3 "$ROOT/payload/patch_app.py"
+python3 "$ROOT/payload/patch_compose.py"
+cp "$ROOT/payload/test_nexus_scheduler.py" "$REPO/tests/test_nexus_scheduler.py"
+cp "$ROOT/payload/test_nexus_scheduler_contract.py" "$REPO/tests/test_nexus_scheduler_contract.py"
+echo "Backup: $BACKUP"
+echo "SBP-019 install: PASS"
+echo "No live container was restarted."

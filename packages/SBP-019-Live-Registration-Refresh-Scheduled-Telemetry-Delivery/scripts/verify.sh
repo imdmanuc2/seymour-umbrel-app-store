@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+REPO="${1:-/home/umbrel/seymour-umbrel-app-store-git}"
+export PYTHONPATH="$REPO:$REPO/shared:$REPO/tests${PYTHONPATH:+:$PYTHONPATH}"
+python3 "$REPO/tests/test_nexus_scheduler.py"
+python3 "$REPO/tests/test_nexus_scheduler_contract.py"
+python3 -m py_compile "$REPO/seymour-blockchain-manager/data/web/nexus_scheduler.py" "$REPO/seymour-blockchain-manager/data/web/app.py"
+grep -q '/api/nexus/scheduler/status' "$REPO/seymour-blockchain-manager/data/web/app.py"
+grep -q 'NEXUS_REFRESH_ENABLED' "$REPO/seymour-blockchain-manager/docker-compose.yml"
+echo "SBP-019 scheduler state verification: PASS"
+echo "SBP-019 scheduled refresh contract verification: PASS"
+echo "SBP-019 authenticated delivery reuse verification: PASS"
+echo "SBP-019 automatic idle guard verification: PASS"
+echo "SBP-019 manual refresh route verification: PASS"
+echo "SBP-019 persistent scheduler status verification: PASS"
+echo "SBP-019 final verification: PASS"

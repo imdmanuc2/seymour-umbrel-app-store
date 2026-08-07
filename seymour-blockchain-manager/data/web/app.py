@@ -17,6 +17,11 @@ from nexus_integration import (
     registration_payload,
 )
 from nexus_delivery import deliver, load_status
+from nexus_scheduler import (
+    refresh_once as nexus_refresh_once,
+    start as start_nexus_scheduler,
+    status as nexus_scheduler_status,
+)
 from operations_center import (
     OperationKind,
     diagnostics,
@@ -160,6 +165,12 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(dashboard_payload())
             return
 
+        if self.path == "/api/nexus/scheduler/status":
+            self.send_json(
+                nexus_scheduler_status()
+            )
+            return
+
         if self.path == "/api/nexus/delivery/status":
             self.send_json(load_status())
             return
@@ -251,6 +262,25 @@ class Handler(BaseHTTPRequestHandler):
 
 
     def do_POST(self) -> None:
+        if self.path == "/api/nexus/scheduler/run":
+            result = nexus_refresh_once()
+
+            status = (
+                HTTPStatus.OK
+                if result.get("status") in {
+                    "succeeded",
+                    "disabled",
+                    "not-configured",
+                }
+                else HTTPStatus.BAD_GATEWAY
+            )
+
+            self.send_json(
+                result,
+                status=status,
+            )
+            return
+
         if self.path == "/api/nexus/delivery":
             body = self.read_json_body()
 
@@ -346,6 +376,8 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    start_nexus_scheduler()
+
     ThreadingHTTPServer(
         ("0.0.0.0", 8080),
         Handler,

@@ -44,6 +44,10 @@ services:
       NEXUS_REGISTRATION_BACKOFF_SECONDS: "2"
       NEXUS_DELIVERY_EVIDENCE_PATH: /evidence/nexus-delivery.jsonl
       NEXUS_DELIVERY_STATUS_PATH: /evidence/nexus-delivery-status.json
+      NEXUS_REFRESH_ENABLED: "true"
+      NEXUS_REFRESH_INTERVAL_SECONDS: "60"
+      NEXUS_REFRESH_INITIAL_DELAY_SECONDS: "15"
+      NEXUS_REFRESH_STATE_PATH: /evidence/nexus-refresh-state.json
 
     volumes:
       - ${APP_DATA_DIR}/data/web:/app:ro
