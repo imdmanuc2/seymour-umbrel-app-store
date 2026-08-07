@@ -1,0 +1,1 @@
+.operations-actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}.operations-actions button,.operations-execute{padding:11px 13px;border:1px solid var(--border);border-radius:9px;cursor:pointer}.operations-execute{width:100%;margin:10px 0 16px}

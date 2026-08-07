@@ -9,6 +9,7 @@ from urllib.parse import unquote
 
 from telemetry import dashboard_payload
 from sync_manager import analyze
+from operations_center import OperationKind, diagnostics, execute_backup, plan, recent_logs, recommendations
 from lifecycle import GuardedLifecycleService, LifecycleAction
 
 
@@ -123,6 +124,17 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(dashboard_payload())
             return
 
+        if self.path == "/api/operations/diagnostics":
+            result = diagnostics()
+            payload = result.to_dict()
+            payload["recommendations"] = recommendations(result.result or {})
+            self.send_json(payload)
+            return
+
+        if self.path.startswith("/api/operations/logs"):
+            self.send_json(recent_logs().to_dict())
+            return
+
         if self.path == "/api/sync":
             self.send_json(analyze(dashboard_payload()))
             return
@@ -185,6 +197,18 @@ class Handler(BaseHTTPRequestHandler):
 
 
     def do_POST(self) -> None:
+        if self.path == "/api/operations/plan":
+            body = self.read_json_body()
+            self.send_json(plan(OperationKind(str(body.get("kind", ""))), dict(body.get("details", {}))).to_dict())
+            return
+
+        if self.path == "/api/operations/backup":
+            body = self.read_json_body()
+            result = execute_backup(str(body.get("confirmation", "")))
+            status = HTTPStatus.OK if result.status.value == "succeeded" else HTTPStatus.BAD_REQUEST
+            self.send_json(result.to_dict(), status=status)
+            return
+
         if self.path == "/api/adoption/plan":
             body = self.read_json_body()
             self.send_json(ADOPTION.plan(Path(str(body.get("sourcePath", "")))).to_dict())

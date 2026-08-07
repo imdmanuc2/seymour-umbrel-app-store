@@ -341,3 +341,62 @@ dialog::backdrop { background: rgba(0,0,0,.72); }
 .recommendation.critical{border-color:rgba(255,119,119,.45)}
 .recommendation.info{border-color:rgba(56,217,150,.35)}
 @media(max-width:620px){.sync-kpis{grid-template-columns:1fr 1fr}}
+.operations-actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}.operations-actions button,.operations-execute{padding:11px 13px;border:1px solid var(--border);border-radius:9px;cursor:pointer}.operations-execute{width:100%;margin:10px 0 16px}
+
+.adoption-label {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+  color: var(--muted);
+}
+
+.adoption-label input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: #08131d;
+  color: var(--text);
+}
+
+.adoption-execute {
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px;
+  border: 0;
+  border-radius: 9px;
+}
+
+.lifecycle-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.lifecycle-actions button {
+  min-width: 120px;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.danger {
+  background: rgba(255, 119, 119, 0.12);
+  border-color: rgba(255, 119, 119, 0.35) !important;
+  color: var(--danger);
+}
+
+.operation-result {
+  min-height: 0;
+  max-height: 280px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 14px;
+  border-radius: 10px;
+  background: #08131d;
+  color: #cfe2ef;
+  font-size: 12px;
+}

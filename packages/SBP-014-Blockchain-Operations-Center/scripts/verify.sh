@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+REPO="${1:-/home/umbrel/seymour-umbrel-app-store-git}";export PYTHONPATH="$REPO:$REPO/shared:$REPO/tests${PYTHONPATH:+:$PYTHONPATH}"
+for t in test_provider_catalog.py test_bch_catalog_compatibility.py test_blockchain_manager_ui.py test_blockchain_manager_catalog.py test_live_dashboard.py test_live_dashboard_contract.py test_guarded_lifecycle.py test_lifecycle_ui_contract.py test_installation_wizard.py test_installation_wizard_ui.py test_sync_manager.py test_sync_manager_ui.py test_adoption.py test_adoption_ui.py test_operations_center.py test_operations_center_ui.py;do python3 "$REPO/tests/$t";done
+python3 -m py_compile "$REPO/seymour-blockchain-manager/data/web/operations_center.py" "$REPO/seymour-blockchain-manager/data/web/app.py"
+grep -q '/api/operations/diagnostics' "$REPO/seymour-blockchain-manager/data/web/app.py";grep -q 'showOperationsCenter' "$REPO/seymour-blockchain-manager/data/web/app.js";grep -q 'OPERATIONS_EVIDENCE_PATH' "$REPO/seymour-blockchain-manager/docker-compose.yml"
+echo "SBP-014 RPC diagnostics verification: PASS";echo "SBP-014 log inspection verification: PASS";echo "SBP-014 health history verification: PASS";echo "SBP-014 backup planning verification: PASS";echo "SBP-014 restore planning verification: PASS";echo "SBP-014 upgrade planning verification: PASS";echo "SBP-014 recovery guidance verification: PASS";echo "SBP-014 operations evidence verification: PASS";echo "SBP-014 final verification: PASS"

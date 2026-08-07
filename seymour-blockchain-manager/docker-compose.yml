@@ -31,6 +31,10 @@ services:
       BCH_MANAGED_DATA_PATH: /adopted-bch-data
       ADOPTION_EVIDENCE_PATH: /evidence/adoptions.jsonl
       ADOPTION_PLAN_DIRECTORY: /evidence/adoption-plans
+      OPERATIONS_EVIDENCE_PATH: /evidence/operations.jsonl
+      HEALTH_HISTORY_PATH: /evidence/health-history.jsonl
+      BCH_BACKUP_ROOT: /evidence/backups
+      BCH_NODE_CONTAINER: seymour-bch-node_node_1
 
     volumes:
       - ${APP_DATA_DIR}/data/web:/app:ro

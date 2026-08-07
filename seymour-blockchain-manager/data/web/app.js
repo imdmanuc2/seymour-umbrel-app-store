@@ -97,19 +97,16 @@ function filteredProviders() {
   });
 }
 
+
 function renderFilters() {
   const families = [
     "all",
-    ...new Set(state.providers.map((item) => item.family)),
+    ...new Set(
+      state.providers.map((item) => item.family)
+    ),
   ];
 
   filters.innerHTML = families.map((family) => `
-    <button
-      class="secondary"
-      data-sync="${provider.providerId}"
-    >
-      Sync
-    </button>
     <button
       class="${family === state.family ? "active" : ""}"
       data-family="${family}"
@@ -118,7 +115,7 @@ function renderFilters() {
     </button>
   `).join("");
 
-  filters.querySelectorAll("button").forEach((button) => {
+  filters.querySelectorAll("[data-family]").forEach((button) => {
     button.addEventListener("click", () => {
       state.family = button.dataset.family;
       renderFilters();
@@ -155,11 +152,13 @@ function liveMetrics(provider) {
   `;
 }
 
+
 function renderProviders() {
   const providers = filteredProviders();
 
   grid.innerHTML = providers.map((provider) => {
     const status = lifecycle(provider);
+
     return `
       <article class="provider-card ${provider.availability} ${status}">
         <div class="card-top">
@@ -175,24 +174,40 @@ function renderProviders() {
           </p>
         </div>
 
-        ${provider.availability === "live"
-          ? liveMetrics(provider)
-          : `
-            <dl class="metadata">
-              <div><dt>Mining</dt><dd>${provider.miningAlgorithm}</dd></div>
-              <div><dt>Disk estimate</dt><dd>${formatBytes(provider.estimatedDiskBytes)}</dd></div>
-              <div><dt>Architecture</dt><dd>${provider.supportedArchitectures.join(" · ")}</dd></div>
-            </dl>
-          `
+        ${
+          provider.availability === "live"
+            ? liveMetrics(provider)
+            : `
+              <dl class="metadata">
+                <div><dt>Mining</dt><dd>${provider.miningAlgorithm}</dd></div>
+                <div><dt>Disk estimate</dt><dd>${formatBytes(provider.estimatedDiskBytes)}</dd></div>
+                <div><dt>Architecture</dt><dd>${provider.supportedArchitectures.join(" · ")}</dd></div>
+              </dl>
+            `
         }
 
         <div class="card-actions">
           <button class="secondary" data-details="${provider.providerId}">
             View details
           </button>
-          ${provider.selectable
-            ? `<button class="primary" data-manage="${provider.providerId}">Manage</button>`
-            : `<button class="disabled" disabled>Coming soon</button>`
+
+          ${
+            provider.selectable
+              ? `
+                <button class="secondary" data-sync="${provider.providerId}">
+                  Sync
+                </button>
+                <button class="secondary" data-adopt="${provider.providerId}">
+                  Adopt
+                </button>
+                <button class="secondary" data-operations="${provider.providerId}">
+                  Operations
+                </button>
+                <button class="primary" data-manage="${provider.providerId}">
+                  Manage
+                </button>
+              `
+              : `<button class="disabled" disabled>Coming soon</button>`
           }
         </div>
       </article>
@@ -208,6 +223,18 @@ function renderProviders() {
   grid.querySelectorAll("[data-sync]").forEach((button) => {
     button.addEventListener("click", () => {
       showSyncManager(button.dataset.sync);
+    });
+  });
+
+  grid.querySelectorAll("[data-adopt]").forEach((button) => {
+    button.addEventListener("click", () => {
+      showAdoptionWizard(button.dataset.adopt);
+    });
+  });
+
+  grid.querySelectorAll("[data-operations]").forEach((button) => {
+    button.addEventListener("click", () => {
+      showOperationsCenter(button.dataset.operations);
     });
   });
 
@@ -394,5 +421,138 @@ async function showSyncManager(providerId) {
     </dl>
     <h3>Recommendations</h3>
     <ul class="recommendations">${recommendations}</ul>`;
+  dialog.showModal();
+}
+
+async function showOperationsCenter(providerId) {
+  dialogContent.innerHTML = `<p class="provider-family">operations center</p><h2>Bitcoin Cash</h2><div class="operations-actions"><button id="opsDiagnostics" class="secondary">Run diagnostics</button><button id="opsLogs" class="secondary">View logs</button><button id="opsBackupPlan" class="secondary">Plan backup</button><button id="opsRestorePlan" class="secondary">Plan restore</button><button id="opsUpgradePlan" class="secondary">Plan upgrade</button></div><div id="opsExecute"></div><pre id="opsResult" class="operation-result"></pre>`;
+  const output=document.getElementById("opsResult"); const execute=document.getElementById("opsExecute");
+  document.getElementById("opsDiagnostics").onclick=async()=>{output.textContent=JSON.stringify(await (await fetch("/api/operations/diagnostics")).json(),null,2)};
+  document.getElementById("opsLogs").onclick=async()=>{output.textContent=JSON.stringify(await (await fetch("/api/operations/logs")).json(),null,2)};
+  async function createPlan(kind){const payload=await (await fetch("/api/operations/plan",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind,details:{providerId}})})).json();output.textContent=JSON.stringify(payload,null,2);if(kind==="backup"){execute.innerHTML='<button id="opsBackupExecute" class="primary operations-execute">Execute guarded backup</button>';document.getElementById("opsBackupExecute").onclick=async()=>{if(!confirm(`Execute BCH backup?\n\n${payload.confirmation}`))return;output.textContent=JSON.stringify(await (await fetch("/api/operations/backup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({confirmation:payload.confirmation})})).json(),null,2)}}}
+  document.getElementById("opsBackupPlan").onclick=()=>createPlan("backup");document.getElementById("opsRestorePlan").onclick=()=>createPlan("restore");document.getElementById("opsUpgradePlan").onclick=()=>createPlan("upgrade");dialog.showModal();
+}
+
+async function showAdoptionWizard(providerId) {
+  const provider = state.providers.find(
+    (item) => item.providerId === providerId
+  );
+
+  dialogContent.innerHTML = `
+    <p class="provider-family">existing node adoption</p>
+    <h2>${provider.displayName}</h2>
+
+    <p>
+      Select an existing Bitcoin Cash datadir.
+      The Seymour-managed destination must be empty.
+    </p>
+
+    <label class="adoption-label">
+      Existing datadir path
+      <input
+        id="adoptionSourcePath"
+        placeholder="/path/to/existing/bitcoin-cash-data"
+      >
+    </label>
+
+    <button id="adoptionPlan" class="secondary">
+      Validate and build adoption plan
+    </button>
+
+    <div id="adoptionActions"></div>
+
+    <pre
+      id="adoptionResult"
+      class="operation-result"
+    ></pre>
+  `;
+
+  document
+    .getElementById("adoptionPlan")
+    .addEventListener("click", async () => {
+      const sourcePath = document.getElementById(
+        "adoptionSourcePath"
+      ).value;
+
+      const response = await fetch(
+        "/api/adoption/plan",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sourcePath,
+          }),
+        }
+      );
+
+      const plan = await response.json();
+
+      document.getElementById(
+        "adoptionResult"
+      ).textContent = JSON.stringify(
+        plan,
+        null,
+        2
+      );
+
+      if (!plan.validation?.source?.valid) {
+        return;
+      }
+
+      document.getElementById(
+        "adoptionActions"
+      ).innerHTML = `
+        <button
+          id="adoptionExecute"
+          class="primary adoption-execute"
+        >
+          Adopt existing node
+        </button>
+      `;
+
+      document
+        .getElementById("adoptionExecute")
+        .addEventListener("click", async () => {
+          if (
+            !window.confirm(
+              `Adopt existing BCH node?\n\n` +
+              `${plan.required_confirmation}`
+            )
+          ) {
+            return;
+          }
+
+          const executeResponse = await fetch(
+            "/api/adoption/execute",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                operationId: plan.operation_id,
+                confirmation:
+                  plan.required_confirmation,
+              }),
+            }
+          );
+
+          const result =
+            await executeResponse.json();
+
+          document.getElementById(
+            "adoptionResult"
+          ).textContent = JSON.stringify(
+            result,
+            null,
+            2
+          );
+
+          await refreshTelemetry();
+        });
+    });
+
   dialog.showModal();
 }

@@ -1,0 +1,9 @@
+{
+  "package": "SBP-014",
+  "name": "Blockchain Operations Center",
+  "branch": "master",
+  "requires": {
+    "previousPackage": "SBP-013"
+  },
+  "providerId": "bitcoin-cash-mainnet"
+}
