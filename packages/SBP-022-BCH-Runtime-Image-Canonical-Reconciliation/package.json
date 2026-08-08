@@ -1,0 +1,7 @@
+{
+  "package": "SBP-022",
+  "name": "BCH Runtime Image & Canonical Configuration Reconciliation",
+  "targetRepository": "seymour-umbrel-app-store",
+  "targetBranch": "master",
+  "requires": {"package": "SBP-021"}
+}

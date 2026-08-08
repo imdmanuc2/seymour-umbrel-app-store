@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="${1:-/home/umbrel/seymour-umbrel-app-store-git}"
+python3 "$ROOT/tests/test_bch_canonical_entrypoint.py"
+python3 "$ROOT/tests/test_bch_recreation_contract.py"
+python3 "$ROOT/tests/test_bch_healthcheck_contract.py"
+grep -q 'entrypoint: \["/usr/local/bin/seymour-entrypoint"\]' "$ROOT/seymour-bch-node/docker-compose.yml"
+grep -q 'rpcallowip=10.0.0.0/8' "$ROOT/seymour-bch-node/data/node/entrypoint.sh"
+grep -q 'rpcuser=${RPC_USER}' "$ROOT/seymour-bch-node/data/node/entrypoint.sh"
+grep -q 'rpcpassword=${RPC_PASSWORD}' "$ROOT/seymour-bch-node/data/node/entrypoint.sh"
+echo "SBP-022 compose runtime reconciliation verification: PASS"
+echo "SBP-022 RPC persistence verification: PASS"
+echo "SBP-022 recreation safety verification: PASS"
+echo "SBP-022 canonical runtime contract verification: PASS"
+echo "SBP-022 final verification: PASS"
