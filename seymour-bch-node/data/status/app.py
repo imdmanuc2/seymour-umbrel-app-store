@@ -47,7 +47,10 @@ DATA_PATH = Path(
 )
 
 
-def rpc_call(method: str) -> dict:
+def rpc_call(
+    method: str,
+    timeout: int = 5,
+) -> dict:
     payload = json.dumps(
         {
             "jsonrpc": "1.0",
@@ -73,7 +76,7 @@ def rpc_call(method: str) -> dict:
 
     with urllib.request.urlopen(
         request,
-        timeout=5,
+        timeout=timeout,
     ) as response:
         result = json.loads(
             response.read()
@@ -108,40 +111,101 @@ def storage_payload() -> dict:
 
 
 def status_payload() -> dict:
+    # Lightweight RPC liveness check.
+    #
+    # getblockchaininfo can take a long time while BCHN is
+    # performing initial block download, so it must not decide
+    # whether the node itself is reachable.
+    try:
+        uptime = rpc_call(
+            "uptime",
+            timeout=5,
+        )
+    except Exception as exc:
+        return {
+            "healthy": False,
+            "status": "starting",
+            "chain": "bitcoin-cash",
+            "rpcReachable": False,
+            "error": str(exc),
+            "storage": storage_payload(),
+        }
+
+    # RPC is alive. Detailed chain telemetry is allowed more
+    # time and may legitimately be slow during IBD.
     try:
         blockchain = rpc_call(
-            "getblockchaininfo"
+            "getblockchaininfo",
+            timeout=20,
         )
+
         network = rpc_call(
-            "getnetworkinfo"
+            "getnetworkinfo",
+            timeout=20,
+        )
+
+    except Exception as exc:
+        return {
+            "healthy": True,
+            "status": "rpc-slow",
+            "chain": "bitcoin-cash",
+            "rpcReachable": True,
+            "uptime": uptime,
+            "error": str(exc),
+            "storage": storage_payload(),
+        }
+
+    return {
+        "healthy": True,
+        "status": "online",
+        "chain": "bitcoin-cash",
+        "rpcReachable": True,
+        "uptime": uptime,
+        "blocks": blockchain.get(
+            "blocks"
+        ),
+        "headers": blockchain.get(
+            "headers"
+        ),
+        "verificationProgress": (
+            blockchain.get(
+                "verificationprogress"
+            )
+        ),
+        "initialBlockDownload": (
+            blockchain.get(
+                "initialblockdownload"
+            )
+        ),
+        "peers": network.get(
+            "connections"
+        ),
+        "subversion": network.get(
+            "subversion"
+        ),
+        "storage": storage_payload(),
+    }
+
+
+def health_payload() -> dict:
+    """
+    Fast BCH RPC liveness endpoint.
+
+    Detailed blockchain state is intentionally excluded because
+    getblockchaininfo may be slow during initial block download.
+    """
+    try:
+        uptime = rpc_call(
+            "uptime",
+            timeout=5,
         )
 
         return {
             "healthy": True,
             "status": "online",
             "chain": "bitcoin-cash",
-            "blocks": blockchain.get(
-                "blocks"
-            ),
-            "headers": blockchain.get(
-                "headers"
-            ),
-            "verificationProgress": (
-                blockchain.get(
-                    "verificationprogress"
-                )
-            ),
-            "initialBlockDownload": (
-                blockchain.get(
-                    "initialblockdownload"
-                )
-            ),
-            "peers": network.get(
-                "connections"
-            ),
-            "subversion": network.get(
-                "subversion"
-            ),
+            "rpcReachable": True,
+            "uptime": uptime,
             "storage": storage_payload(),
         }
 
@@ -150,6 +214,7 @@ def status_payload() -> dict:
             "healthy": False,
             "status": "starting",
             "chain": "bitcoin-cash",
+            "rpcReachable": False,
             "error": str(exc),
             "storage": storage_payload(),
         }
@@ -197,7 +262,13 @@ class Handler(BaseHTTPRequestHandler):
             str(len(body)),
         )
         self.end_headers()
-        self.wfile.write(body)
+        try:
+            self.wfile.write(body)
+        except (
+            BrokenPipeError,
+            ConnectionResetError,
+        ):
+            return
 
     def send_file(
         self,
@@ -263,7 +334,7 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if self.path == "/api/health":
-            payload = status_payload()
+            payload = health_payload()
             self.send_json(
                 payload,
                 200
