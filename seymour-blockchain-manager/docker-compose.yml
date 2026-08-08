@@ -24,7 +24,7 @@ services:
       BCH_RPC_URL: ${BCH_RPC_URL:-http://seymour-bch-node_node_1:8332/}
       BCH_RPC_USER: ${BCH_RPC_USER:-}
       BCH_RPC_PASSWORD: ${BCH_RPC_PASSWORD:-}
-      BCH_RPC_TIMEOUT_SECONDS: "5"
+      BCH_RPC_TIMEOUT_SECONDS: "20"
       BCH_DATA_PATH: /bch-data
       DOCKER_SOCKET: /var/run/docker.sock
       SEYMOUR_UMBREL_CONTROL_SCRIPT: /control/seymour-umbrel-app
