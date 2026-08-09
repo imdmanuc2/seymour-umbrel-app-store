@@ -196,7 +196,23 @@ def registration_payload(dashboard, sync):
         telemetry["container"] = runtime["container"]
         telemetry["lifecycleStatus"] = runtime["lifecycleStatus"]
         telemetry["operationalState"] = runtime.get("operationalState")
+
+        operational_state = (
+            runtime.get("operationalState")
+            if isinstance(runtime.get("operationalState"), dict)
+            else {}
+        )
+
+        telemetry["operationalStateName"] = operational_state.get("state")
+        telemetry["runtimeState"] = operational_state.get("state")
+        telemetry["runtimeStateReason"] = operational_state.get("reason")
+        telemetry["runtimeRpcReachable"] = operational_state.get("rpcReachable")
+        telemetry["runtimeRpcHealthy"] = operational_state.get("rpcHealthy")
+        telemetry["runtimeInitialBlockDownload"] = operational_state.get("initialBlockDownload")
+        telemetry["runtimeVerificationProgress"] = operational_state.get("verificationProgress")
+
         telemetry["rpc"] = runtime["rpc"]
         asset["operationalState"] = runtime.get("operationalState")
+        asset["runtimeState"] = operational_state.get("state")
         asset["status"] = runtime["lifecycleStatus"]
     return payload

@@ -1,0 +1,9 @@
+{
+  "package": "SBP-026",
+  "name": "Nexus CMDB Runtime State Projection",
+  "targetRepository": "seymour-umbrel-app-store",
+  "targetBranch": "master",
+  "requires": [
+    "SBP-025"
+  ]
+}
