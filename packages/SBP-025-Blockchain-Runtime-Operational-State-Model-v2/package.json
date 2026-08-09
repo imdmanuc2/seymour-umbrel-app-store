@@ -1,0 +1,14 @@
+{
+  "package": "SBP-025",
+  "revision": 2,
+  "name": "Blockchain Runtime Operational State Model",
+  "targetRepository": "seymour-umbrel-app-store",
+  "targetBranch": "master",
+  "requires": [
+    "SBP-024"
+  ],
+  "compatibility": [
+    "legacy Nexus registration integration",
+    "SBP-020 wrapped registration integration"
+  ]
+}

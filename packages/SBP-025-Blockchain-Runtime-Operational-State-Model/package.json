@@ -1,0 +1,7 @@
+{
+  "package": "SBP-025",
+  "name": "Blockchain Runtime Operational State Model",
+  "targetRepository": "seymour-umbrel-app-store",
+  "targetBranch": "master",
+  "requires": ["SBP-024"]
+}

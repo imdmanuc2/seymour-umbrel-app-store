@@ -5,6 +5,7 @@ from typing import Any
 from urllib import error, request
 from urllib.parse import quote
 from bch_rpc_probe import probe as probe_bch_rpc
+from runtime_state import normalize_runtime_state
 
 DOCKER_SOCKET=Path(os.environ.get("DOCKER_SOCKET","/var/run/docker.sock"))
 BCH_NODE_CONTAINER=os.environ.get("BCH_NODE_CONTAINER","seymour-bch-node_node_1")
@@ -134,4 +135,7 @@ def probe()->dict[str,Any]:
  installed=bool(container.get("found")); running=bool(container.get("running"))
  rpc=bool(rpc_probe.get("reachable") and rpc_probe.get("healthy"))
  lifecycle="not-installed" if not installed else "stopped" if not running else "running" if rpc else "degraded"
- return {"providerId":"bitcoin-cash-mainnet","appId":"seymour-bch-node","installed":installed,"running":running,"lifecycleStatus":lifecycle,"container":container,"rpc":{"reachable":rpc,"probe":rpc_probe,"health":legacy_health,"status":legacy_status}}
+ result = {"providerId":"bitcoin-cash-mainnet","appId":"seymour-bch-node","installed":installed,"running":running,"lifecycleStatus":lifecycle,"container":container,"rpc":{"reachable":rpc,"probe":rpc_probe,"health":legacy_health,"status":legacy_status}}
+ result["operationalState"] = normalize_runtime_state(result)
+ result["lifecycleStatus"] = result["operationalState"]["state"]
+ return result

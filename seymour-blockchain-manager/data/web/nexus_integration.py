@@ -195,6 +195,8 @@ def registration_payload(dashboard, sync):
         telemetry["running"] = runtime["running"]
         telemetry["container"] = runtime["container"]
         telemetry["lifecycleStatus"] = runtime["lifecycleStatus"]
+        telemetry["operationalState"] = runtime.get("operationalState")
         telemetry["rpc"] = runtime["rpc"]
+        asset["operationalState"] = runtime.get("operationalState")
         asset["status"] = runtime["lifecycleStatus"]
     return payload
