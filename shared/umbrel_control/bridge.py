@@ -20,6 +20,36 @@ WRITE_ACTIONS = {
 }
 
 
+def _native_result_error(payload: object) -> str | None:
+    if payload is None:
+        return None
+    if isinstance(payload, dict):
+        for key in ("error", "message", "detail", "reason"):
+            value = payload.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+        nested = payload.get("result")
+        if nested is not None:
+            value = _native_result_error(nested)
+            if value:
+                return value
+    if isinstance(payload, str):
+        value = payload.strip()
+        if value:
+            return value
+    return None
+
+
+def _state_matches_action(action: str, state: object) -> bool:
+    value = str(state or "").strip().lower()
+    if action in {"start", "restart"}:
+        return value in {"ready", "running"}
+    if action == "stop":
+        return value in {"stopped", "not-running", "inactive"}
+    return False
+
+
+
 @dataclass
 class ControlOperation:
     operation_id: str
@@ -169,8 +199,29 @@ class UmbrelAppControlBridge:
             operation.success = True
         except Exception as exc:
             operation.executed = True
-            operation.success = False
-            operation.error = str(exc)
+            if app_id is not None and action in {"start", "restart", "stop"}:
+                try:
+                    state_payload = self._invoke("state", app_id)
+                    state = state_payload.get("result", state_payload) if isinstance(state_payload, dict) else state_payload
+                    current_state = state.get("state") if isinstance(state, dict) else state
+                    if _state_matches_action(action, current_state):
+                        operation.success = True
+                        operation.error = None
+                        operation.result = {
+                            "reconciled": True,
+                            "state": current_state,
+                            "nativeError": str(exc),
+                            "statePayload": state_payload,
+                        }
+                    else:
+                        operation.success = False
+                        operation.error = _native_result_error(state_payload) or str(exc)
+                except Exception as state_exc:
+                    operation.success = False
+                    operation.error = str(exc) + " Post-operation state reconciliation failed: " + str(state_exc)
+            else:
+                operation.success = False
+                operation.error = str(exc)
 
         self.write_evidence(operation)
         return operation

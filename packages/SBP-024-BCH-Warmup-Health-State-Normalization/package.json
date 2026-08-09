@@ -1,0 +1,1 @@
+{"package":"SBP-024","name":"BCH Warmup & Health State Normalization","targetRepository":"seymour-umbrel-app-store","targetBranch":"master","requires":["SBP-023"]}

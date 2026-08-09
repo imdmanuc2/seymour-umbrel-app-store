@@ -94,25 +94,42 @@ def docker_container_inspect(name: str=BCH_NODE_CONTAINER)->dict[str,Any]:
   out.update({"found":True,"status":str(state.get("Status") or "unknown"),"running":bool(state.get("Running")),"health":str(health.get("Status") or "none"),"containerId":str(payload.get("Id") or '')[:12] or None}); return out
  except Exception as exc: out["error"]=str(exc); return out
 
-def http_json(url: str)->dict[str,Any]:
- out={"url":url,"reachable":False,"httpStatus":None,"payload":None,"error":None}
- try:
-  with request.urlopen(url,timeout=4) as r:
-   raw=r.read().decode(); out["httpStatus"]=int(r.status); out["reachable"]=True
-   try: out["payload"]=json.loads(raw)
-   except json.JSONDecodeError: out["payload"]={"raw":raw}
- except error.HTTPError as exc:
-  out["httpStatus"]=int(exc.code); out["error"]=f"HTTP {exc.code}: {exc.reason}"
-  try:
-   raw=exc.read().decode(); out["payload"]=json.loads(raw) if raw else None
-  except Exception: pass
- except Exception as exc: out["error"]=str(exc)
- return out
+def http_json(
+    url: str,
+    timeout: int = 8,
+) -> dict[str, Any]:
+    out = {
+        "url": url,
+        "reachable": False,
+        "httpStatus": None,
+        "payload": None,
+        "error": None,
+    }
+    try:
+        with request.urlopen(url, timeout=timeout) as response:
+            raw = response.read().decode()
+            out["httpStatus"] = int(response.status)
+            out["reachable"] = True
+            try:
+                out["payload"] = json.loads(raw)
+            except json.JSONDecodeError:
+                out["payload"] = {"raw": raw}
+    except error.HTTPError as exc:
+        out["httpStatus"] = int(exc.code)
+        out["error"] = f"HTTP {exc.code}: {exc.reason}"
+        try:
+            raw = exc.read().decode()
+            out["payload"] = json.loads(raw) if raw else None
+        except Exception:
+            pass
+    except Exception as exc:
+        out["error"] = str(exc)
+    return out
 
 def probe()->dict[str,Any]:
  container=docker_container_inspect()
- legacy_health=http_json(BCH_HEALTH_URL)
- legacy_status=http_json(BCH_STATUS_URL)
+ legacy_health=http_json(BCH_HEALTH_URL, timeout=8)
+ legacy_status=http_json(BCH_STATUS_URL, timeout=25)
  rpc_probe=probe_bch_rpc()
  installed=bool(container.get("found")); running=bool(container.get("running"))
  rpc=bool(rpc_probe.get("reachable") and rpc_probe.get("healthy"))

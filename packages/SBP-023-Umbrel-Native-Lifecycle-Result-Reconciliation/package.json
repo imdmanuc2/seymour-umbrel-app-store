@@ -1,0 +1,6 @@
+{
+  "package": "SBP-023",
+  "name": "Umbrel Native Lifecycle Result Reconciliation",
+  "targetRepository": "seymour-umbrel-app-store",
+  "targetBranch": "master"
+}
