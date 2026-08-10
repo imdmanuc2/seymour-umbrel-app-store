@@ -1,0 +1,7 @@
+{
+  "package": "SBP-035",
+  "name": "Lifecycle API / Frontend Contract Integration",
+  "targetRepository": "seymour-umbrel-app-store",
+  "targetBranch": "master",
+  "requires": ["SBP-034", "SBP-033", "SBP-032", "SBP-031", "SBP-030"]
+}
