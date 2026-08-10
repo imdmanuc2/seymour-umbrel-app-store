@@ -1,0 +1,8 @@
+{
+  "package": "SBP-036.1",
+  "name": "Blockchain Manager Runtime Integration & Deployment Repair",
+  "dependsOn": [
+    "SBP-036"
+  ],
+  "liveLifecycleWritesDuringVerify": false
+}

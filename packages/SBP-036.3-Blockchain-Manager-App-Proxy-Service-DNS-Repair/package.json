@@ -1,0 +1,9 @@
+{
+  "package": "SBP-036.3",
+  "name": "Blockchain Manager App Proxy Service DNS Repair",
+  "dependsOn": [
+    "SBP-036.2"
+  ],
+  "rootCause": "app_proxy targeted generated underscore container name instead of stable compose service alias",
+  "liveLifecycleWritesDuringVerify": false
+}

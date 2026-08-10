@@ -1,0 +1,8 @@
+{
+  "package": "SBP-036.2",
+  "name": "Installed App Runtime Synchronization",
+  "dependsOn": [
+    "SBP-036.1"
+  ],
+  "liveLifecycleWritesDuringVerify": false
+}
