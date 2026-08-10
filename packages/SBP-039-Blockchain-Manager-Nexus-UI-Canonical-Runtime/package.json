@@ -1,0 +1,12 @@
+{
+  "package": "SBP-039",
+  "name": "Blockchain Manager Nexus UI & Canonical Runtime Integration",
+  "dependsOn": [
+    "SBP-038"
+  ],
+  "scope": [
+    "frontend",
+    "canonical-runtime-ui"
+  ],
+  "liveLifecycleWritesDuringVerify": false
+}

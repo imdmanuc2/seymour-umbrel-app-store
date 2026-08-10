@@ -1,0 +1,14 @@
+{
+  "package": "SBP-041",
+  "name": "Runtime Status Stabilization & Sync Presentation",
+  "dependsOn": [
+    "SBP-040"
+  ],
+  "scope": [
+    "frontend",
+    "runtime-presentation"
+  ],
+  "presentationGraceSeconds": 20,
+  "canonicalBackendStateModified": false,
+  "liveLifecycleWritesDuringVerify": false
+}

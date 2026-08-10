@@ -9,8 +9,8 @@ from runtime_state import normalize_runtime_state
 
 DOCKER_SOCKET=Path(os.environ.get("DOCKER_SOCKET","/var/run/docker.sock"))
 BCH_NODE_CONTAINER=os.environ.get("BCH_NODE_CONTAINER","seymour-bch-node_node_1")
-BCH_HEALTH_URL=os.environ.get("BCH_HEALTH_URL","http://seymour-bch-node_status_1:8080/api/health")
-BCH_STATUS_URL=os.environ.get("BCH_STATUS_URL","http://seymour-bch-node_status_1:8080/api/status")
+BCH_HEALTH_URL=os.environ.get("BCH_HEALTH_URL","http://status:8080/api/health")
+BCH_STATUS_URL=os.environ.get("BCH_STATUS_URL","http://status:8080/api/status")
 
 def _decode_chunked(body: bytes) -> bytes:
  out = bytearray()

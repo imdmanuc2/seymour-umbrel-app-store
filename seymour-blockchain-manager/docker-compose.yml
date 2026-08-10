@@ -19,8 +19,8 @@ services:
     environment:
       PROVIDER_CATALOG_PATH: /catalog/providers.v1.json
       BCH_APP_ID: seymour-bch-node
-      BCH_HEALTH_URL: http://seymour-bch-node_status_1:8080/api/health
-      BCH_STATUS_URL: http://seymour-bch-node_status_1:8080/api/status
+      BCH_HEALTH_URL: http://status:8080/api/health
+      BCH_STATUS_URL: http://status:8080/api/status
       BCH_RPC_URL: ${BCH_RPC_URL:-http://seymour-bch-node_node_1:8332/}
       BCH_RPC_USER: ${BCH_RPC_USER:-}
       BCH_RPC_PASSWORD: ${BCH_RPC_PASSWORD:-}

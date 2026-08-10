@@ -11,16 +11,17 @@ import subprocess
 import time
 from typing import Any
 from urllib import request
+from bch_runtime_probe import probe as probe_bch_runtime
 
 
 BCH_APP_ID = os.environ.get("BCH_APP_ID", "seymour-bch-node")
 BCH_HEALTH_URL = os.environ.get(
     "BCH_HEALTH_URL",
-    "http://seymour-bch-node_status_1:8080/api/health",
+    "http://status:8080/api/health",
 )
 BCH_STATUS_URL = os.environ.get(
     "BCH_STATUS_URL",
-    "http://seymour-bch-node_status_1:8080/api/status",
+    "http://status:8080/api/status",
 )
 BCH_DATA_PATH = Path(
     os.environ.get(
@@ -294,63 +295,84 @@ def normalized_sync(status: dict[str, Any]) -> dict[str, Any]:
 
 
 def bch_telemetry() -> dict[str, Any]:
-    container = docker_container(
-        f"{BCH_APP_ID}_node_1"
-    )
-    health = read_json_url(BCH_HEALTH_URL)
-    status = read_json_url(BCH_STATUS_URL)
+    # Project the canonical BCH runtime probe into the dashboard contract.
+    runtime = probe_bch_runtime()
 
-    reachable = bool(
-        health.get("reachable", True)
-        and "error" not in health
+    operational_state = (
+        runtime.get("operationalState")
+        if isinstance(runtime.get("operationalState"), dict)
+        else {}
     )
-    sync = normalized_sync(status)
-
-    peers = (
-        status.get("connections")
-        or status.get("peers")
-        or status.get("peerCount")
-    )
-    mempool = (
-        status.get("mempoolBytes")
-        or status.get("mempoolSize")
-        or status.get("mempool")
+    rpc = runtime.get("rpc") if isinstance(runtime.get("rpc"), dict) else {}
+    rpc_probe = rpc.get("probe") if isinstance(rpc.get("probe"), dict) else {}
+    legacy_status = rpc.get("status") if isinstance(rpc.get("status"), dict) else {}
+    legacy_payload = (
+        legacy_status.get("payload")
+        if isinstance(legacy_status.get("payload"), dict)
+        else {}
     )
 
-    installed = container.get("found", False)
-    running = container.get("running", False)
+    runtime_state = operational_state.get("state") or runtime.get("lifecycleStatus") or "unknown"
 
-    if not installed:
-        lifecycle = "not-installed"
-    elif not running:
-        lifecycle = "stopped"
-    elif not reachable:
-        lifecycle = "error"
-    elif sync.get("progressPercent") is not None and sync[
-        "progressPercent"
-    ] < 99.999:
-        lifecycle = "syncing"
-    else:
-        lifecycle = "running"
+    progress = rpc_probe.get("progressPercent")
+    if progress is None:
+        verification = operational_state.get("verificationProgress")
+        if isinstance(verification, (int, float)):
+            progress = float(verification) * 100.0
+
+    sync = {
+        "height": rpc_probe.get("height"),
+        "headers": rpc_probe.get("headers"),
+        "progressPercent": progress,
+        "initialBlockDownload": (
+            rpc_probe.get("initialBlockDownload")
+            if rpc_probe.get("initialBlockDownload") is not None
+            else operational_state.get("initialBlockDownload")
+        ),
+    }
+
+    storage = legacy_payload.get("storage") if isinstance(legacy_payload.get("storage"), dict) else {}
+    used_bytes = storage.get("usedBytes")
+    if used_bytes is None:
+        used_bytes = directory_size(BCH_DATA_PATH)
+
+    rpc_reachable = bool(
+        operational_state.get("rpcReachable")
+        if operational_state.get("rpcReachable") is not None
+        else rpc_probe.get("reachable")
+    )
+    rpc_healthy = bool(
+        operational_state.get("rpcHealthy")
+        if operational_state.get("rpcHealthy") is not None
+        else rpc_probe.get("healthy")
+    )
 
     return {
         "providerId": "bitcoin-cash-mainnet",
-        "installed": installed,
-        "running": running,
-        "lifecycleStatus": lifecycle,
-        "container": container,
+        "appId": runtime.get("appId", BCH_APP_ID),
+        "installed": bool(runtime.get("installed")),
+        "running": bool(runtime.get("running")),
+        "lifecycleStatus": runtime_state,
+        "runtimeState": runtime_state,
+        "runtimeStateReason": operational_state.get("reason"),
+        "runtimeRpcReachable": rpc_reachable,
+        "runtimeRpcHealthy": rpc_healthy,
+        "runtimeInitialBlockDownload": sync["initialBlockDownload"],
+        "runtimeVerificationProgress": operational_state.get("verificationProgress"),
+        "operationalState": operational_state,
+        "container": runtime.get("container", {}),
         "rpc": {
-            "reachable": reachable,
-            "health": health,
+            "reachable": rpc_reachable,
+            "healthy": rpc_healthy,
+            "probe": rpc_probe,
         },
         "sync": sync,
-        "peers": peers,
-        "mempool": mempool,
+        "peers": rpc_probe.get("peers"),
+        "mempool": None,
         "data": {
             "path": str(BCH_DATA_PATH),
-            "usedBytes": directory_size(BCH_DATA_PATH),
+            "usedBytes": used_bytes,
         },
-        "rawStatus": status,
     }
 
 

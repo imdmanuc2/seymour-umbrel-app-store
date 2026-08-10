@@ -3,7 +3,10 @@ const state = {
   telemetry: {},
   family: "all",
   query: "",
+  runtimePresentation: {},
 };
+
+const RUNTIME_PRESENTATION_GRACE_MS = 20000;
 
 const grid = document.getElementById("providerGrid");
 const filters = document.getElementById("filters");
@@ -27,17 +30,70 @@ function providerTelemetry(providerId) {
   return state.telemetry.providers?.[providerId] || null;
 }
 
-function lifecycle(provider) {
+function rawRuntimeState(provider) {
   const telemetry = providerTelemetry(provider.providerId);
   if (provider.availability !== "live") return "coming-soon";
-  return telemetry?.lifecycleStatus || "unknown";
+
+  return (
+    telemetry?.runtimeState ||
+    telemetry?.operationalState?.state ||
+    telemetry?.runtime?.runtimeState ||
+    telemetry?.lifecycleStatus ||
+    "unknown"
+  );
+}
+
+function presentedRuntime(provider) {
+  const providerId = provider.providerId;
+  const telemetry = providerTelemetry(providerId);
+  const rawState = rawRuntimeState(provider);
+  const now = Date.now();
+
+  if (provider.availability !== "live") {
+    return {state: rawState, telemetry, graceHeld: false};
+  }
+
+  const current = state.runtimePresentation[providerId] || null;
+  const isGoodLiveState = ["running", "syncing", "starting"].includes(rawState);
+
+  if (isGoodLiveState) {
+    state.runtimePresentation[providerId] = {
+      state: rawState,
+      telemetry,
+      lastGoodAt: now,
+    };
+    return {state: rawState, telemetry, graceHeld: false};
+  }
+
+  if (
+    current &&
+    current.state === "syncing" &&
+    ["degraded", "unknown"].includes(rawState) &&
+    now - current.lastGoodAt <= RUNTIME_PRESENTATION_GRACE_MS
+  ) {
+    return {
+      state: "syncing",
+      telemetry: current.telemetry,
+      graceHeld: true,
+      rawState,
+    };
+  }
+
+  return {state: rawState, telemetry, graceHeld: false};
+}
+
+function lifecycle(provider) {
+  return presentedRuntime(provider).state;
 }
 
 function lifecycleLabel(value) {
   return {
     "running": "Running",
     "syncing": "Syncing",
+    "starting": "Starting",
+    "degraded": "Degraded",
     "stopped": "Stopped",
+    "offline": "Offline",
     "error": "Error",
     "not-installed": "Not installed",
     "unknown": "Unknown",
@@ -125,7 +181,8 @@ function renderFilters() {
 }
 
 function liveMetrics(provider) {
-  const telemetry = providerTelemetry(provider.providerId);
+  const presentation = presentedRuntime(provider);
+  const telemetry = presentation.telemetry;
   if (!telemetry) return "";
 
   const sync = telemetry.sync || {};
@@ -136,22 +193,53 @@ function liveMetrics(provider) {
       ? formatBytes(telemetry.mempool)
       : telemetry.mempool ?? "—";
 
-  return `
-    ${progress !== null && progress !== undefined
-      ? progressBar(progress, "Sync")
-      : ""}
+  const height = sync.height ?? "—";
+  const headers = sync.headers ?? "—";
+  const blockContext =
+    sync.height !== null && sync.height !== undefined &&
+    sync.headers !== null && sync.headers !== undefined
+      ? `${Number(sync.height).toLocaleString()} / ${Number(sync.headers).toLocaleString()}`
+      : "—";
 
+  const rpcHealthy =
+    telemetry.runtimeRpcHealthy ??
+    telemetry.rpc?.healthy ??
+    telemetry.rpc?.reachable ??
+    false;
+
+  return `
+    ${
+      progress !== null && progress !== undefined
+        ? `
+          <div class="sync-progress-block">
+            ${progressBar(progress, "Sync progress")}
+            <div class="sync-context">
+              <span>Blocks</span>
+              <strong>${blockContext}</strong>
+            </div>
+          </div>
+        `
+        : ""
+    }
+    ${
+      presentation.graceHeld
+        ? `
+          <div class="telemetry-grace-note">
+            Live telemetry reconnecting · showing last confirmed sync state
+          </div>
+        `
+        : ""
+    }
     <dl class="metadata live-metadata">
-      <div><dt>Height</dt><dd>${sync.height ?? "—"}</dd></div>
-      <div><dt>Headers</dt><dd>${sync.headers ?? "—"}</dd></div>
+      <div><dt>Height</dt><dd>${height}</dd></div>
+      <div><dt>Headers</dt><dd>${headers}</dd></div>
       <div><dt>Peers</dt><dd>${peerValue}</dd></div>
       <div><dt>Mempool</dt><dd>${mempoolValue}</dd></div>
       <div><dt>Chain data</dt><dd>${formatBytes(telemetry.data?.usedBytes)}</dd></div>
-      <div><dt>RPC</dt><dd>${telemetry.rpc?.reachable ? "Healthy" : "Unavailable"}</dd></div>
+      <div><dt>RPC</dt><dd class="${rpcHealthy ? "metric-good" : "metric-bad"}">${rpcHealthy ? "Healthy" : "Unavailable"}</dd></div>
     </dl>
   `;
 }
-
 
 function renderProviders() {
   const providers = filteredProviders();
@@ -187,18 +275,11 @@ function renderProviders() {
         }
 
         <div class="card-actions">
-          <button class="secondary" data-details="${provider.providerId}">
-            View details
-          </button>
-
           ${
             provider.selectable
               ? `
-                <button class="secondary" data-sync="${provider.providerId}">
-                  Sync
-                </button>
-                <button class="secondary" data-adopt="${provider.providerId}">
-                  Adopt
+                <button class="secondary" data-details="${provider.providerId}">
+                  Open
                 </button>
                 <button class="secondary" data-operations="${provider.providerId}">
                   Operations
@@ -207,7 +288,12 @@ function renderProviders() {
                   Manage
                 </button>
               `
-              : `<button class="disabled" disabled>Coming soon</button>`
+              : `
+                <button class="secondary" data-details="${provider.providerId}">
+                  View details
+                </button>
+                <button class="disabled" disabled>Coming soon</button>
+              `
           }
         </div>
       </article>
@@ -276,24 +362,55 @@ function showManage(providerId) {
   const provider = state.providers.find(
     (item) => item.providerId === providerId
   );
-  const telemetry = providerTelemetry(providerId);
+  const presentation = presentedRuntime(provider);
+  const telemetry = presentation.telemetry || {};
+  const runtimeState = presentation.state;
+  const sync = telemetry.sync || {};
+  const progress =
+    sync.progressPercent !== null && sync.progressPercent !== undefined
+      ? `${Number(sync.progressPercent).toFixed(2)}%`
+      : "—";
 
   dialogContent.innerHTML = `
     <p class="provider-family">management</p>
     <h2>${provider.displayName}</h2>
-    <p>
-      Current state:
-      <strong>${lifecycleLabel(lifecycle(provider))}</strong>
-    </p>
-    <div class="install-contract">
-      <code>App ID: ${provider.installAction?.appId || "—"}</code>
-      <code>Image: ${provider.productionImage || "—"}</code>
-      <code>RPC: ${telemetry?.rpc?.reachable ? "Healthy" : "Unavailable"}</code>
+
+    <div class="runtime-banner">
+      <strong>
+        <span class="runtime-state-dot ${runtimeState}"></span>
+        ${lifecycleLabel(runtimeState)}
+      </strong>
+      <span>${runtimeState === "syncing" ? progress + " verified" : "Canonical runtime state"}</span>
     </div>
-    <p>
-      Lifecycle buttons will be enabled by the next guarded operations package.
-    </p>
+
+    <div class="manage-grid">
+      <article><span>RPC</span><strong>${telemetry.rpc?.reachable ? "Healthy" : "Unavailable"}</strong></article>
+      <article><span>Height</span><strong>${sync.height ?? "—"}</strong></article>
+      <article><span>Headers</span><strong>${sync.headers ?? "—"}</strong></article>
+      <article><span>Peers</span><strong>${telemetry.peers ?? "—"}</strong></article>
+      <article><span>Chain data</span><strong>${formatBytes(telemetry.data?.usedBytes)}</strong></article>
+      <article><span>App ID</span><strong>${provider.installAction?.appId || "—"}</strong></article>
+    </div>
+
+    <div class="manage-actions">
+      <button class="secondary" id="manageSync">Sync</button>
+      <button class="secondary" id="manageOperations">Operations</button>
+      <button class="secondary" id="manageAdopt">Adopt</button>
+    </div>
   `;
+
+  document.getElementById("manageSync")?.addEventListener("click", () => {
+    dialog.close();
+    showSyncManager(providerId);
+  });
+  document.getElementById("manageOperations")?.addEventListener("click", () => {
+    dialog.close();
+    showOperationsCenter(providerId);
+  });
+  document.getElementById("manageAdopt")?.addEventListener("click", () => {
+    dialog.close();
+    showAdoptionWizard(providerId);
+  });
 
   dialog.showModal();
 }

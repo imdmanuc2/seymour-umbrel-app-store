@@ -1,0 +1,7 @@
+{
+  "package": "SBP-040",
+  "name": "Blockchain Manager Live Runtime Status UI Fix",
+  "dependsOn": ["SBP-039"],
+  "scope": ["dashboard", "canonical-runtime", "frontend-status"],
+  "liveLifecycleWritesDuringVerify": false
+}
