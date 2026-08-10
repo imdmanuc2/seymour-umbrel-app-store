@@ -7,8 +7,8 @@ LIFECYCLE_ACTIONS = (
 )
 
 LIFECYCLE_STATES = (
-    "not-installed", "installing", "stopped", "starting", "running",
-    "restarting", "updating", "uninstalling", "degraded", "error", "unknown",
+    "not-installed", "installing", "stopped", "starting", "syncing", "running",
+    "restarting", "updating", "uninstalling", "degraded", "offline", "error", "unknown",
 )
 
 @dataclass(frozen=True)

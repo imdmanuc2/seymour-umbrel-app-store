@@ -1,0 +1,18 @@
+{
+  "package": "SBP-037",
+  "name": "Canonical Runtime State Reconciliation",
+  "dependsOn": [
+    "SBP-036.3"
+  ],
+  "canonicalStates": [
+    "starting",
+    "syncing",
+    "running",
+    "degraded",
+    "stopped",
+    "offline",
+    "error",
+    "unknown"
+  ],
+  "liveLifecycleWritesDuringVerify": false
+}

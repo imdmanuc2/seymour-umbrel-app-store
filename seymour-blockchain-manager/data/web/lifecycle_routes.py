@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 from typing import Any, Mapping
 
+from bch_runtime_probe import probe as probe_bch_runtime
+
 
 class LifecycleHttpUnavailable(RuntimeError):
     pass
@@ -35,6 +37,7 @@ class LifecycleHttpAdapter:
         try:
             from shared.app_lifecycle import (
                 AppLifecycleEngine,
+                CanonicalRuntimeStateProvider,
                 LifecycleApiFacade,
                 LifecycleAuditRecorder,
                 LifecycleAuditStore,
@@ -77,7 +80,17 @@ class LifecycleHttpAdapter:
             endpoint=endpoint,
             evidence_directory=evidence_directory,
         )
-        executor = LifecycleExecutor(bridge, AppLifecycleEngine())
+        bch_app_id = os.environ.get('BCH_APP_ID', 'seymour-bch-node')
+        state_provider = CanonicalRuntimeStateProvider(
+            app_urls={},
+            app_probes={bch_app_id: probe_bch_runtime},
+            timeout_seconds=3.0,
+        )
+        executor = LifecycleExecutor(
+            bridge,
+            AppLifecycleEngine(),
+            state_provider=state_provider,
+        )
         audit = LifecycleAuditRecorder(LifecycleAuditStore(audit_path))
         operations = LifecycleOperationService(executor, audit_recorder=audit)
         return LifecycleApiFacade(operations)

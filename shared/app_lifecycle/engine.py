@@ -15,11 +15,13 @@ _ALLOWED = {
     "installing": set(),
     "stopped": {"start", "update", "uninstall"},
     "starting": set(),
+    "syncing": {"stop", "restart"},
     "running": {"stop", "restart", "update", "uninstall"},
     "restarting": set(),
     "updating": set(),
     "uninstalling": set(),
     "degraded": {"stop", "restart", "update", "uninstall"},
+    "offline": {"start"},
     "error": {"start", "stop", "restart", "update", "uninstall"},
     "unknown": set(),
 }

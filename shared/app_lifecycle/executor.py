@@ -96,11 +96,21 @@ class LifecycleExecutionResult:
 class LifecycleExecutor:
     """Canonical adapter from lifecycle planning to the existing native Umbrel bridge."""
 
-    def __init__(self, bridge: Any, engine: AppLifecycleEngine | None = None) -> None:
+    def __init__(
+        self,
+        bridge: Any,
+        engine: AppLifecycleEngine | None = None,
+        state_provider: Any | None = None,
+    ) -> None:
         self.bridge = bridge
         self.engine = engine or AppLifecycleEngine()
+        self.state_provider = state_provider
 
     def read_state(self, app_id: str) -> LifecycleState:
+        if self.state_provider is not None:
+            canonical = self.state_provider.read_state(app_id, self.engine)
+            if canonical is not None:
+                return canonical
         operation = self.bridge.execute("state", app_id)
         return native_state_snapshot(app_id, operation, self.engine)
 

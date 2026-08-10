@@ -1,0 +1,8 @@
+{
+  "package": "SBP-038",
+  "name": "Canonical Runtime State Service",
+  "dependsOn": [
+    "SBP-037"
+  ],
+  "liveLifecycleWritesDuringVerify": false
+}
