@@ -1,0 +1,26 @@
+{
+  "contract": "seymour.lifecycle-result",
+  "version": "1.0",
+  "sourceContract": "seymour.app-lifecycle-execution/1.0",
+  "purpose": "Stable platform-facing lifecycle result projection",
+  "fields": [
+    "contract",
+    "version",
+    "correlation_id",
+    "observed_at",
+    "app_id",
+    "action",
+    "allowed",
+    "executed",
+    "success",
+    "before_state",
+    "after_state",
+    "lifecycle_state",
+    "reason",
+    "error",
+    "confirmation_required",
+    "evidence"
+  ],
+  "nativeEvidenceOpaque": true,
+  "directDockerLifecycle": false
+}
