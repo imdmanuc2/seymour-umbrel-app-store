@@ -1,0 +1,22 @@
+{
+  "contract": "seymour.lifecycle-audit-record",
+  "version": "1.0",
+  "storage": "append-only-jsonl",
+  "defaultPath": "~/.seymour/lifecycle/audit-events.jsonl",
+  "pathEnvironmentVariable": "SEYMOUR_LIFECYCLE_AUDIT_PATH",
+  "bestEffort": true,
+  "executionOutcomeIndependent": true,
+  "directDockerLifecycle": false,
+  "repositoryRuntimeData": false,
+  "fields": [
+    "audit_id",
+    "recorded_at",
+    "event"
+  ],
+  "historyFilters": [
+    "app_id",
+    "action",
+    "event_type",
+    "correlation_id"
+  ]
+}
