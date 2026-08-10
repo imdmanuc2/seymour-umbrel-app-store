@@ -1,0 +1,6 @@
+{
+  "id": "SBP-036",
+  "name": "Blockchain Manager HTTP Lifecycle Route Integration",
+  "version": "1.0.0",
+  "dependsOn": ["SBP-030", "SBP-031", "SBP-032", "SBP-033", "SBP-034", "SBP-035"]
+}

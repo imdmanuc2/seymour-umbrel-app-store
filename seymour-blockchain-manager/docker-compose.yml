@@ -28,6 +28,9 @@ services:
       BCH_DATA_PATH: /bch-data
       DOCKER_SOCKET: /var/run/docker.sock
       SEYMOUR_UMBREL_CONTROL_SCRIPT: /control/seymour-umbrel-app
+      SEYMOUR_PLATFORM_ROOT: /seymour-platform
+      SEYMOUR_LIFECYCLE_AUDIT_PATH: /evidence/lifecycle-audit.jsonl
+      SEYMOUR_LIFECYCLE_NATIVE_EVIDENCE_PATH: /evidence/native-app-control
       LIFECYCLE_EVIDENCE_PATH: /evidence/lifecycle.jsonl
       SEYMOUR_BCH_INSTALL_SCRIPT: /control/seymour-install-bch
       INSTALL_EVIDENCE_PATH: /evidence/installations.jsonl
@@ -59,4 +62,5 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${APP_DATA_DIR}/data/evidence:/evidence
       - /home/umbrel/seymour-umbrel-app-store-git/scripts:/control:ro
+      - /home/umbrel/seymour-umbrel-app-store-git/shared:/seymour-platform/shared:ro
       - /home/umbrel/umbrel/app-data/seymour-bch-node/data/node:/bch-data:ro

@@ -5,7 +5,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
 from pathlib import Path
-from urllib.parse import unquote
+from urllib.parse import parse_qs, unquote, urlparse
 
 from telemetry import dashboard_payload
 from bch_runtime_probe import probe as probe_bch_runtime
@@ -33,6 +33,7 @@ from operations_center import (
     recommendations,
 )
 from lifecycle import GuardedLifecycleService, LifecycleAction
+from lifecycle_routes import LIFECYCLE_HTTP
 
 
 CATALOG_PATH = Path(
@@ -137,6 +138,15 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self) -> None:
+        if self.path.startswith("/api/lifecycle/history"):
+            query = {
+                key: values[-1]
+                for key, values in parse_qs(urlparse(self.path).query).items()
+                if values
+            }
+            payload, status = LIFECYCLE_HTTP.history(query)
+            self.send_json(payload, status=status)
+            return
         if self.path.startswith("/api/adoption/plans/"):
             operation_id = self.path.rsplit("/", 1)[-1]
             try:
@@ -272,6 +282,15 @@ class Handler(BaseHTTPRequestHandler):
 
 
     def do_POST(self) -> None:
+        if self.path == "/api/lifecycle/operation":
+            try:
+                body = self.read_json_body()
+            except (ValueError, json.JSONDecodeError) as exc:
+                self.send_json({"error": "invalid-json", "message": str(exc)}, status=HTTPStatus.BAD_REQUEST)
+                return
+            payload, status = LIFECYCLE_HTTP.operation(body)
+            self.send_json(payload, status=status)
+            return
         if self.path == "/api/nexus/scheduler/run":
             result = nexus_refresh_once()
 
@@ -366,16 +385,14 @@ class Handler(BaseHTTPRequestHandler):
         if not self.path.startswith(prefix):
             self.send_error(HTTPStatus.NOT_FOUND)
             return
-        action = LifecycleAction(self.path[len(prefix):])
-        length = int(self.headers.get("Content-Length", "0"))
-        body = json.loads(self.rfile.read(length).decode()) if length else {}
-        result = LIFECYCLE.execute(
-            provider_id=str(body.get("providerId", "")),
-            app_id=str(body.get("appId", "")),
-            action=action,
-            confirmation=body.get("confirmation"),
-        )
-        self.send_json(result.to_dict(), status=HTTPStatus.OK if result.status.value == "succeeded" else HTTPStatus.BAD_REQUEST)
+        action = unquote(self.path[len(prefix):]).strip().lower()
+        try:
+            body = self.read_json_body()
+        except (ValueError, json.JSONDecodeError) as exc:
+            self.send_json({"error": "invalid-json", "message": str(exc)}, status=HTTPStatus.BAD_REQUEST)
+            return
+        payload, status = LIFECYCLE_HTTP.legacy_operation(action, body)
+        self.send_json(payload, status=status)
 
     def log_message(
         self,
