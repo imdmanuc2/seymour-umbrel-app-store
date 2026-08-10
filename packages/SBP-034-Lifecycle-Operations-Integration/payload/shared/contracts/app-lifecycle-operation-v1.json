@@ -1,0 +1,17 @@
+{
+  "contract": "seymour.lifecycle-operation-response",
+  "version": "1.0",
+  "purpose": "Operations-facing composition of canonical lifecycle execution, projection, and audit",
+  "executionOwner": "SBP-031 LifecycleExecutor",
+  "projectionOwner": "SBP-032 LifecycleResultProjector",
+  "auditOwner": "SBP-033 LifecycleAuditRecorder",
+  "duplicateExecutionPath": false,
+  "directDockerLifecycle": false,
+  "auditBestEffort": true,
+  "fields": ["result", "event", "audit"],
+  "writeSafety": {
+    "planningDefault": true,
+    "executeFlagRequired": true,
+    "confirmationTokenRequiredForWrites": true
+  }
+}
