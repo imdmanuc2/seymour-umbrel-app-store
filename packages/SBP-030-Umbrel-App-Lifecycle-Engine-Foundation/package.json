@@ -1,0 +1,9 @@
+{
+  "package": "SBP-030",
+  "name": "Umbrel App Lifecycle Engine Foundation",
+  "targetRepository": "seymour-umbrel-app-store",
+  "targetBranch": "master",
+  "requires": [
+    "SBP-024"
+  ]
+}

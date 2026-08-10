@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from shared.app_lifecycle import AppLifecycleEngine, LifecycleExecutor
+from shared.umbrel_control import UmbrelAppControlBridge
+
+
+def parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(description="Seymour canonical Umbrel app lifecycle interface")
+    p.add_argument("app_id")
+    p.add_argument(
+        "action",
+        choices=["capabilities", "install", "start", "stop", "restart", "update", "uninstall"],
+    )
+    p.add_argument("--state", default="unknown", help="Planning-only native state override")
+    p.add_argument("--installed", action="store_true", help="Planning-only installed override")
+    p.add_argument("--running", action="store_true", help="Planning-only running override")
+    p.add_argument("--healthy", choices=["true", "false", "unknown"], default="unknown")
+    p.add_argument("--live", action="store_true", help="Read current state from native Umbrel bridge")
+    p.add_argument("--execute", action="store_true", help="Execute an allowed native Umbrel write action")
+    p.add_argument("--confirmation", default=None, help="Exact confirmation token for write execution")
+    p.add_argument(
+        "--helper-path",
+        default=str(ROOT / "shared/umbrel_control/native-client.ts"),
+        help="Native Umbrel helper path",
+    )
+    p.add_argument("--data-directory", default="/home/umbrel/umbrel")
+    p.add_argument("--endpoint", default="ws://localhost/trpc")
+    return p
+
+
+def main() -> int:
+    args = parser().parse_args()
+    engine = AppLifecycleEngine()
+
+    if args.live or args.execute:
+        bridge = UmbrelAppControlBridge(
+            helper_path=Path(args.helper_path),
+            data_directory=Path(args.data_directory),
+            endpoint=args.endpoint,
+        )
+        executor = LifecycleExecutor(bridge, engine)
+        if args.action == "capabilities":
+            state = executor.read_state(args.app_id)
+            payload = {
+                "appId": state.app_id,
+                "state": state.as_dict(),
+                "capabilities": engine.capabilities(state),
+                "source": "native-umbrel",
+            }
+        else:
+            payload = executor.execute(
+                args.app_id,
+                args.action,
+                execute=args.execute,
+                confirmation=args.confirmation,
+            ).as_dict()
+        print(json.dumps(payload, indent=2))
+        return 0 if payload.get("success", True) is not False else 2
+
+    healthy = True if args.healthy == "true" else False if args.healthy == "false" else None
+    state = engine.normalize_state(
+        app_id=args.app_id,
+        installed=args.installed,
+        running=args.running,
+        native_state=args.state,
+        healthy=healthy,
+    )
+    payload = (
+        {"appId": state.app_id, "state": state.as_dict(), "capabilities": engine.capabilities(state), "source": "planner"}
+        if args.action == "capabilities"
+        else engine.plan(state, args.action).as_dict()
+    )
+    print(json.dumps(payload, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

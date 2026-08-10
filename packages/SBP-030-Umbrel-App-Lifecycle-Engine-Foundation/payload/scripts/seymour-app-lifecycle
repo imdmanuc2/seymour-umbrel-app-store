@@ -1,0 +1,33 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+import argparse, json, sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from shared.app_lifecycle import AppLifecycleEngine
+
+p = argparse.ArgumentParser()
+p.add_argument("app_id")
+p.add_argument("action", choices=["capabilities","install","start","stop","restart","update","uninstall"])
+p.add_argument("--state", default="unknown")
+p.add_argument("--installed", action="store_true")
+p.add_argument("--running", action="store_true")
+p.add_argument("--healthy", choices=["true","false","unknown"], default="unknown")
+args = p.parse_args()
+
+healthy = True if args.healthy == "true" else False if args.healthy == "false" else None
+engine = AppLifecycleEngine()
+state = engine.normalize_state(
+    app_id=args.app_id,
+    installed=args.installed,
+    running=args.running,
+    native_state=args.state,
+    healthy=healthy,
+)
+payload = (
+    {"appId": state.app_id, "state": state.as_dict(), "capabilities": engine.capabilities(state)}
+    if args.action == "capabilities"
+    else engine.plan(state, args.action).as_dict()
+)
+print(json.dumps(payload, indent=2))

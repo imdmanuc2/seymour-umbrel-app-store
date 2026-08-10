@@ -1,0 +1,25 @@
+{
+  "contract": "seymour.app-lifecycle-execution",
+  "version": "1.0",
+  "plannerContract": "seymour.app-lifecycle/1.0",
+  "nativeBridge": "shared.umbrel_control.UmbrelAppControlBridge",
+  "writeOperationsRequireExecuteFlag": true,
+  "writeOperationsRequireConfirmation": true,
+  "preActionStateRead": true,
+  "postActionStateRead": true,
+  "directDockerLifecycle": false,
+  "nativeUmbrelLifecycleRequired": true,
+  "resultFields": [
+    "app_id",
+    "action",
+    "allowed",
+    "executed",
+    "success",
+    "reason",
+    "confirmation_token",
+    "before",
+    "after",
+    "native_operation",
+    "error"
+  ]
+}

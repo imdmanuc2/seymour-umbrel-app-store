@@ -1,0 +1,7 @@
+{
+  "package": "SBP-031",
+  "name": "Umbrel App Lifecycle Native Execution Adapter",
+  "targetRepository": "seymour-umbrel-app-store",
+  "targetBranch": "master",
+  "requires": ["SBP-030", "SBP-023"]
+}
