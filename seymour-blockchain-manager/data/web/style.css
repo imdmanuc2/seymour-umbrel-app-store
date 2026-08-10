@@ -684,3 +684,194 @@ body {
   background: #4d9cff;
   box-shadow: 0 0 9px rgba(77,156,255,.5);
 }
+
+
+/* SBP-042 — Nexus experience */
+.operational-summary {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.operational-summary article {
+  min-height: 92px;
+  padding: 15px 16px;
+}
+
+.operational-summary strong {
+  font-size: 26px;
+}
+
+.runtime-section {
+  margin-bottom: 22px;
+  padding: 18px;
+  border: 1px solid rgba(83,145,224,.24);
+  border-radius: 18px;
+  background: rgba(7,18,34,.82);
+}
+
+.section-heading,
+.runtime-focus-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.section-heading {
+  margin-bottom: 14px;
+}
+
+.section-heading h2,
+.catalog-heading h2 {
+  margin-bottom: 4px;
+}
+
+.section-note,
+.catalog-heading p {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.runtime-focus-card {
+  padding: 22px;
+  border: 1px solid rgba(77,156,255,.32);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(77,156,255,.13), transparent 38%),
+    rgba(10,27,46,.94);
+}
+
+.runtime-focus-card.syncing {
+  border-color: rgba(77,156,255,.55);
+}
+
+.runtime-focus-card.running {
+  border-color: rgba(67,217,155,.48);
+}
+
+.runtime-focus-card.degraded {
+  border-color: rgba(243,155,88,.48);
+}
+
+.runtime-focus-progress {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid rgba(77,156,255,.18);
+  border-radius: 13px;
+  background: rgba(4,15,28,.56);
+}
+
+.runtime-focus-progress .progress {
+  height: 14px;
+}
+
+.runtime-focus-blocks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.runtime-focus-blocks strong {
+  color: var(--text);
+}
+
+.runtime-focus-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.runtime-focus-kpis article {
+  padding: 13px 14px;
+  border: 1px solid rgba(83,145,224,.17);
+  border-radius: 12px;
+  background: rgba(5,17,31,.72);
+}
+
+.runtime-focus-kpis span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.runtime-focus-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 16px;
+}
+
+.runtime-focus-actions button {
+  min-width: 112px;
+  padding: 10px 14px;
+  border: 1px solid rgba(83,145,224,.28);
+  border-radius: 10px;
+  background: rgba(12,34,56,.95);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.runtime-focus-actions .primary {
+  background: #1a67b6;
+  border-color: rgba(80,155,237,.55);
+}
+
+.catalog-heading {
+  margin: 4px 0 10px;
+}
+
+.catalog-heading p {
+  margin: 0;
+}
+
+.catalog-card {
+  min-height: 360px;
+  opacity: .88;
+  background: rgba(10,25,42,.84);
+}
+
+.catalog-card:hover {
+  opacity: 1;
+}
+
+.catalog-card .status-pill {
+  font-size: 11px;
+}
+
+.catalog-actions {
+  grid-template-columns: 1fr 1fr !important;
+}
+
+@media (max-width: 1100px) {
+  .operational-summary {
+    grid-template-columns: repeat(3, minmax(0,1fr));
+  }
+  .runtime-focus-kpis {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .operational-summary {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+  .runtime-focus-heading,
+  .section-heading {
+    flex-direction: column;
+  }
+  .runtime-focus-kpis {
+    grid-template-columns: 1fr;
+  }
+  .runtime-focus-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .runtime-focus-actions button {
+    width: 100%;
+  }
+}

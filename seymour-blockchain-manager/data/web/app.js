@@ -14,6 +14,11 @@ const search = document.getElementById("search");
 const dialog = document.getElementById("providerDialog");
 const dialogContent = document.getElementById("dialogContent");
 
+function setText(id, value) {
+  const node = document.getElementById(id);
+  if (node) node.textContent = value;
+}
+
 function formatBytes(value) {
   if (value === null || value === undefined) return "—";
   const units = ["B", "KB", "MB", "GB", "TB"];
@@ -111,26 +116,184 @@ function progressBar(value, label) {
   `;
 }
 
+function installedProviders() {
+  return state.providers.filter(
+    (provider) => provider.availability === "live"
+  );
+}
+
+function plannedProviders() {
+  return state.providers.filter(
+    (provider) => provider.availability !== "live"
+  );
+}
+
+function renderOperationalSummary() {
+  const live = installedProviders();
+  const presentations = live.map((provider) => ({
+    provider,
+    presentation: presentedRuntime(provider),
+  }));
+
+  const syncing = presentations.filter(
+    ({presentation}) => presentation.state === "syncing"
+  ).length;
+  const running = presentations.filter(
+    ({presentation}) => presentation.state === "running"
+  ).length;
+  const degraded = presentations.filter(
+    ({presentation}) => presentation.state === "degraded"
+  ).length;
+
+  const rpcReachable = presentations.filter(({presentation}) => {
+    const telemetry = presentation.telemetry || {};
+    return Boolean(
+      telemetry.runtimeRpcReachable ??
+      telemetry.rpc?.reachable
+    );
+  }).length;
+
+  const peers = presentations.reduce((sum, {presentation}) => {
+    return sum + Number(presentation.telemetry?.peers || 0);
+  }, 0);
+
+  const diskBytes = presentations.reduce((sum, {presentation}) => {
+    return sum + Number(
+      presentation.telemetry?.data?.usedBytes || 0
+    );
+  }, 0);
+
+  const values = {
+    installedCount: live.length,
+    syncingCount: syncing,
+    runningCount: running,
+    rpcReachableCount: rpcReachable,
+    peerCount: peers,
+    runtimeDiskUsed: formatBytes(diskBytes),
+    degradedCount: degraded,
+  };
+
+  Object.entries(values).forEach(([id, value]) => {
+    const node = document.getElementById(id);
+    if (node) node.textContent = value;
+  });
+}
+
+function renderRuntimeFocus() {
+  const target = document.getElementById("runtimeFocus");
+  if (!target) return;
+
+  const live = installedProviders();
+  if (!live.length) {
+    target.innerHTML = `
+      <div class="empty-runtime-focus">
+        No managed blockchain runtime is currently installed.
+      </div>
+    `;
+    return;
+  }
+
+  const provider = live[0];
+  const presentation = presentedRuntime(provider);
+  const telemetry = presentation.telemetry || {};
+  const sync = telemetry.sync || {};
+  const stateLabel = lifecycleLabel(presentation.state);
+  const progress = Number(sync.progressPercent || 0);
+  const height = sync.height ?? "—";
+  const headers = sync.headers ?? "—";
+  const peers = telemetry.peers ?? "—";
+  const rpcHealthy =
+    telemetry.runtimeRpcHealthy ??
+    telemetry.rpc?.healthy ??
+    telemetry.rpc?.reachable ??
+    false;
+
+  target.innerHTML = `
+    <article class="runtime-focus-card ${presentation.state}">
+      <div class="runtime-focus-heading">
+        <div>
+          <p class="provider-family">managed runtime</p>
+          <h2>${provider.displayName}</h2>
+          <p class="implementation">
+            ${provider.implementation} ${provider.nodeVersion}
+          </p>
+        </div>
+        <span class="status-pill">${stateLabel}</span>
+      </div>
+
+      ${
+        presentation.state === "syncing"
+          ? `
+            <div class="runtime-focus-progress">
+              ${progressBar(progress, "Blockchain sync")}
+              <div class="runtime-focus-blocks">
+                <span>Blocks</span>
+                <strong>${Number(height).toLocaleString()} / ${Number(headers).toLocaleString()}</strong>
+              </div>
+            </div>
+          `
+          : ""
+      }
+
+      <div class="runtime-focus-kpis">
+        <article><span>Runtime</span><strong>${stateLabel}</strong></article>
+        <article><span>RPC</span><strong class="${rpcHealthy ? "metric-good" : "metric-bad"}">${rpcHealthy ? "Healthy" : "Unavailable"}</strong></article>
+        <article><span>Peers</span><strong>${peers}</strong></article>
+        <article><span>Chain data</span><strong>${formatBytes(telemetry.data?.usedBytes)}</strong></article>
+      </div>
+
+      <div class="runtime-focus-actions">
+        <button class="secondary" data-focus-details="${provider.providerId}">Open</button>
+        <button class="secondary" data-focus-operations="${provider.providerId}">Operations</button>
+        <button class="primary" data-focus-manage="${provider.providerId}">Manage</button>
+      </div>
+    </article>
+  `;
+
+  target.querySelector("[data-focus-details]")?.addEventListener(
+    "click",
+    () => showDetails(provider.providerId)
+  );
+  target.querySelector("[data-focus-operations]")?.addEventListener(
+    "click",
+    () => showOperationsCenter(provider.providerId)
+  );
+  target.querySelector("[data-focus-manage]")?.addEventListener(
+    "click",
+    () => showManage(provider.providerId)
+  );
+}
+
 function renderHost() {
   const host = state.telemetry.host;
   if (!host) return;
 
-  document.getElementById("hostCpu").textContent =
-    `${Number(host.cpuPercent || 0).toFixed(1)}%`;
+  setText(
+    "hostCpu",
+    `${Number(host.cpuPercent || 0).toFixed(1)}%`
+  );
 
-  document.getElementById("hostMemory").textContent =
-    `${Number(host.memory?.usedPercent || 0).toFixed(1)}%`;
+  setText(
+    "hostMemory",
+    `${Number(host.memory?.usedPercent || 0).toFixed(1)}%`
+  );
 
-  document.getElementById("hostStorage").textContent =
-    formatBytes(host.storage?.freeBytes);
+  setText(
+    "hostStorage",
+    formatBytes(host.storage?.freeBytes)
+  );
 
-  document.getElementById("hostDocker").textContent =
-    host.docker?.available ? "Online" : "Unavailable";
+  setText(
+    "hostDocker",
+    host.docker?.available ? "Online" : "Unavailable"
+  );
 
-  document.getElementById("hostArchitecture").textContent =
-    host.architecture || "—";
+  setText(
+    "hostArchitecture",
+    host.architecture || "—"
+  );
 
-  document.getElementById("hostPanel").classList.toggle(
+  document.getElementById("hostPanel")?.classList.toggle(
     "warning",
     !host.healthy
   );
@@ -242,18 +405,17 @@ function liveMetrics(provider) {
 }
 
 function renderProviders() {
-  const providers = filteredProviders();
+  const providers = filteredProviders().filter(
+    (provider) => provider.availability !== "live"
+  );
 
   grid.innerHTML = providers.map((provider) => {
-    const status = lifecycle(provider);
-
     return `
-      <article class="provider-card ${provider.availability} ${status}">
+      <article class="provider-card catalog-card ${provider.availability}">
         <div class="card-top">
           <div class="coin-badge">${provider.ticker}</div>
-          <span class="status-pill">${lifecycleLabel(status)}</span>
+          <span class="status-pill">Coming soon</span>
         </div>
-
         <div>
           <p class="provider-family">${provider.family}</p>
           <h2>${provider.displayName}</h2>
@@ -261,40 +423,16 @@ function renderProviders() {
             ${provider.implementation} ${provider.nodeVersion}
           </p>
         </div>
-
-        ${
-          provider.availability === "live"
-            ? liveMetrics(provider)
-            : `
-              <dl class="metadata">
-                <div><dt>Mining</dt><dd>${provider.miningAlgorithm}</dd></div>
-                <div><dt>Disk estimate</dt><dd>${formatBytes(provider.estimatedDiskBytes)}</dd></div>
-                <div><dt>Architecture</dt><dd>${provider.supportedArchitectures.join(" · ")}</dd></div>
-              </dl>
-            `
-        }
-
-        <div class="card-actions">
-          ${
-            provider.selectable
-              ? `
-                <button class="secondary" data-details="${provider.providerId}">
-                  Open
-                </button>
-                <button class="secondary" data-operations="${provider.providerId}">
-                  Operations
-                </button>
-                <button class="primary" data-manage="${provider.providerId}">
-                  Manage
-                </button>
-              `
-              : `
-                <button class="secondary" data-details="${provider.providerId}">
-                  View details
-                </button>
-                <button class="disabled" disabled>Coming soon</button>
-              `
-          }
+        <dl class="metadata">
+          <div><dt>Mining</dt><dd>${provider.miningAlgorithm}</dd></div>
+          <div><dt>Disk estimate</dt><dd>${formatBytes(provider.estimatedDiskBytes)}</dd></div>
+          <div><dt>Architecture</dt><dd>${provider.supportedArchitectures.join(" · ")}</dd></div>
+        </dl>
+        <div class="card-actions catalog-actions">
+          <button class="secondary" data-details="${provider.providerId}">
+            View details
+          </button>
+          <button class="disabled" disabled>Coming soon</button>
         </div>
       </article>
     `;
@@ -303,30 +441,6 @@ function renderProviders() {
   grid.querySelectorAll("[data-details]").forEach((button) => {
     button.addEventListener("click", () => {
       showDetails(button.dataset.details);
-    });
-  });
-
-  grid.querySelectorAll("[data-sync]").forEach((button) => {
-    button.addEventListener("click", () => {
-      showSyncManager(button.dataset.sync);
-    });
-  });
-
-  grid.querySelectorAll("[data-adopt]").forEach((button) => {
-    button.addEventListener("click", () => {
-      showAdoptionWizard(button.dataset.adopt);
-    });
-  });
-
-  grid.querySelectorAll("[data-operations]").forEach((button) => {
-    button.addEventListener("click", () => {
-      showOperationsCenter(button.dataset.operations);
-    });
-  });
-
-  grid.querySelectorAll("[data-manage]").forEach((button) => {
-    button.addEventListener("click", () => {
-      showManage(button.dataset.manage);
     });
   });
 }
@@ -420,18 +534,10 @@ async function loadCatalog() {
   if (!response.ok) throw new Error(`Catalog ${response.status}`);
   const payload = await response.json();
   state.providers = payload.providers;
-
-  const live = state.providers.filter(
-    (provider) => provider.availability === "live"
-  ).length;
-
-  document.getElementById("providerCount").textContent =
-    payload.providerCount;
-  document.getElementById("liveCount").textContent = live;
-  document.getElementById("plannedCount").textContent =
-    payload.providerCount - live;
-  document.getElementById("catalogStatus").textContent =
-    `Catalog ${payload.catalogVersion} · Live telemetry`;
+  setText(
+    "catalogStatus",
+    `Catalog ${payload.catalogVersion} · Live telemetry`
+  );
 
   renderFilters();
 }
@@ -442,10 +548,14 @@ async function refreshTelemetry() {
     if (!response.ok) throw new Error(`Dashboard ${response.status}`);
     state.telemetry = await response.json();
     renderHost();
+    renderOperationalSummary();
+    renderRuntimeFocus();
     renderProviders();
   } catch (error) {
-    document.getElementById("catalogStatus").textContent =
-      `Telemetry error: ${error.message}`;
+    setText(
+      "catalogStatus",
+      `Telemetry error: ${error.message}`
+    );
   }
 }
 

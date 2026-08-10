@@ -29,22 +29,53 @@
       <article><span>Architecture</span><strong id="hostArchitecture">—</strong></article>
     </section>
 
-    <section class="summary">
-      <article>
-        <span class="summary-label">Providers</span>
-        <strong id="providerCount">—</strong>
-      </article>
-      <article>
-        <span class="summary-label">Available now</span>
-        <strong id="liveCount">—</strong>
-      </article>
-      <article>
-        <span class="summary-label">Coming soon</span>
-        <strong id="plannedCount">—</strong>
-      </article>
-    </section>
+    <section class="summary operational-summary">
+        <article>
+          <span class="summary-label">Installed nodes</span>
+          <strong id="installedCount">0</strong>
+        </article>
+        <article>
+          <span class="summary-label">Syncing</span>
+          <strong id="syncingCount">0</strong>
+        </article>
+        <article>
+          <span class="summary-label">Running</span>
+          <strong id="runningCount">0</strong>
+        </article>
+        <article>
+          <span class="summary-label">RPC reachable</span>
+          <strong id="rpcReachableCount">0</strong>
+        </article>
+        <article>
+          <span class="summary-label">Peers</span>
+          <strong id="peerCount">0</strong>
+        </article>
+        <article>
+          <span class="summary-label">Runtime disk</span>
+          <strong id="runtimeDiskUsed">—</strong>
+        </article>
+      </section>
 
-    <section class="toolbar">
+      <section class="runtime-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Operational focus</p>
+            <h2>Managed blockchains</h2>
+          </div>
+          <span class="section-note">Live canonical runtime state</span>
+        </div>
+        <div id="runtimeFocus"></div>
+      </section>
+
+    <section class="catalog-heading">
+        <div>
+          <p class="eyebrow">Provider catalog</p>
+          <h2>Available next</h2>
+          <p>Explore planned blockchain runtimes without distracting from live operations.</p>
+        </div>
+      </section>
+
+      <section class="toolbar">
       <div class="filters" id="filters"></div>
       <input
         id="search"

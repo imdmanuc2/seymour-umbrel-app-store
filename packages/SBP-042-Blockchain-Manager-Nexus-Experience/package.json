@@ -1,0 +1,12 @@
+{
+  "package": "SBP-042",
+  "name": "Blockchain Manager Nexus Experience",
+  "dependsOn": [
+    "SBP-041"
+  ],
+  "scope": [
+    "frontend",
+    "nexus-experience"
+  ],
+  "liveLifecycleWritesDuringVerify": false
+}

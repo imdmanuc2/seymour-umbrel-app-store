@@ -1,0 +1,13 @@
+{
+  "package": "SBP-042.1",
+  "name": "Blockchain Manager DOM Contract Repair",
+  "dependsOn": [
+    "SBP-042"
+  ],
+  "scope": [
+    "frontend",
+    "dom-contract",
+    "repair"
+  ],
+  "liveLifecycleWritesDuringVerify": false
+}
