@@ -1,0 +1,15 @@
+{
+  "package": "SBP-046",
+  "name": "BCH Version 1 Acceptance & Freeze",
+  "dependsOn": [
+    "SBP-045"
+  ],
+  "scope": [
+    "acceptance",
+    "bch",
+    "freeze"
+  ],
+  "readOnly": true,
+  "liveLifecycleWritesDuringVerify": false,
+  "referenceProviderCandidate": true
+}
