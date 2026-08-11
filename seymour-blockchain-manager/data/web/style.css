@@ -875,3 +875,363 @@ body {
     width: 100%;
   }
 }
+
+
+/* SBP-043 — live operations experience */
+#providerDialog:has(.ops-shell) {
+  width: min(900px, calc(100% - 30px));
+}
+
+.ops-shell {
+  display: grid;
+  gap: 14px;
+}
+
+.ops-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  padding-bottom: 4px;
+}
+
+.ops-header h2 {
+  margin-bottom: 5px;
+}
+
+.ops-runtime-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.ops-runtime-strip article {
+  padding: 12px 13px;
+  border: 1px solid rgba(83,145,224,.20);
+  border-radius: 11px;
+  background: rgba(5,17,31,.72);
+}
+
+.ops-runtime-strip span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.ops-runtime-strip strong {
+  font-size: 15px;
+}
+
+.ops-section,
+.ops-output-section {
+  padding: 15px;
+  border: 1px solid rgba(83,145,224,.18);
+  border-radius: 13px;
+  background: rgba(5,17,31,.55);
+}
+
+.ops-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 11px;
+}
+
+.ops-section-heading h3 {
+  margin-bottom: 0;
+  font-size: 16px;
+}
+
+.ops-safety-note {
+  color: #86c1ff;
+  font-size: 11px;
+}
+
+.ops-action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 8px;
+}
+
+.ops-action-grid button,
+.ops-confirm-execute,
+.ops-link-button {
+  min-height: 40px;
+  padding: 9px 11px;
+  border: 1px solid rgba(83,145,224,.25);
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+.ops-action-grid button:disabled {
+  opacity: .38;
+  cursor: not-allowed;
+}
+
+.ops-confirm-execute {
+  width: 100%;
+  margin-top: 9px;
+}
+
+.ops-result-card {
+  margin-top: 10px;
+  padding: 12px 13px;
+  border: 1px solid rgba(83,145,224,.22);
+  border-radius: 10px;
+  background: rgba(8,24,40,.85);
+}
+
+.ops-result-card.success {
+  border-color: rgba(67,217,155,.35);
+}
+
+.ops-result-card.warning {
+  border-color: rgba(243,155,88,.38);
+}
+
+.ops-result-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+
+.ops-result-card p {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.ops-result-card code {
+  display: block;
+  padding: 8px;
+  border-radius: 7px;
+  background: rgba(0,0,0,.28);
+  color: #9ed0ff;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.ops-result-card small {
+  display: block;
+  margin-top: 7px;
+  color: var(--muted);
+}
+
+.ops-inline-loading {
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.ops-link-button {
+  min-height: auto;
+  padding: 5px 8px;
+  border-color: transparent;
+  background: transparent;
+  color: #86c1ff;
+}
+
+.ops-result-output {
+  min-height: 92px;
+  max-height: 260px;
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  .ops-header,
+  .ops-section-heading {
+    flex-direction: column;
+  }
+
+  .ops-runtime-strip,
+  .ops-action-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* SBP-044 — operations evidence timeline */
+.ops-evidence-view {
+  overflow: hidden;
+}
+
+.ops-empty-state {
+  padding: 13px 14px;
+  border: 1px dashed rgba(83,145,224,.20);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  background: rgba(5,17,31,.35);
+}
+
+.ops-timeline {
+  display: grid;
+  gap: 0;
+}
+
+.ops-timeline-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 9px;
+  min-height: 66px;
+}
+
+.ops-timeline-item:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 17px;
+  bottom: -2px;
+  width: 1px;
+  background: rgba(83,145,224,.22);
+}
+
+.ops-timeline-marker {
+  position: relative;
+  z-index: 1;
+  width: 13px;
+  height: 13px;
+  margin-top: 3px;
+  border: 3px solid #0c1c2d;
+  border-radius: 50%;
+  background: #4d9cff;
+  box-shadow: 0 0 0 1px rgba(77,156,255,.45);
+}
+
+.ops-timeline-item.success .ops-timeline-marker {
+  background: #43d99b;
+}
+
+.ops-timeline-item.warning .ops-timeline-marker {
+  background: #f39b58;
+}
+
+.ops-timeline-item.error .ops-timeline-marker {
+  background: #ff7777;
+}
+
+.ops-timeline-content {
+  padding: 0 0 13px;
+}
+
+.ops-timeline-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ops-timeline-top strong {
+  font-size: 12px;
+}
+
+.ops-timeline-top time {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.ops-timeline-content p {
+  margin: 4px 0 7px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.ops-timeline-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.ops-timeline-meta span {
+  padding: 3px 6px;
+  border: 1px solid rgba(83,145,224,.16);
+  border-radius: 999px;
+  color: #9fc3e6;
+  font-size: 9px;
+}
+
+.ops-diagnostic-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 8px;
+}
+
+.ops-diagnostic-card {
+  min-height: 88px;
+  padding: 11px;
+  border: 1px solid rgba(83,145,224,.18);
+  border-radius: 10px;
+  background: rgba(6,20,35,.70);
+}
+
+.ops-diagnostic-card > span {
+  display: inline-block;
+  margin-bottom: 6px;
+  color: #86c1ff;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.ops-diagnostic-card.success {
+  border-color: rgba(67,217,155,.28);
+}
+
+.ops-diagnostic-card.success > span {
+  color: #69e5b2;
+}
+
+.ops-diagnostic-card.warning {
+  border-color: rgba(243,155,88,.28);
+}
+
+.ops-diagnostic-card.warning > span {
+  color: #ffb267;
+}
+
+.ops-diagnostic-card.error {
+  border-color: rgba(255,119,119,.28);
+}
+
+.ops-diagnostic-card.error > span {
+  color: #ff8c8c;
+}
+
+.ops-diagnostic-card strong {
+  display: block;
+  font-size: 12px;
+}
+
+.ops-diagnostic-card p {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.ops-log-view {
+  min-height: 150px;
+  max-height: 280px;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border: 1px solid rgba(83,145,224,.16);
+  border-radius: 9px;
+  background: #06111e;
+  color: #a8c8e8;
+  font: 11px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 700px) {
+  .ops-diagnostic-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-timeline-top {
+    flex-direction: column;
+  }
+}

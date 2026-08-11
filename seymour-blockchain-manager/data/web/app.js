@@ -48,6 +48,15 @@ function rawRuntimeState(provider) {
   );
 }
 
+function hasCompleteSyncTelemetry(telemetry) {
+  const sync = telemetry?.sync || {};
+  return (
+    Number.isFinite(Number(sync.progressPercent)) &&
+    Number.isFinite(Number(sync.height)) &&
+    Number.isFinite(Number(sync.headers))
+  );
+}
+
 function presentedRuntime(provider) {
   const providerId = provider.providerId;
   const telemetry = providerTelemetry(providerId);
@@ -60,14 +69,31 @@ function presentedRuntime(provider) {
 
   const current = state.runtimePresentation[providerId] || null;
   const isGoodLiveState = ["running", "syncing", "starting"].includes(rawState);
+  const completeSyncTelemetry =
+    rawState !== "syncing" || hasCompleteSyncTelemetry(telemetry);
 
-  if (isGoodLiveState) {
+  if (isGoodLiveState && completeSyncTelemetry) {
     state.runtimePresentation[providerId] = {
       state: rawState,
       telemetry,
       lastGoodAt: now,
     };
     return {state: rawState, telemetry, graceHeld: false};
+  }
+
+  if (
+    rawState === "syncing" &&
+    current &&
+    current.state === "syncing" &&
+    !completeSyncTelemetry &&
+    now - current.lastGoodAt <= RUNTIME_PRESENTATION_GRACE_MS
+  ) {
+    return {
+      state: "syncing",
+      telemetry: current.telemetry,
+      graceHeld: true,
+      rawState,
+    };
   }
 
   if (
@@ -198,9 +224,13 @@ function renderRuntimeFocus() {
   const telemetry = presentation.telemetry || {};
   const sync = telemetry.sync || {};
   const stateLabel = lifecycleLabel(presentation.state);
-  const progress = Number(sync.progressPercent || 0);
-  const height = sync.height ?? "—";
-  const headers = sync.headers ?? "—";
+  const rawProgress = Number(sync.progressPercent);
+  const progress = Number.isFinite(rawProgress) ? rawProgress : null;
+
+  const rawHeight = Number(sync.height);
+  const rawHeaders = Number(sync.headers);
+  const height = Number.isFinite(rawHeight) ? rawHeight : null;
+  const headers = Number.isFinite(rawHeaders) ? rawHeaders : null;
   const peers = telemetry.peers ?? "—";
   const rpcHealthy =
     telemetry.runtimeRpcHealthy ??
@@ -222,17 +252,27 @@ function renderRuntimeFocus() {
       </div>
 
       ${
-        presentation.state === "syncing"
+        presentation.state === "syncing" && progress !== null
           ? `
             <div class="runtime-focus-progress">
               ${progressBar(progress, "Blockchain sync")}
               <div class="runtime-focus-blocks">
                 <span>Blocks</span>
-                <strong>${Number(height).toLocaleString()} / ${Number(headers).toLocaleString()}</strong>
+                <strong>${
+                  height !== null && headers !== null
+                    ? `${height.toLocaleString()} / ${headers.toLocaleString()}`
+                    : "Telemetry warming up"
+                }</strong>
               </div>
             </div>
           `
-          : ""
+          : presentation.state === "syncing"
+            ? `
+              <div class="telemetry-grace-note">
+                Sync telemetry is warming up after a runtime transition.
+              </div>
+            `
+            : ""
       }
 
       <div class="runtime-focus-kpis">
@@ -582,24 +622,7 @@ async function boot() {
 boot().catch((error) => {
   grid.innerHTML = `<p class="error">${error.message}</p>`;
 });
-function requiredConfirmation(action, appId) {
-  return action === "state" ? null : `${action.toUpperCase()}-${appId}`;
-}
 
-async function executeLifecycle(provider, action) {
-  const appId = provider.installAction.appId;
-  const confirmation = requiredConfirmation(action, appId);
-  if (confirmation && !window.confirm(`${action.toUpperCase()} ${provider.displayName}?\n\n${confirmation}`)) return;
-  const response = await fetch(`/api/lifecycle/${action}`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({providerId: provider.providerId, appId, confirmation}),
-  });
-  const payload = await response.json();
-  if (!response.ok) throw new Error(payload.error || "Lifecycle operation failed");
-  await refreshTelemetry();
-  return payload;
-}
 async function openInstallWizard(providerId) {
   const provider = state.providers.find((item) => item.providerId === providerId);
   const preflight = await (await fetch("/api/install/preflight", {cache: "no-store"})).json();
@@ -651,13 +674,747 @@ async function showSyncManager(providerId) {
   dialog.showModal();
 }
 
+async function fetchJsonWithTimeout(
+  url,
+  options = {},
+  timeoutMs = 12000
+) {
+  const controller = new AbortController();
+  const timer = window.setTimeout(
+    () => controller.abort(),
+    timeoutMs
+  );
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch {
+      payload = {
+        error: "invalid-json-response",
+        message: `HTTP ${response.status}`,
+      };
+    }
+
+    return {
+      ok: response.ok,
+      status: response.status,
+      payload,
+      timedOut: false,
+    };
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      return {
+        ok: false,
+        status: 0,
+        payload: {
+          error: "request-timeout",
+          message: `Request exceeded ${Math.round(timeoutMs / 1000)} seconds.`,
+        },
+        timedOut: true,
+      };
+    }
+
+    return {
+      ok: false,
+      status: 0,
+      payload: {
+        error: "network-error",
+        message: error?.message || "Network request failed.",
+      },
+      timedOut: false,
+    };
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
+function evidenceTimestamp(value) {
+  if (!value) return "Unknown time";
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime())
+    ? value
+    : parsed.toLocaleString();
+}
+
+function severityClass(value) {
+  const severity = String(value || "").toLowerCase();
+  if (["error", "critical", "failed"].includes(severity)) {
+    return "error";
+  }
+  if (["warning", "warn", "degraded"].includes(severity)) {
+    return "warning";
+  }
+  if (["success", "healthy", "passed"].includes(severity)) {
+    return "success";
+  }
+  return "info";
+}
+
+function renderLifecycleTimeline(target, payload) {
+  if (!target) return;
+
+  const items = Array.isArray(payload?.items)
+    ? payload.items
+    : [];
+
+  if (!items.length) {
+    target.innerHTML = `
+      <div class="ops-empty-state">
+        No lifecycle evidence recorded yet.
+      </div>
+    `;
+    return;
+  }
+
+  target.innerHTML = `
+    <div class="ops-timeline">
+      ${items.map((item) => `
+        <article class="ops-timeline-item ${severityClass(item.severity)}">
+          <div class="ops-timeline-marker"></div>
+          <div class="ops-timeline-content">
+            <div class="ops-timeline-top">
+              <strong>${item.eventType || "Lifecycle event"}</strong>
+              <time>${evidenceTimestamp(item.recordedAt || item.observedAt)}</time>
+            </div>
+            <p>${item.message || item.reason || "Lifecycle evidence recorded."}</p>
+            <div class="ops-timeline-meta">
+              ${item.action ? `<span>${item.action}</span>` : ""}
+              ${item.lifecycleState ? `<span>${lifecycleLabel(item.lifecycleState)}</span>` : ""}
+              ${item.auditId ? `<span>Audit ${item.auditId}</span>` : ""}
+            </div>
+          </div>
+        </article>
+      `).join("")}
+    </div>
+  `;
+}
+
+function flattenDiagnosticEntries(payload) {
+  if (!payload || typeof payload !== "object") return [];
+
+  const candidates = [
+    payload.checks,
+    payload.results,
+    payload.diagnostics,
+    payload.items,
+  ].find(Array.isArray);
+
+  if (candidates) {
+    return candidates.map((item, index) => ({
+      name:
+        item.name ||
+        item.check ||
+        item.title ||
+        `Check ${index + 1}`,
+      status:
+        item.status ||
+        (item.success === true
+          ? "passed"
+          : item.success === false
+            ? "failed"
+            : "info"),
+      message:
+        item.message ||
+        item.detail ||
+        item.reason ||
+        "",
+    }));
+  }
+
+  return Object.entries(payload)
+    .filter(([, value]) => (
+      typeof value === "string" ||
+      typeof value === "number" ||
+      typeof value === "boolean"
+    ))
+    .slice(0, 12)
+    .map(([name, value]) => ({
+      name,
+      status: "info",
+      message: String(value),
+    }));
+}
+
+function renderDiagnostics(target, payload) {
+  if (!target) return;
+
+  const entries = flattenDiagnosticEntries(payload);
+
+  if (!entries.length) {
+    target.innerHTML = `
+      <div class="ops-empty-state">
+        Diagnostics returned no structured checks. Raw evidence is shown below.
+      </div>
+    `;
+    return;
+  }
+
+  target.innerHTML = `
+    <div class="ops-diagnostic-grid">
+      ${entries.map((item) => `
+        <article class="ops-diagnostic-card ${severityClass(item.status)}">
+          <span>${item.status}</span>
+          <strong>${item.name}</strong>
+          ${item.message ? `<p>${item.message}</p>` : ""}
+        </article>
+      `).join("")}
+    </div>
+  `;
+}
+
+function extractLogs(payload) {
+  if (typeof payload === "string") return payload;
+
+  for (const key of ["logs", "lines", "output", "stdout"]) {
+    const value = payload?.[key];
+    if (typeof value === "string") return value;
+    if (Array.isArray(value)) return value.join("\n");
+  }
+
+  return JSON.stringify(payload, null, 2);
+}
+
+function renderLogs(target, payload) {
+  if (!target) return;
+  target.textContent = extractLogs(payload);
+  target.scrollTop = target.scrollHeight;
+}
+
+async function lifecycleRequest(provider, action, execute = false, confirmation = null) {
+  const appId = provider.installAction?.appId;
+  if (!appId) {
+    throw new Error("Provider has no lifecycle appId");
+  }
+
+  const body = {
+    appId,
+    action,
+    execute,
+  };
+
+  if (confirmation) {
+    body.confirmation = confirmation;
+  }
+
+  return fetchJsonWithTimeout(
+    "/api/lifecycle/operation",
+    {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(body),
+    },
+    30000
+  );
+}
+
+async function lifecyclePlan(provider, action) {
+  return lifecycleRequest(provider, action, false, null);
+}
+
+async function lifecycleExecute(provider, action, confirmation) {
+  return lifecycleRequest(
+    provider,
+    action,
+    true,
+    confirmation
+  );
+}
+
+function allowedLifecycleActions(runtimeState) {
+  const policy = {
+    running: ["restart", "stop"],
+    syncing: ["restart", "stop"],
+    degraded: ["restart", "stop"],
+    starting: ["stop"],
+    stopped: ["start"],
+    offline: ["start"],
+    error: ["restart"],
+    unknown: [],
+  };
+
+  return new Set(policy[runtimeState] || []);
+}
+
+function lifecycleActionLabel(action) {
+  return {
+    start: "Start",
+    stop: "Stop",
+    restart: "Restart",
+  }[action] || action;
+}
+
+function operationStatusClass(payload) {
+  if (!payload) return "neutral";
+  if (payload.success === true || payload.eventType === "lifecycle.action.planned") {
+    return "success";
+  }
+  if (payload.allowed === false || payload.success === false) {
+    return "warning";
+  }
+  return "neutral";
+}
+
+function renderOperationResult(target, payload, title = "Result") {
+  if (!target) return;
+
+  const status = operationStatusClass(payload);
+  const reason =
+    payload?.reason ||
+    payload?.message ||
+    payload?.error ||
+    "Operation response received.";
+
+  target.innerHTML = `
+    <div class="ops-result-card ${status}">
+      <div class="ops-result-heading">
+        <strong>${title}</strong>
+        ${
+          payload?.lifecycleState
+            ? `<span class="status-pill">${lifecycleLabel(payload.lifecycleState)}</span>`
+            : ""
+        }
+      </div>
+      <p>${reason}</p>
+      ${
+        payload?.confirmationToken
+          ? `<code>${payload.confirmationToken}</code>`
+          : ""
+      }
+      ${
+        payload?.auditId
+          ? `<small>Audit ${payload.auditId}</small>`
+          : ""
+      }
+    </div>
+  `;
+}
+
 async function showOperationsCenter(providerId) {
-  dialogContent.innerHTML = `<p class="provider-family">operations center</p><h2>Bitcoin Cash</h2><div class="operations-actions"><button id="opsDiagnostics" class="secondary">Run diagnostics</button><button id="opsLogs" class="secondary">View logs</button><button id="opsBackupPlan" class="secondary">Plan backup</button><button id="opsRestorePlan" class="secondary">Plan restore</button><button id="opsUpgradePlan" class="secondary">Plan upgrade</button></div><div id="opsExecute"></div><pre id="opsResult" class="operation-result"></pre>`;
-  const output=document.getElementById("opsResult"); const execute=document.getElementById("opsExecute");
-  document.getElementById("opsDiagnostics").onclick=async()=>{output.textContent=JSON.stringify(await (await fetch("/api/operations/diagnostics")).json(),null,2)};
-  document.getElementById("opsLogs").onclick=async()=>{output.textContent=JSON.stringify(await (await fetch("/api/operations/logs")).json(),null,2)};
-  async function createPlan(kind){const payload=await (await fetch("/api/operations/plan",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind,details:{providerId}})})).json();output.textContent=JSON.stringify(payload,null,2);if(kind==="backup"){execute.innerHTML='<button id="opsBackupExecute" class="primary operations-execute">Execute guarded backup</button>';document.getElementById("opsBackupExecute").onclick=async()=>{if(!confirm(`Execute BCH backup?\n\n${payload.confirmation}`))return;output.textContent=JSON.stringify(await (await fetch("/api/operations/backup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({confirmation:payload.confirmation})})).json(),null,2)}}}
-  document.getElementById("opsBackupPlan").onclick=()=>createPlan("backup");document.getElementById("opsRestorePlan").onclick=()=>createPlan("restore");document.getElementById("opsUpgradePlan").onclick=()=>createPlan("upgrade");dialog.showModal();
+  const provider = state.providers.find(
+    (item) => item.providerId === providerId
+  );
+  const presentation = presentedRuntime(provider);
+  const telemetry = presentation.telemetry || {};
+  const sync = telemetry.sync || {};
+  const runtimeState = presentation.state;
+  const allowed = allowedLifecycleActions(runtimeState);
+
+  const rpcHealthy =
+    telemetry.runtimeRpcHealthy ??
+    telemetry.rpc?.healthy ??
+    telemetry.rpc?.reachable ??
+    false;
+
+  const progress =
+    sync.progressPercent !== null && sync.progressPercent !== undefined
+      ? `${Number(sync.progressPercent).toFixed(2)}%`
+      : "—";
+
+  dialogContent.innerHTML = `
+    <div class="ops-shell">
+      <div class="ops-header">
+        <div>
+          <p class="provider-family">operations center</p>
+          <h2>${provider.displayName}</h2>
+          <p class="implementation">
+            Canonical guarded operations for ${provider.installAction?.appId || "managed runtime"}.
+          </p>
+        </div>
+        <span class="status-pill ${runtimeState}">
+          ${lifecycleLabel(runtimeState)}
+        </span>
+      </div>
+
+      <section class="ops-runtime-strip">
+        <article>
+          <span>Runtime</span>
+          <strong>${lifecycleLabel(runtimeState)}</strong>
+        </article>
+        <article>
+          <span>RPC</span>
+          <strong class="${rpcHealthy ? "metric-good" : "metric-bad"}">
+            ${rpcHealthy ? "Healthy" : "Unavailable"}
+          </strong>
+        </article>
+        <article>
+          <span>Peers</span>
+          <strong>${telemetry.peers ?? "—"}</strong>
+        </article>
+        <article>
+          <span>Sync</span>
+          <strong>${progress}</strong>
+        </article>
+      </section>
+
+      <section class="ops-section">
+        <div class="ops-section-heading">
+          <div>
+            <p class="eyebrow">Diagnostics</p>
+            <h3>Observe before changing</h3>
+          </div>
+        </div>
+        <div class="ops-action-grid">
+          <button id="opsDiagnostics" class="secondary">Run diagnostics</button>
+          <button id="opsLogs" class="secondary">View recent logs</button>
+          <button id="opsHistory" class="secondary">Lifecycle history</button>
+        </div>
+      </section>
+
+      <section class="ops-section">
+        <div class="ops-section-heading">
+          <div>
+            <p class="eyebrow">Lifecycle</p>
+            <h3>Guarded runtime control</h3>
+          </div>
+          <span class="ops-safety-note">Plan → confirm → execute</span>
+        </div>
+
+        <div class="ops-action-grid lifecycle-control-grid">
+          <button
+            id="opsStart"
+            class="secondary"
+            ${allowed.has("start") ? "" : "disabled"}
+          >Start</button>
+          <button
+            id="opsRestart"
+            class="secondary"
+            ${allowed.has("restart") ? "" : "disabled"}
+          >Restart</button>
+          <button
+            id="opsStop"
+            class="danger"
+            ${allowed.has("stop") ? "" : "disabled"}
+          >Stop</button>
+        </div>
+
+        <div id="opsLifecyclePlan"></div>
+      </section>
+
+      <section class="ops-section">
+        <div class="ops-section-heading">
+          <div>
+            <p class="eyebrow">Maintenance</p>
+            <h3>Plan controlled change</h3>
+          </div>
+        </div>
+
+        <div class="ops-action-grid">
+          <button id="opsBackupPlan" class="secondary">Plan backup</button>
+          <button id="opsRestorePlan" class="secondary">Plan restore</button>
+          <button id="opsUpgradePlan" class="secondary">Plan upgrade</button>
+        </div>
+
+        <div id="opsMaintenanceExecute"></div>
+      </section>
+
+      <section class="ops-section ops-evidence-view">
+        <div class="ops-section-heading">
+          <div>
+            <p class="eyebrow">Lifecycle timeline</p>
+            <h3>Recent guarded operations</h3>
+          </div>
+          <button id="opsRefreshHistory" class="ops-link-button">Refresh</button>
+        </div>
+        <div id="opsHistoryView" class="ops-history-view">
+          <div class="ops-empty-state">Load lifecycle history to view evidence.</div>
+        </div>
+      </section>
+
+      <section class="ops-section ops-evidence-view">
+        <div class="ops-section-heading">
+          <div>
+            <p class="eyebrow">Diagnostics</p>
+            <h3>Health checks</h3>
+          </div>
+        </div>
+        <div id="opsDiagnosticsView">
+          <div class="ops-empty-state">Run diagnostics to populate health checks.</div>
+        </div>
+      </section>
+
+      <section class="ops-section ops-evidence-view">
+        <div class="ops-section-heading">
+          <div>
+            <p class="eyebrow">Logs</p>
+            <h3>Recent runtime logs</h3>
+          </div>
+        </div>
+        <pre id="opsLogsView" class="ops-log-view">Open recent logs to populate this viewer.</pre>
+      </section>
+
+      <section class="ops-output-section">
+        <div class="ops-section-heading">
+          <div>
+            <p class="eyebrow">Raw evidence</p>
+            <h3>Operation output</h3>
+          </div>
+          <button id="opsClearOutput" class="ops-link-button">Clear</button>
+        </div>
+        <pre id="opsResult" class="operation-result ops-result-output">No operation selected.</pre>
+      </section>
+    </div>
+  `;
+
+  const output = document.getElementById("opsResult");
+  const lifecyclePlanTarget = document.getElementById("opsLifecyclePlan");
+  const maintenanceExecute = document.getElementById("opsMaintenanceExecute");
+  const historyView = document.getElementById("opsHistoryView");
+  const diagnosticsView = document.getElementById("opsDiagnosticsView");
+  const logsView = document.getElementById("opsLogsView");
+
+  const writeOutput = (payload) => {
+    output.textContent = JSON.stringify(payload, null, 2);
+  };
+
+  document.getElementById("opsClearOutput")?.addEventListener(
+    "click",
+    () => {
+      output.textContent = "No operation selected.";
+      lifecyclePlanTarget.innerHTML = "";
+      maintenanceExecute.innerHTML = "";
+    }
+  );
+
+  document.getElementById("opsDiagnostics")?.addEventListener(
+    "click",
+    async () => {
+      output.textContent = "Running diagnostics…";
+      diagnosticsView.innerHTML =
+        `<div class="ops-inline-loading">Running diagnostics…</div>`;
+
+      const result = await fetchJsonWithTimeout(
+        "/api/operations/diagnostics",
+        {cache: "no-store"},
+        15000
+      );
+
+      writeOutput(result.payload);
+      renderDiagnostics(diagnosticsView, result.payload);
+
+      if (!result.ok) {
+        renderOperationResult(
+          diagnosticsView,
+          result.payload,
+          result.timedOut ? "Diagnostics timeout" : "Diagnostics unavailable"
+        );
+      }
+    }
+  );
+
+  document.getElementById("opsLogs")?.addEventListener(
+    "click",
+    async () => {
+      output.textContent = "Loading recent logs…";
+      logsView.textContent = "Loading recent logs…";
+
+      const result = await fetchJsonWithTimeout(
+        "/api/operations/logs",
+        {cache: "no-store"},
+        12000
+      );
+
+      writeOutput(result.payload);
+      renderLogs(logsView, result.payload);
+    }
+  );
+
+  async function loadLifecycleHistory() {
+    historyView.innerHTML =
+      `<div class="ops-inline-loading">Loading lifecycle history…</div>`;
+
+    const appId = encodeURIComponent(
+      provider.installAction?.appId || ""
+    );
+
+    const result = await fetchJsonWithTimeout(
+      `/api/lifecycle/history?appId=${appId}`,
+      {cache: "no-store"},
+      12000
+    );
+
+    writeOutput(result.payload);
+
+    if (result.ok) {
+      renderLifecycleTimeline(historyView, result.payload);
+    } else {
+      renderOperationResult(
+        historyView,
+        result.payload,
+        result.timedOut ? "History timeout" : "History unavailable"
+      );
+    }
+  }
+
+  document.getElementById("opsHistory")?.addEventListener(
+    "click",
+    loadLifecycleHistory
+  );
+
+  document.getElementById("opsRefreshHistory")?.addEventListener(
+    "click",
+    loadLifecycleHistory
+  );
+
+  async function planLifecycle(action) {
+    lifecyclePlanTarget.innerHTML =
+      `<div class="ops-inline-loading">Planning ${action}…</div>`;
+
+    const result = await lifecyclePlan(provider, action);
+    const payload = result.payload;
+
+    renderOperationResult(
+      lifecyclePlanTarget,
+      payload,
+      result.timedOut
+        ? `${lifecycleActionLabel(action)} plan timeout`
+        : `${lifecycleActionLabel(action)} plan`
+    );
+
+    writeOutput(payload);
+
+    if (!result.ok || payload?.allowed !== true) {
+      return;
+    }
+
+    await loadLifecycleHistory();
+
+    const token = payload.confirmationToken;
+    if (!token) {
+      return;
+    }
+
+    const executeButton = document.createElement("button");
+    executeButton.className =
+      action === "stop"
+        ? "danger ops-confirm-execute"
+        : "primary ops-confirm-execute";
+    executeButton.textContent =
+      `Execute ${lifecycleActionLabel(action)}`;
+
+    lifecyclePlanTarget.appendChild(executeButton);
+
+    executeButton.addEventListener("click", async () => {
+      const confirmed = window.confirm(
+        `${lifecycleActionLabel(action)} ${provider.displayName}?\n\n` +
+        `Required confirmation:\n${token}`
+      );
+
+      if (!confirmed) return;
+
+      executeButton.disabled = true;
+      executeButton.textContent =
+        `Executing ${lifecycleActionLabel(action)}…`;
+
+      const executeResult = await lifecycleExecute(
+        provider,
+        action,
+        token
+      );
+
+      writeOutput(executeResult.payload);
+      renderOperationResult(
+        lifecyclePlanTarget,
+        executeResult.payload,
+        `${lifecycleActionLabel(action)} execution`
+      );
+
+      await refreshTelemetry();
+    });
+  }
+
+  document.getElementById("opsStart")?.addEventListener(
+    "click",
+    () => planLifecycle("start")
+  );
+  document.getElementById("opsRestart")?.addEventListener(
+    "click",
+    () => planLifecycle("restart")
+  );
+  document.getElementById("opsStop")?.addEventListener(
+    "click",
+    () => planLifecycle("stop")
+  );
+
+  async function createMaintenancePlan(kind) {
+    maintenanceExecute.innerHTML =
+      `<div class="ops-inline-loading">Planning ${kind}…</div>`;
+
+    const result = await fetchJsonWithTimeout(
+      "/api/operations/plan",
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          kind,
+          details: {providerId},
+        }),
+      },
+      12000
+    );
+
+    const payload = result.payload;
+    writeOutput(payload);
+
+    renderOperationResult(
+      maintenanceExecute,
+      payload,
+      `${kind[0].toUpperCase()}${kind.slice(1)} plan`
+    );
+
+    if (kind !== "backup" || !payload.confirmation) {
+      return;
+    }
+
+    const executeButton = document.createElement("button");
+    executeButton.className = "primary ops-confirm-execute";
+    executeButton.textContent = "Execute guarded backup";
+    maintenanceExecute.appendChild(executeButton);
+
+    executeButton.addEventListener("click", async () => {
+      if (
+        !window.confirm(
+          `Execute BCH backup?\n\n${payload.confirmation}`
+        )
+      ) {
+        return;
+      }
+
+      const executeResponse = await fetch(
+        "/api/operations/backup",
+        {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            confirmation: payload.confirmation,
+          }),
+        }
+      );
+
+      writeOutput(await executeResponse.json());
+    });
+  }
+
+  document.getElementById("opsBackupPlan")?.addEventListener(
+    "click",
+    () => createMaintenancePlan("backup")
+  );
+  document.getElementById("opsRestorePlan")?.addEventListener(
+    "click",
+    () => createMaintenancePlan("restore")
+  );
+  document.getElementById("opsUpgradePlan")?.addEventListener(
+    "click",
+    () => createMaintenancePlan("upgrade")
+  );
+
+  dialog.showModal();
+  loadLifecycleHistory();
 }
 
 async function showAdoptionWizard(providerId) {

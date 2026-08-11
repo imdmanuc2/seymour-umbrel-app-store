@@ -1,0 +1,14 @@
+{
+  "package": "SBP-045",
+  "name": "BCH Final Hardening & BTC Handoff",
+  "dependsOn": [
+    "SBP-044"
+  ],
+  "scope": [
+    "frontend",
+    "operations",
+    "bch-finalization"
+  ],
+  "requiresBlockchainManagerRestart": true,
+  "liveLifecycleWritesDuringVerify": false
+}

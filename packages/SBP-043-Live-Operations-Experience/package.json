@@ -1,0 +1,13 @@
+{
+  "package": "SBP-043",
+  "name": "Live Operations Experience",
+  "dependsOn": [
+    "SBP-042.1"
+  ],
+  "scope": [
+    "frontend",
+    "operations",
+    "canonical-lifecycle"
+  ],
+  "liveLifecycleWritesDuringVerify": false
+}

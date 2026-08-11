@@ -1,0 +1,15 @@
+{
+  "package": "SBP-044",
+  "name": "Operations Evidence Timeline & Request Resilience",
+  "dependsOn": [
+    "SBP-043"
+  ],
+  "scope": [
+    "frontend",
+    "operations",
+    "evidence",
+    "resilience"
+  ],
+  "requestTimeoutSeconds": 15,
+  "liveLifecycleWritesDuringVerify": false
+}
