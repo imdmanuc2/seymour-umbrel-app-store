@@ -1,0 +1,19 @@
+{
+  "contract": "seymour.blockchain-runtime",
+  "version": "1.0",
+  "providerId": "bitcoin-mainnet",
+  "appId": "seymour-bitcoin-node",
+  "displayName": "Bitcoin",
+  "ticker": "BTC",
+  "implementation": "Bitcoin Core",
+  "nodeVersion": "29.0.0",
+  "network": "mainnet",
+  "miningAlgorithm": "SHA-256",
+  "ports": {
+    "rpc": 8332,
+    "p2p": 8333,
+    "zmqRawBlock": 28332,
+    "zmqRawTx": 28333
+  },
+  "canonicalRuntimeState": true
+}

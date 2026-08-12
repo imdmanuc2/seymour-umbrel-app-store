@@ -1,0 +1,12 @@
+{
+  "id": "SBP-050",
+  "name": "Bitcoin Core Node Foundation",
+  "version": "1.0.0",
+  "description": "Replaces the Bitcoin Core Umbrel placeholder with the Seymour managed Bitcoin Core runtime foundation.",
+  "appId": "seymour-bitcoin-node",
+  "providerId": "bitcoin-mainnet",
+  "bitcoinCoreVersion": "29.0.0",
+  "safeInstall": true,
+  "startsRuntime": false,
+  "modifiesChainData": false
+}
