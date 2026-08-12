@@ -1,0 +1,18 @@
+{
+  "contract": "seymour.managed-runtime-registration",
+  "version": "1.0",
+  "sourceContract": "seymour.managed-runtime/1.0",
+  "purpose": "Nexus-facing collection of canonical managed runtime observations",
+  "transport": "existing Nexus registration delivery path",
+  "preserveExistingRegistrationId": true,
+  "preserveExistingDeliveryIdempotency": true,
+  "preserveLegacyAssetProjectionDuringMigration": true,
+  "fields": [
+    "managedRuntimeContract",
+    "managedRuntimes"
+  ],
+  "directDockerLifecycle": false,
+  "duplicateRegistrationPath": false,
+  "duplicateLifecycleExecutionPath": false,
+  "lifecycleWrites": false
+}

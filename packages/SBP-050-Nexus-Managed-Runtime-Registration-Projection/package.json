@@ -1,0 +1,15 @@
+{
+  "packageId": "SBP-050",
+  "name": "Nexus Managed Runtime Registration Projection",
+  "version": "1.0.0",
+  "branch": "develop",
+  "dependsOn": [
+    "SBP-049"
+  ],
+  "writeSafety": {
+    "repositoryFilesOnly": true,
+    "lifecycleWrite": false,
+    "directDockerLifecycle": false,
+    "blockchainConfigurationWrite": false
+  }
+}

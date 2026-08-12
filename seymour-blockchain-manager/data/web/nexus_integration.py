@@ -216,3 +216,15 @@ def registration_payload(dashboard, sync):
         asset["runtimeState"] = operational_state.get("state")
         asset["status"] = runtime["lifecycleStatus"]
     return payload
+
+
+# SBP-050 — canonical managed runtime registration projection
+from shared.managed_runtime import attach_managed_runtime_projection
+
+_sbp050_registration_payload = registration_payload
+
+def registration_payload(dashboard, sync):
+    # Preserve the existing registration identity and delivery/idempotency
+    # semantics, then attach the generic SBP-049 runtime projection.
+    payload = _sbp050_registration_payload(dashboard, sync)
+    return attach_managed_runtime_projection(payload)
