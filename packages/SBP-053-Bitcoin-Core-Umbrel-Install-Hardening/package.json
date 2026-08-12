@@ -1,0 +1,11 @@
+{
+  "id": "SBP-053",
+  "name": "Bitcoin Core Umbrel Install Hardening",
+  "version": "1.0.0",
+  "providerId": "bitcoin-mainnet",
+  "appId": "seymour-bitcoin-node",
+  "safeInstall": true,
+  "startsRuntime": false,
+  "restartsRuntime": false,
+  "modifiesChainData": false
+}
