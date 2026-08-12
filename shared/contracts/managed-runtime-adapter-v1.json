@@ -1,0 +1,22 @@
+{
+  "contract": "seymour.managed-runtime",
+  "version": "1.0",
+  "purpose": "Platform-neutral managed runtime observation and capability contract",
+  "sections": [
+    "identity",
+    "state",
+    "capabilities",
+    "telemetry",
+    "native"
+  ],
+  "stateOwner": "shared.runtime_state.RuntimeStateService",
+  "lifecyclePolicyOwner": "shared.app_lifecycle.AppLifecycleEngine",
+  "lifecycleExecutionOwner": "existing injected LifecycleOperationService",
+  "nativeRuntimeOwner": {
+    "umbrel": "shared.umbrel_runtime.UmbrelRuntime"
+  },
+  "providerCatalogOwner": "shared.provider_catalog",
+  "directDockerLifecycle": false,
+  "duplicateLifecycleExecutionPath": false,
+  "adapterMayExecuteWritesDirectly": false
+}

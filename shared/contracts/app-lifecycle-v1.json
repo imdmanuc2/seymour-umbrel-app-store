@@ -14,11 +14,13 @@
     "installing",
     "stopped",
     "starting",
+    "syncing",
     "running",
     "restarting",
     "updating",
     "uninstalling",
     "degraded",
+    "offline",
     "error",
     "unknown"
   ],

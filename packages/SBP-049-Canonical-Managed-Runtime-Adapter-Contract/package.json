@@ -1,0 +1,12 @@
+{
+  "packageId": "SBP-049",
+  "name": "Canonical Managed Runtime Adapter Contract",
+  "version": "1.0.0",
+  "branch": "develop",
+  "writeSafety": {
+    "repositoryFilesOnly": true,
+    "lifecycleWrite": false,
+    "directDockerLifecycle": false,
+    "blockchainConfigurationWrite": false
+  }
+}
