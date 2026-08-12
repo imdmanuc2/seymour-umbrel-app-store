@@ -649,28 +649,17 @@ async function showSyncManager(providerId) {
   const provider = state.providers.find((item) => item.providerId === providerId);
   const response = await fetch("/api/sync", {cache: "no-store"});
   const sync = await response.json();
-  const recommendations = sync.recommendations.map((item) => `
-    <li class="recommendation ${item.severity}">
-      <strong>${item.code}</strong><span>${item.message}</span>
-    </li>`).join("");
+  const recommendations = sync.recommendations.map((item) => `<li class="recommendation ${item.severity}"><strong>${item.code}</strong><span>${item.message}</span></li>`).join("");
   dialogContent.innerHTML = `
-    <p class="provider-family">initial sync manager</p>
-    <h2>${provider.displayName}</h2>
-    <div class="sync-kpis">
-      <article><span>Progress</span><strong>${sync.snapshot.progress_percent ?? "—"}%</strong></article>
-      <article><span>Blocks remaining</span><strong>${sync.blocksRemaining ?? "—"}</strong></article>
-      <article><span>Rate</span><strong>${sync.blocksPerSecond ?? "—"} blk/s</strong></article>
-      <article><span>ETA</span><strong>${formatDuration(sync.etaSeconds)}</strong></article>
-    </div>
-    <dl class="dialog-metadata">
-      <div><dt>Height</dt><dd>${sync.snapshot.height ?? "—"}</dd></div>
-      <div><dt>Headers</dt><dd>${sync.snapshot.headers ?? "—"}</dd></div>
-      <div><dt>Peers</dt><dd>${sync.snapshot.peers ?? "—"}</dd></div>
-      <div><dt>Peer quality</dt><dd>${sync.peerQuality.state}</dd></div>
-      <div><dt>Stalled</dt><dd>${sync.stall.stalled ? "Yes" : "No"}</dd></div>
-    </dl>
-    <h3>Recommendations</h3>
-    <ul class="recommendations">${recommendations}</ul>`;
+    <p class="provider-family">initial sync manager</p><h2>${provider.displayName}</h2>
+    <div class="sync-manager-tabs"><button class="sync-tab active" data-sync-view="status">Status</button><button class="sync-tab" data-sync-view="performance">Performance</button></div>
+    <section id="syncStatusView"><div class="sync-kpis"><article><span>Progress</span><strong>${sync.snapshot.progress_percent ?? "—"}%</strong></article><article><span>Blocks remaining</span><strong>${sync.blocksRemaining ?? "—"}</strong></article><article><span>Rate</span><strong>${sync.blocksPerSecond ?? "—"} blk/s</strong></article><article><span>ETA</span><strong>${formatDuration(sync.etaSeconds)}</strong></article></div><dl class="dialog-metadata"><div><dt>Height</dt><dd>${sync.snapshot.height ?? "—"}</dd></div><div><dt>Headers</dt><dd>${sync.snapshot.headers ?? "—"}</dd></div><div><dt>Peers</dt><dd>${sync.snapshot.peers ?? "—"}</dd></div><div><dt>Peer quality</dt><dd>${sync.peerQuality.state}</dd></div><div><dt>Stalled</dt><dd>${sync.stall.stalled ? "Yes" : "No"}</dd></div></dl><h3>Recommendations</h3><ul class="recommendations">${recommendations}</ul></section>
+    <section id="syncPerformanceView" hidden><div class="performance-toolbar"><p>Read-only measurement of sync throughput, peers, CPU, memory, and block I/O.</p><button id="runSyncPerformance" class="primary">Measure performance</button></div><div id="syncPerformanceResults" class="performance-results"><div class="ops-empty-state">Run a performance measurement. Repeating it builds short-window averages in memory.</div></div></section>`;
+  const statusView=document.getElementById("syncStatusView"), performanceView=document.getElementById("syncPerformanceView");
+  document.querySelectorAll("[data-sync-view]").forEach((button)=>button.addEventListener("click",()=>{const mode=button.dataset.syncView;document.querySelectorAll("[data-sync-view]").forEach((item)=>item.classList.toggle("active",item===button));statusView.hidden=mode!=="status";performanceView.hidden=mode!=="performance";}));
+  const fr=(v,suffix)=>Number.isFinite(Number(v))?`${Number(v).toFixed(2)} ${suffix}`:"Collecting…"; const fp=(v)=>Number.isFinite(Number(v))?`${Number(v).toFixed(1)}%`:"—";
+  const render=(p)=>{const latest=p.throughput?.latest||{}, five=p.throughput?.fiveMinute||{}, peers=p.peers||{}, resources=p.resources||{}, memory=resources.memory||{}, io=resources.blockIo||{}, recs=p.analysis?.recommendations||[]; return `<div class="performance-summary"><article><span>Likely bottleneck</span><strong>${p.analysis?.likelyBottleneck||"undetermined"}</strong></article><article><span>Blocks / minute</span><strong>${fr(five.blocksPerMinute ?? latest.blocksPerMinute,"blk/min")}</strong></article><article><span>Progress / hour</span><strong>${fr(((five.progressPerHour ?? latest.progressPerHour) ?? null) === null ? null : (five.progressPerHour ?? latest.progressPerHour)*100,"%/hr")}</strong></article><article><span>Estimated completion</span><strong>${formatDuration(p.throughput?.etaSeconds)}</strong></article></div><div class="performance-columns"><section class="performance-panel"><p class="eyebrow">Peer analysis</p><dl class="dialog-metadata"><div><dt>Connected peers</dt><dd>${peers.count ?? "—"}</dd></div><div><dt>Outbound</dt><dd>${peers.outboundCount ?? "—"}</dd></div><div><dt>Average ping</dt><dd>${peers.averagePingMs ?? "—"} ms</dd></div><div><dt>Best ping</dt><dd>${peers.bestPingMs ?? "—"} ms</dd></div></dl><div class="performance-peer-list">${(peers.peers||[]).slice(0,8).map((peer)=>`<article><strong>${peer.address||"unknown peer"}</strong><span>${peer.pingMs ?? "—"} ms · blocks ${peer.syncedBlocks ?? "—"}</span></article>`).join("") || '<div class="ops-empty-state">No peer detail available.</div>'}</div></section><section class="performance-panel"><p class="eyebrow">Runtime resources</p><dl class="dialog-metadata"><div><dt>Container CPU</dt><dd>${fp(resources.cpuPercent)}</dd></div><div><dt>Memory</dt><dd>${fp(memory.usedPercent)}</dd></div><div><dt>Block reads</dt><dd>${formatBytes(io.readBytes)}</dd></div><div><dt>Block writes</dt><dd>${formatBytes(io.writeBytes)}</dd></div></dl><p class="performance-note">CPU can exceed 100% when the node uses more than one core.</p></section></div><section class="performance-panel"><p class="eyebrow">Recommendations</p><ul class="recommendations">${recs.map((item)=>`<li class="recommendation ${item.severity}"><strong>${item.code}</strong><span>${item.message}</span></li>`).join("")}</ul></section><p class="performance-observation-count">${p.throughput?.observationCount ?? 0} in-memory observation(s)</p>`;};
+  document.getElementById("runSyncPerformance")?.addEventListener("click",async()=>{const target=document.getElementById("syncPerformanceResults");target.innerHTML='<div class="ops-inline-loading">Measuring BCH performance…</div>';const result=await fetchJsonWithTimeout("/api/sync/performance",{cache:"no-store"},30000);target.innerHTML=result.ok?render(result.payload):`<div class="ops-result-card warning"><strong>Performance measurement unavailable</strong><p>${result.payload?.message||result.payload?.error||`HTTP ${result.status}`}</p></div>`;});
   dialog.showModal();
 }
 

@@ -17,7 +17,7 @@ CONFIG_FILE="$CONFIG_DIR/bitcoin.conf"
 RPC_USER="${BCH_RPC_USER:-seymour_rpc}"
 RPC_PASSWORD="${BCH_RPC_PASSWORD:-change-me-before-production}"
 PRUNE="${BCH_PRUNE:-0}"
-TXINDEX="${BCH_TXINDEX:-1}"
+TXINDEX="${BCH_TXINDEX:-0}"
 
 if [ -f "$SECRETS_FILE" ]; then
   RPC_USER="$(

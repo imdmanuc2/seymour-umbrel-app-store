@@ -63,7 +63,7 @@ def build_plan(form: dict[str, str]) -> dict[str, Any]:
     )
     prune = int(form.get("prune", "0") or "0")
     txindex = (
-        form.get("txindex", "1")
+        form.get("txindex", "0")
         not in {"0", "false", "False"}
     )
 
@@ -73,7 +73,7 @@ def build_plan(form: dict[str, str]) -> dict[str, Any]:
         specific_version = None
         storage_path = "/data"
         prune = 0
-        txindex = True
+        txindex = False
 
     inputs: dict[str, Any] = {}
 

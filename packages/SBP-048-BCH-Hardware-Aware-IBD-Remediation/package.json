@@ -1,0 +1,20 @@
+{
+  "package": "SBP-048",
+  "name": "BCH Hardware-Aware IBD Remediation",
+  "dependsOn": [
+    "SBP-047"
+  ],
+  "scope": [
+    "bch",
+    "ibd",
+    "performance",
+    "remediation"
+  ],
+  "changes": {
+    "txindexDefault": false,
+    "prune": "unchanged",
+    "chainDataDeleted": false
+  },
+  "requiresBchRestart": true,
+  "liveLifecycleWritesDuringVerify": false
+}

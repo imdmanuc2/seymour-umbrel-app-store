@@ -1,7 +1,10 @@
-
 # Python generated files
 __pycache__/
 *.pyc
+
+# Generated package archives
+packages/*.zip
+packages/**/*.zip
 
 # Package rollback backups
 backups/
@@ -9,20 +12,10 @@ backups/
 # Runtime-generated evidence
 runtime-evidence/
 
-# Package rollback backups
-backups/
-
-# Python-generated files
-__pycache__/
-*.pyc
-
-# Temporary local validation files
+# Temporary/local validation files
 *.before-*
 *.tmp
 
 # Private runtime credentials
 private/
 *.env
-
-# Local compose backups
-*.before-*

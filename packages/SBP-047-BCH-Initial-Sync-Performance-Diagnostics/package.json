@@ -1,0 +1,1 @@
+{"package":"SBP-047","name":"BCH Initial Sync Performance Diagnostics","dependsOn":["SBP-046"],"scope":["bch","performance","diagnostics","read-only"],"requiresBlockchainManagerRestart":true,"configurationWrites":false,"liveLifecycleWritesDuringVerify":false}

@@ -11,6 +11,7 @@ from telemetry import dashboard_payload
 from bch_runtime_probe import probe as probe_bch_runtime
 from bch_rpc_probe import probe as probe_bch_rpc
 from sync_manager import analyze
+from sync_performance import analyze as analyze_sync_performance
 from installer import Installer
 from adoption import AdoptionService
 from nexus_integration import (
@@ -218,6 +219,10 @@ class Handler(BaseHTTPRequestHandler):
 
         if self.path.startswith("/api/operations/logs"):
             self.send_json(recent_logs().to_dict())
+            return
+
+        if self.path == "/api/sync/performance":
+            self.send_json(analyze_sync_performance())
             return
 
         if self.path == "/api/sync":
