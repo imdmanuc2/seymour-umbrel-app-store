@@ -1,0 +1,11 @@
+{
+  "id": "SBP-052",
+  "name": "Bitcoin Core Umbrel Installation Workflow",
+  "version": "1.0.0",
+  "appId": "seymour-bitcoin-node",
+  "providerId": "bitcoin-mainnet",
+  "image": "ghcr.io/imdmanuc2/seymour-bitcoin-node:29.0.0",
+  "safeInstall": true,
+  "startsRuntime": false,
+  "modifiesChainData": false
+}

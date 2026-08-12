@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+PKG="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+TARGET="$ROOT/scripts/seymour-install-btc"
+"$PKG/scripts/doctor.sh" "$ROOT"
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+BACKUP="$ROOT/backups/sbp-052-$STAMP"
+mkdir -p "$BACKUP"
+[[ ! -f "$TARGET" ]] || cp -a "$TARGET" "$BACKUP/seymour-install-btc"
+cp "$PKG/payload/scripts/seymour-install-btc" "$TARGET"
+chmod +x "$TARGET"
+printf '%s\n' "$BACKUP" > "$ROOT/backups/sbp-052-latest"
+echo "Backup: $BACKUP"
+echo "SBP-052 guarded BTC installation workflow installed: PASS"
+echo "SBP-052 install: PASS"
+echo "No Bitcoin installation was executed."
+echo "No blockchain data or running container was modified."

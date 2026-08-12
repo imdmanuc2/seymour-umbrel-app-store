@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+import argparse, json, shutil, subprocess
+from pathlib import Path
+
+APP_ID = "seymour-bitcoin-node"
+PROVIDER_ID = "bitcoin-mainnet"
+IMAGE = "ghcr.io/imdmanuc2/seymour-bitcoin-node:29.0.0"
+CONFIRMATION = f"INSTALL-{APP_ID}"
+
+REPO = Path(__file__).resolve().parents[1]
+CONTROL = REPO / "scripts" / "seymour-umbrel-app"
+APP_DIR = REPO / APP_ID
+MANIFEST = APP_DIR / "umbrel-app.yml"
+COMPOSE = APP_DIR / "docker-compose.yml"
+
+def preflight():
+    checks = {
+        "appId": APP_ID,
+        "providerId": PROVIDER_ID,
+        "image": IMAGE,
+        "appDirectory": APP_DIR.is_dir(),
+        "manifest": MANIFEST.is_file(),
+        "compose": COMPOSE.is_file(),
+        "controlBridge": CONTROL.is_file(),
+        "controlBridgeExecutable": CONTROL.is_file() and bool(CONTROL.stat().st_mode & 0o111),
+        "dockerAvailable": shutil.which("docker") is not None,
+        "imageReferencePresent": COMPOSE.is_file() and IMAGE in COMPOSE.read_text(),
+    }
+    required = ("appDirectory","manifest","compose","controlBridge","controlBridgeExecutable","dockerAvailable","imageReferencePresent")
+    return {
+        "contract": "seymour.bitcoin-install-preflight",
+        "version": "1.0",
+        "compatible": all(checks[k] for k in required),
+        "requiredConfirmation": CONFIRMATION,
+        "checks": checks,
+    }
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("--execute", action="store_true")
+    p.add_argument("--confirm")
+    p.add_argument("--data-directory", type=Path, default=Path("/home/umbrel/umbrel"))
+    p.add_argument("--endpoint", default="ws://localhost/trpc")
+    p.add_argument("--timeout-seconds", type=int, default=1800)
+    a = p.parse_args()
+
+    checks = preflight()
+    if not a.execute:
+        print(json.dumps({"mode":"plan", **checks}, indent=2))
+        raise SystemExit(0 if checks["compatible"] else 1)
+
+    if a.confirm != CONFIRMATION:
+        print(json.dumps({"success":False,"error":"confirmation-mismatch","expected":CONFIRMATION}, indent=2))
+        raise SystemExit(1)
+
+    if not checks["compatible"]:
+        print(json.dumps({"success":False,"error":"preflight-failed","preflight":checks}, indent=2))
+        raise SystemExit(1)
+
+    cmd = [
+        str(CONTROL), "install", APP_ID,
+        "--execute", "--confirm", CONFIRMATION,
+        "--data-directory", str(a.data_directory),
+        "--endpoint", a.endpoint,
+    ]
+    cp = subprocess.run(cmd, capture_output=True, text=True, timeout=a.timeout_seconds, check=False)
+    try:
+        result = json.loads(cp.stdout) if cp.stdout.strip() else None
+    except json.JSONDecodeError:
+        result = {"raw": cp.stdout}
+    payload = {
+        "contract":"seymour.bitcoin-install-result",
+        "version":"1.0",
+        "appId":APP_ID,
+        "providerId":PROVIDER_ID,
+        "executed":True,
+        "success":cp.returncode == 0,
+        "result":result,
+        "stderr":cp.stderr.strip() or None,
+    }
+    print(json.dumps(payload, indent=2))
+    raise SystemExit(0 if cp.returncode == 0 else 1)
+
+if __name__ == "__main__":
+    main()
