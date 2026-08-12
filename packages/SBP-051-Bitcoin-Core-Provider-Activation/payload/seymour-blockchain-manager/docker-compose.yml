@@ -1,0 +1,74 @@
+services:
+  app_proxy:
+    environment:
+      APP_HOST: web
+      APP_PORT: 8080
+
+  web:
+    image: python:3.12-alpine
+    restart: on-failure
+    working_dir: /app
+
+    command:
+      - python
+      - /app/app.py
+
+    env_file:
+      - /home/umbrel/seymour-umbrel-app-store-git/private/nexus-registration.env
+
+    environment:
+      PROVIDER_CATALOG_PATH: /catalog/providers.v1.json
+      BCH_APP_ID: seymour-bch-node
+      BTC_APP_ID: seymour-bitcoin-node
+      BTC_HEALTH_URL: http://seymour-bitcoin-node_status_1:8080/api/health
+      BTC_STATUS_URL: http://seymour-bitcoin-node_status_1:8080/api/status
+      BTC_RPC_URL: ${BTC_RPC_URL:-http://seymour-bitcoin-node_node_1:8332/}
+      BTC_RPC_USER: ${BTC_RPC_USER:-}
+      BTC_RPC_PASSWORD: ${BTC_RPC_PASSWORD:-}
+      BTC_RPC_TIMEOUT_SECONDS: "20"
+      BTC_NODE_CONTAINER: seymour-bitcoin-node_node_1
+      BCH_HEALTH_URL: http://status:8080/api/health
+      BCH_STATUS_URL: http://status:8080/api/status
+      BCH_RPC_URL: ${BCH_RPC_URL:-http://seymour-bch-node_node_1:8332/}
+      BCH_RPC_USER: ${BCH_RPC_USER:-}
+      BCH_RPC_PASSWORD: ${BCH_RPC_PASSWORD:-}
+      BCH_RPC_TIMEOUT_SECONDS: "20"
+      BCH_DATA_PATH: /bch-data
+      DOCKER_SOCKET: /var/run/docker.sock
+      SEYMOUR_UMBREL_CONTROL_SCRIPT: /control/seymour-umbrel-app
+      SEYMOUR_PLATFORM_ROOT: /seymour-platform
+      SEYMOUR_LIFECYCLE_AUDIT_PATH: /evidence/lifecycle-audit.jsonl
+      SEYMOUR_LIFECYCLE_NATIVE_EVIDENCE_PATH: /evidence/native-app-control
+      LIFECYCLE_EVIDENCE_PATH: /evidence/lifecycle.jsonl
+      SEYMOUR_BCH_INSTALL_SCRIPT: /control/seymour-install-bch
+      INSTALL_EVIDENCE_PATH: /evidence/installations.jsonl
+      INSTALL_OPERATION_DIRECTORY: /evidence/install-operations
+      SYNC_HISTORY_PATH: /evidence/sync-history.jsonl
+      SYNC_STALL_SECONDS: "600"
+      SYNC_LOW_PEERS: "3"
+      BCH_MANAGED_DATA_PATH: /adopted-bch-data
+      ADOPTION_EVIDENCE_PATH: /evidence/adoptions.jsonl
+      ADOPTION_PLAN_DIRECTORY: /evidence/adoption-plans
+      OPERATIONS_EVIDENCE_PATH: /evidence/operations.jsonl
+      HEALTH_HISTORY_PATH: /evidence/health-history.jsonl
+      BCH_BACKUP_ROOT: /evidence/backups
+      BCH_NODE_CONTAINER: seymour-bch-node_node_1
+      NEXUS_REGISTRATION_EVIDENCE_PATH: /evidence/nexus-registration.jsonl
+      NEXUS_REGISTRATION_TIMEOUT_SECONDS: "15"
+      NEXUS_REGISTRATION_MAX_ATTEMPTS: "4"
+      NEXUS_REGISTRATION_BACKOFF_SECONDS: "2"
+      NEXUS_DELIVERY_EVIDENCE_PATH: /evidence/nexus-delivery.jsonl
+      NEXUS_DELIVERY_STATUS_PATH: /evidence/nexus-delivery-status.json
+      NEXUS_REFRESH_ENABLED: "true"
+      NEXUS_REFRESH_INTERVAL_SECONDS: "60"
+      NEXUS_REFRESH_INITIAL_DELAY_SECONDS: "15"
+      NEXUS_REFRESH_STATE_PATH: /evidence/nexus-refresh-state.json
+
+    volumes:
+      - ${APP_DATA_DIR}/data/web:/app:ro
+      - ${APP_DATA_DIR}/data/catalog:/catalog:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${APP_DATA_DIR}/data/evidence:/evidence
+      - /home/umbrel/seymour-umbrel-app-store-git/scripts:/control:ro
+      - /home/umbrel/seymour-umbrel-app-store-git/shared:/seymour-platform/shared:ro
+      - /home/umbrel/umbrel/app-data/seymour-bch-node/data/node:/bch-data:ro
