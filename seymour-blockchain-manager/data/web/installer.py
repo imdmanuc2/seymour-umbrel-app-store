@@ -19,6 +19,7 @@ from shared.blockchain_install import evaluate as evaluate_install_preflight
 from shared.blockchain_install.host import profile as host_profile
 from shared.blockchain_install.binding import build_binding_plan
 from storage_targets import storage_targets, target_by_id
+from shared.blockchain_install.storage import verify_storage_target
 
 CATALOG_PATH = Path(os.environ.get("PROVIDER_CATALOG_PATH", "/catalog/providers.v1.json"))
 CONTROL_SCRIPT = Path(os.environ.get(
@@ -278,6 +279,23 @@ class Installer:
             return operation
 
         data_path = Path(binding.data_path)
+        capacity = checks.get("capacity", {}) if isinstance(checks, dict) else {}
+        required_bytes = int(capacity.get("required_bytes", 0)) if isinstance(capacity, dict) else 0
+        storage_guard = verify_storage_target(
+            selected_target,
+            minimum_free_bytes=required_bytes,
+            data_path=data_path,
+        )
+        operation.preflight["storageMountGuard"] = storage_guard
+        if not storage_guard["healthy"]:
+            operation.status = InstallStatus.FAILED
+            operation.error = (
+                "Selected blockchain storage failed live mount identity verification: "
+                + "; ".join(str(item) for item in storage_guard["errors"])
+            )
+            operation.updated_at = utc_now()
+            self._save(operation)
+            return operation
         try:
             data_path.mkdir(parents=True, exist_ok=True)
         except Exception as exc:

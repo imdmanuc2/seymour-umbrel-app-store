@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+PKG="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+"$PKG/scripts/doctor.sh" "$ROOT"
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+BACKUP="$ROOT/backups/sbp-060.3-$STAMP"
+mkdir -p "$BACKUP/shared/blockchain_install" "$BACKUP/seymour-blockchain-manager/data/web"
+for f in models.py storage.py preflight.py __init__.py; do cp -a "$ROOT/shared/blockchain_install/$f" "$BACKUP/shared/blockchain_install/$f"; done
+cp -a "$ROOT/seymour-blockchain-manager/data/web/storage_targets.py" "$BACKUP/seymour-blockchain-manager/data/web/storage_targets.py"
+cp -a "$ROOT/seymour-blockchain-manager/data/web/installer.py" "$BACKUP/seymour-blockchain-manager/data/web/installer.py"
+python3 "$PKG/scripts/patch.py" "$ROOT"
+cp "$PKG/payload/tests/test_blockchain_storage_mount_guard.py" "$ROOT/tests/test_blockchain_storage_mount_guard.py"
+printf '%s\n' "$BACKUP" > "$ROOT/backups/sbp-060.3-latest"
+echo "Backup: $BACKUP"
+echo "SBP-060.3 filesystem identity guard installed: PASS"
+echo "SBP-060.3 fail-closed mount guard installed: PASS"
+echo "SBP-060.3 installer pre-execution guard installed: PASS"
+echo "SBP-060.3 install: PASS"
+echo "No blockchain runtime was started/stopped and no chain data was moved."

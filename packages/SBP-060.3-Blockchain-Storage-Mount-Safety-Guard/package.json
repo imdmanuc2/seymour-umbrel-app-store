@@ -1,0 +1,9 @@
+{
+  "id": "SBP-060.3",
+  "name": "Blockchain Storage Mount Safety Guard",
+  "version": "1.0.0",
+  "requires": ["SBP-054", "SBP-056", "SBP-058", "SBP-060.2"],
+  "safeInstall": true,
+  "startsRuntime": false,
+  "movesBlockchainData": false
+}

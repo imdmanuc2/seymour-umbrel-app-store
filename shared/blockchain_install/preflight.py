@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Any
 from .models import CapacityPolicy, HostProfile, InstallPreflight, StorageTarget
+from .storage import verify_storage_target
 
 DEFAULT_RESERVE_RATIO = 0.20
 DEFAULT_MINIMUM_RESERVE_BYTES = 50_000_000_000
@@ -31,6 +32,7 @@ def evaluate(
         reserve_ratio=reserve_ratio,
         minimum_reserve_bytes=minimum_reserve_bytes,
     )
+    mount_guard = verify_storage_target(storage_target, minimum_free_bytes=policy.required_bytes)
     checks = {
         "providerIdPresent": bool(provider_id),
         "architecture": host.architecture,
@@ -45,6 +47,8 @@ def evaluate(
         "storageFreeBytes": storage_target.free_bytes,
         "storageRequiredBytes": policy.required_bytes,
         "storageCapacityHealthy": storage_target.free_bytes >= policy.required_bytes,
+        "storageMountIdentityHealthy": bool(mount_guard["healthy"]),
+        "storageMountIdentity": mount_guard,
     }
     errors, warnings = [], []
     if not checks["providerIdPresent"]: errors.append("Provider ID is missing.")
@@ -55,6 +59,7 @@ def evaluate(
     if not checks["storageWritable"]: errors.append("Selected storage target is not writable.")
     if not checks["storagePersistent"]: errors.append("Selected storage target is not persistent.")
     if not checks["storageCapacityHealthy"]: errors.append("Selected storage target does not have enough free capacity.")
+    if not checks["storageMountIdentityHealthy"]: errors.extend(str(item) for item in mount_guard["errors"])
     if host.cpu_count <= 0: warnings.append("CPU count could not be measured.")
     if host.memory_total_bytes <= 0: warnings.append("Memory capacity could not be measured.")
     return InstallPreflight(

@@ -108,5 +108,6 @@ def target_by_id(target_id: str) -> StorageTarget | None:
             reachable=bool(item["reachable"]),
             mount_point=item.get("mount_point"),
             remote_host=item.get("remote_host"),
+            filesystem_uuid=item.get("filesystem_uuid"),
         )
     return None
