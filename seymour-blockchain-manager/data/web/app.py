@@ -60,19 +60,30 @@ def load_catalog() -> dict:
 
 def provider_payload(provider: dict) -> dict:
     payload = dict(provider)
-    payload["installAction"] = None
 
-    if provider["providerId"] == "bitcoin-cash-mainnet":
+    action = provider.get("installAction")
+    selectable = bool(provider.get("selectable"))
+
+    if selectable and isinstance(action, dict):
+        app_id = str(action.get("appId", "")).strip()
+        confirmation = str(
+            action.get(
+                "confirmation",
+                f"INSTALL-{app_id}",
+            )
+        ).strip()
+
         payload["installAction"] = {
             "type": "umbrel-app",
-            "appId": BCH_APP_ID,
-            "available": True,
-            "label": "Install Bitcoin Cash",
-            "confirmation": f"INSTALL-{BCH_APP_ID}",
+            "appId": app_id,
+            "available": bool(app_id),
+            "label": f"Install {provider.get('displayName', 'Blockchain')}",
+            "confirmation": confirmation,
         }
+    else:
+        payload["installAction"] = None
 
     return payload
-
 
 class Handler(BaseHTTPRequestHandler):
     server_version = "SeymourBlockchainManager/0.2"
@@ -157,8 +168,26 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"error": "adoption-plan-not-found"}, status=HTTPStatus.NOT_FOUND)
             return
 
-        if self.path == "/api/install/preflight":
-            self.send_json(preflight())
+        if self.path.startswith("/api/install/preflight"):
+            parsed = urlparse(self.path)
+            query = parse_qs(parsed.query)
+
+            provider_id = query.get(
+                "providerId",
+                ["bitcoin-cash-mainnet"],
+            )[0]
+
+            storage_target_id = query.get(
+                "storageTargetId",
+                [None],
+            )[0]
+
+            self.send_json(
+                preflight(
+                    storage_target_id=storage_target_id,
+                    provider_id=provider_id,
+                )
+            )
             return
 
         if self.path == "/api/install/storage-targets":

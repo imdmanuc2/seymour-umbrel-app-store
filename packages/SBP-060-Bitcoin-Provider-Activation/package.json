@@ -1,0 +1,13 @@
+{
+  "id": "SBP-060",
+  "name": "Bitcoin Provider Activation",
+  "version": "1.0.0",
+  "requires": [
+    "SBP-051",
+    "SBP-055",
+    "SBP-059"
+  ],
+  "safeInstall": true,
+  "startsRuntime": false,
+  "movesBlockchainData": false
+}

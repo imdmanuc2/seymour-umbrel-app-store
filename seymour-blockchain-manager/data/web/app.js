@@ -625,7 +625,12 @@ boot().catch((error) => {
 
 async function openInstallWizard(providerId) {
   const provider = state.providers.find((item) => item.providerId === providerId);
-  const preflight = await (await fetch("/api/install/preflight", {cache: "no-store"})).json();
+  const preflight = await (
+    await fetch(
+      `/api/install/preflight?providerId=${encodeURIComponent(provider.providerId)}`,
+      {cache: "no-store"}
+    )
+  ).json();
   const storageInventory = await (await fetch("/api/install/storage-targets", {cache: "no-store"})).json();
   const storageTargets = storageInventory.targets || [];
   const defaultStorageTargetId =
