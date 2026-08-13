@@ -1,0 +1,13 @@
+{
+  "id": "SBP-056",
+  "name": "Blockchain Storage Binding Plan",
+  "version": "1.0.0",
+  "requires": [
+    "SBP-054",
+    "SBP-055"
+  ],
+  "safeInstall": true,
+  "startsRuntime": false,
+  "movesBlockchainData": false,
+  "configuresRemoteStorage": false
+}

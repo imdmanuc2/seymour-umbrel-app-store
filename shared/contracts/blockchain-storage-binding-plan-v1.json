@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "seymour.blockchain-storage-binding-plan-v1",
+  "title": "Seymour Blockchain Storage Binding Plan",
+  "type": "object",
+  "required": [
+    "provider_id",
+    "runtime_host",
+    "storage_target_id",
+    "storage_type",
+    "storage_host",
+    "storage_root",
+    "data_path",
+    "filesystem",
+    "reachable",
+    "writable",
+    "persistent",
+    "eligible",
+    "errors"
+  ]
+}
