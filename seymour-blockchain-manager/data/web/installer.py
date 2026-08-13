@@ -15,6 +15,10 @@ from typing import Any
 from urllib import request
 from uuid import uuid4
 
+from shared.blockchain_install import evaluate as evaluate_install_preflight
+from shared.blockchain_install.host import profile as host_profile
+from storage_targets import storage_targets, target_by_id
+
 CATALOG_PATH = Path(os.environ.get("PROVIDER_CATALOG_PATH", "/catalog/providers.v1.json"))
 INSTALL_SCRIPT = Path(os.environ.get("SEYMOUR_BCH_INSTALL_SCRIPT", "/control/seymour-install-bch"))
 CONTROL_SCRIPT = Path(os.environ.get("SEYMOUR_UMBREL_CONTROL_SCRIPT", "/control/seymour-umbrel-app"))
@@ -39,6 +43,7 @@ class InstallRequest:
     rpc_password: str
     rpc_port: int
     p2p_port: int
+    storage_target_id: str
     confirmation: str
 
     @classmethod
@@ -51,6 +56,7 @@ class InstallRequest:
             rpc_password=str(data.get("rpcPassword", "")),
             rpc_port=int(data.get("rpcPort", 8332)),
             p2p_port=int(data.get("p2pPort", 8333)),
+            storage_target_id=str(data.get("storageTargetId", "")).strip(),
             confirmation=str(data.get("confirmation", "")),
         )
 
@@ -113,35 +119,51 @@ def _provider() -> dict[str, Any]:
     catalog = json.loads(CATALOG_PATH.read_text())
     return next(item for item in catalog["providers"] if item["providerId"] == PROVIDER_ID)
 
-def preflight() -> dict[str, Any]:
+def preflight(storage_target_id: str | None = None) -> dict[str, Any]:
     provider = _provider()
-    architecture = normalized_architecture()
-    usage = shutil.disk_usage("/")
-    required = int(provider["estimatedDiskBytes"])
+    inventory = storage_targets()
+    targets = inventory.get("targets", [])
+    selected = target_by_id(storage_target_id) if storage_target_id else None
+    if selected is None and targets:
+        for item in sorted(targets, key=lambda value: int(value.get("free_bytes", 0)), reverse=True):
+            candidate = target_by_id(item["target_id"])
+            if candidate is not None:
+                selected = candidate
+                break
     checks = {
         "providerSelectable": provider["selectable"],
         "productionImage": provider["productionImage"],
-        "architecture": architecture,
-        "architectureSupported": architecture in provider["supportedArchitectures"],
-        "dockerAvailable": _docker_available(),
         "networkAvailable": _network_available(),
-        "storage": {"requiredBytes": required, "freeBytes": usage.free, "healthy": usage.free >= required},
-        "ports": {"rpc": {"port": 8332, "available": _port_available(8332)}, "p2p": {"port": 8333, "available": _port_available(8333)}},
+        "ports": {
+            "rpc": {"port": 8332, "available": _port_available(8332)},
+            "p2p": {"port": 8333, "available": _port_available(8333)},
+        },
+        "storageTargets": inventory,
+        "selectedStorageTargetId": selected.target_id if selected else None,
     }
     errors = []
     if not checks["providerSelectable"]: errors.append("Bitcoin Cash is not selectable.")
     if not checks["productionImage"]: errors.append("Bitcoin Cash has no production image.")
-    if not checks["architectureSupported"]: errors.append("Host architecture is unsupported.")
-    if not checks["dockerAvailable"]: errors.append("Docker is unavailable.")
     if not checks["networkAvailable"]: errors.append("Container registry is unreachable.")
-    if not checks["storage"]["healthy"]: errors.append("Available storage is insufficient.")
-    return {"compatible": not errors, "checks": checks, "errors": errors}
+    common = None
+    if selected is None:
+        errors.append("No storage target is selected.")
+    else:
+        common = evaluate_install_preflight(provider=provider, host=host_profile(), storage_target=selected)
+        errors.extend(common.errors)
+    return {
+        "compatible": not errors,
+        "checks": checks,
+        "errors": errors,
+        "storagePreflight": common.to_dict() if common is not None else None,
+    }
 
 def validate_request(value: InstallRequest) -> None:
     if value.provider_id != PROVIDER_ID: raise ValueError("Provider is not enabled for installation.")
     if value.app_id != BCH_APP_ID: raise ValueError("App ID is not enabled for installation.")
     if value.confirmation != CONFIRMATION_TOKEN: raise ValueError("Installation confirmation token did not match.")
     if not value.node_name: raise ValueError("Node name is required.")
+    if not value.storage_target_id: raise ValueError("Storage target is required.")
     if not value.rpc_user: raise ValueError("RPC user is required.")
     if len(value.rpc_password) < 24: raise ValueError("RPC password must contain at least 24 characters.")
     if not 1 <= value.rpc_port <= 65535 or not 1 <= value.p2p_port <= 65535: raise ValueError("Port is invalid.")
@@ -168,7 +190,7 @@ class Installer:
 
     def execute(self, value: InstallRequest) -> InstallOperation:
         validate_request(value)
-        checks = preflight()
+        checks = preflight(value.storage_target_id)
         now = utc_now()
         operation = InstallOperation(str(uuid4()), InstallStatus.PLANNED, now, now, asdict(value), checks)
         self._save(operation)

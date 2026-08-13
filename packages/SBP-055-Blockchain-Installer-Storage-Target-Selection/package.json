@@ -1,0 +1,11 @@
+{
+  "id": "SBP-055",
+  "name": "Blockchain Installer Storage Target Selection",
+  "version": "1.0.0",
+  "requires": [
+    "SBP-054"
+  ],
+  "safeInstall": true,
+  "startsRuntime": false,
+  "movesBlockchainData": false
+}

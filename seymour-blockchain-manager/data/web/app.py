@@ -13,6 +13,7 @@ from bch_rpc_probe import probe as probe_bch_rpc
 from sync_manager import analyze
 from sync_performance import analyze as analyze_sync_performance
 from installer import Installer
+from storage_targets import storage_targets
 from adoption import AdoptionService
 from nexus_integration import (
     append_registration_evidence,
@@ -158,6 +159,10 @@ class Handler(BaseHTTPRequestHandler):
 
         if self.path == "/api/install/preflight":
             self.send_json(preflight())
+            return
+
+        if self.path == "/api/install/storage-targets":
+            self.send_json(storage_targets())
             return
 
         if self.path == "/api/install/credentials":
