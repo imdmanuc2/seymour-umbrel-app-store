@@ -1,0 +1,12 @@
+{
+  "id": "SBP-059",
+  "name": "Provider-Neutral BTC/BCH Installer Execution",
+  "version": "1.0.0",
+  "requires": [
+    "SBP-055",
+    "SBP-058"
+  ],
+  "safeInstall": true,
+  "startsRuntime": false,
+  "movesBlockchainData": false
+}

@@ -21,13 +21,37 @@ from shared.blockchain_install.binding import build_binding_plan
 from storage_targets import storage_targets, target_by_id
 
 CATALOG_PATH = Path(os.environ.get("PROVIDER_CATALOG_PATH", "/catalog/providers.v1.json"))
-INSTALL_SCRIPT = Path(os.environ.get("SEYMOUR_BCH_INSTALL_SCRIPT", "/control/seymour-install-bch"))
-CONTROL_SCRIPT = Path(os.environ.get("SEYMOUR_UMBREL_CONTROL_SCRIPT", "/control/seymour-umbrel-app"))
-EVIDENCE_PATH = Path(os.environ.get("INSTALL_EVIDENCE_PATH", "/evidence/installations.jsonl"))
-OPERATIONS_PATH = Path(os.environ.get("INSTALL_OPERATION_DIRECTORY", "/evidence/install-operations"))
-BCH_APP_ID = os.environ.get("BCH_APP_ID", "seymour-bch-node")
-PROVIDER_ID = "bitcoin-cash-mainnet"
-CONFIRMATION_TOKEN = f"INSTALL-{BCH_APP_ID}"
+CONTROL_SCRIPT = Path(os.environ.get(
+    "SEYMOUR_UMBREL_CONTROL_SCRIPT",
+    "/control/seymour-umbrel-app",
+))
+EVIDENCE_PATH = Path(os.environ.get(
+    "INSTALL_EVIDENCE_PATH",
+    "/evidence/installations.jsonl",
+))
+OPERATIONS_PATH = Path(os.environ.get(
+    "INSTALL_OPERATION_DIRECTORY",
+    "/evidence/install-operations",
+))
+
+PROVIDERS = {
+    "bitcoin-mainnet": {
+        "appId": os.environ.get("BTC_APP_ID", "seymour-bitcoin-node"),
+        "installScript": Path(os.environ.get(
+            "SEYMOUR_BTC_INSTALL_SCRIPT",
+            "/control/seymour-install-btc",
+        )),
+        "rpcPrefix": "BTC",
+    },
+    "bitcoin-cash-mainnet": {
+        "appId": os.environ.get("BCH_APP_ID", "seymour-bch-node"),
+        "installScript": Path(os.environ.get(
+            "SEYMOUR_BCH_INSTALL_SCRIPT",
+            "/control/seymour-install-bch",
+        )),
+        "rpcPrefix": "BCH",
+    },
+}
 
 class InstallStatus(StrEnum):
     PLANNED = "planned"
@@ -116,12 +140,23 @@ def _port_available(port: int) -> bool:
         except OSError:
             return False
 
-def _provider() -> dict[str, Any]:
+def _provider(provider_id: str) -> dict[str, Any]:
     catalog = json.loads(CATALOG_PATH.read_text())
-    return next(item for item in catalog["providers"] if item["providerId"] == PROVIDER_ID)
+    return next(
+        item for item in catalog["providers"]
+        if item["providerId"] == provider_id
+    )
 
-def preflight(storage_target_id: str | None = None) -> dict[str, Any]:
-    provider = _provider()
+def provider_runtime(provider_id: str) -> dict[str, Any]:
+    if provider_id not in PROVIDERS:
+        raise ValueError("Provider is not enabled for installation.")
+    return PROVIDERS[provider_id]
+
+def preflight(
+    storage_target_id: str | None = None,
+    provider_id: str = "bitcoin-cash-mainnet",
+) -> dict[str, Any]:
+    provider = _provider(provider_id)
     inventory = storage_targets()
     targets = inventory.get("targets", [])
     selected = target_by_id(storage_target_id) if storage_target_id else None
@@ -143,8 +178,8 @@ def preflight(storage_target_id: str | None = None) -> dict[str, Any]:
         "selectedStorageTargetId": selected.target_id if selected else None,
     }
     errors = []
-    if not checks["providerSelectable"]: errors.append("Bitcoin Cash is not selectable.")
-    if not checks["productionImage"]: errors.append("Bitcoin Cash has no production image.")
+    if not checks["providerSelectable"]: errors.append(f"{provider_id} is not selectable.")
+    if not checks["productionImage"]: errors.append(f"{provider_id} has no production image.")
     if not checks["networkAvailable"]: errors.append("Container registry is unreachable.")
     common = None
     if selected is None:
@@ -160,18 +195,32 @@ def preflight(storage_target_id: str | None = None) -> dict[str, Any]:
     }
 
 def validate_request(value: InstallRequest) -> None:
-    if value.provider_id != PROVIDER_ID: raise ValueError("Provider is not enabled for installation.")
-    if value.app_id != BCH_APP_ID: raise ValueError("App ID is not enabled for installation.")
-    if value.confirmation != CONFIRMATION_TOKEN: raise ValueError("Installation confirmation token did not match.")
-    if not value.node_name: raise ValueError("Node name is required.")
-    if not value.storage_target_id: raise ValueError("Storage target is required.")
-    if not value.rpc_user: raise ValueError("RPC user is required.")
-    if len(value.rpc_password) < 24: raise ValueError("RPC password must contain at least 24 characters.")
-    if not 1 <= value.rpc_port <= 65535 or not 1 <= value.p2p_port <= 65535: raise ValueError("Port is invalid.")
+    runtime = provider_runtime(value.provider_id)
+    expected_app_id = runtime["appId"]
+    expected_confirmation = f"INSTALL-{expected_app_id}"
+
+    if value.app_id != expected_app_id:
+        raise ValueError("App ID does not match the selected provider.")
+    if value.confirmation != expected_confirmation:
+        raise ValueError("Installation confirmation token did not match.")
+    if not value.node_name:
+        raise ValueError("Node name is required.")
+    if not value.storage_target_id:
+        raise ValueError("Storage target is required.")
+    if not value.rpc_user:
+        raise ValueError("RPC user is required.")
+    if len(value.rpc_password) < 24:
+        raise ValueError("RPC password must contain at least 24 characters.")
+    if not 1 <= value.rpc_port <= 65535 or not 1 <= value.p2p_port <= 65535:
+        raise ValueError("Port is invalid.")
 
 class Installer:
-    def __init__(self, install_script: Path = INSTALL_SCRIPT, control_script: Path = CONTROL_SCRIPT, evidence_path: Path = EVIDENCE_PATH, operations_path: Path = OPERATIONS_PATH) -> None:
-        self.install_script = install_script
+    def __init__(
+        self,
+        control_script: Path = CONTROL_SCRIPT,
+        evidence_path: Path = EVIDENCE_PATH,
+        operations_path: Path = OPERATIONS_PATH,
+    ) -> None:
         self.control_script = control_script
         self.evidence_path = evidence_path
         self.operations_path = operations_path
@@ -191,7 +240,8 @@ class Installer:
 
     def execute(self, value: InstallRequest) -> InstallOperation:
         validate_request(value)
-        checks = preflight(value.storage_target_id)
+        runtime = provider_runtime(value.provider_id)
+        checks = preflight(value.storage_target_id, value.provider_id)
         now = utc_now()
         operation = InstallOperation(str(uuid4()), InstallStatus.PLANNED, now, now, asdict(value), checks)
         self._save(operation)
@@ -237,23 +287,40 @@ class Installer:
             self._save(operation)
             return operation
 
+        prefix = runtime["rpcPrefix"]
         env.update({
-            "BCH_RPC_USER": value.rpc_user,
-            "BCH_RPC_PASSWORD": value.rpc_password,
-            "BCH_RPC_PORT": str(value.rpc_port),
-            "BCH_P2P_PORT": str(value.p2p_port),
+            f"{prefix}_RPC_USER": value.rpc_user,
+            f"{prefix}_RPC_PASSWORD": value.rpc_password,
+            f"{prefix}_RPC_PORT": str(value.rpc_port),
+            f"{prefix}_P2P_PORT": str(value.p2p_port),
             "SEYMOUR_NODE_NAME": value.node_name,
             "SEYMOUR_BLOCKCHAIN_DATA_PATH": str(data_path),
         })
+
+        install_script = runtime["installScript"]
+        confirmation_token = f"INSTALL-{runtime['appId']}"
+
         try:
-            completed = subprocess.run([str(self.install_script), "--execute", "--confirm", CONFIRMATION_TOKEN], capture_output=True, text=True, timeout=900, check=False, env=env)
+            completed = subprocess.run(
+                [
+                    str(install_script),
+                    "--execute",
+                    "--confirm",
+                    confirmation_token,
+                ],
+                capture_output=True,
+                text=True,
+                timeout=900,
+                check=False,
+                env=env,
+            )
             if completed.returncode != 0:
                 raise RuntimeError(completed.stderr or completed.stdout)
             operation.result = json.loads(completed.stdout)
-            state = subprocess.run([str(self.control_script), "state", BCH_APP_ID], capture_output=True, text=True, timeout=120, check=False)
+            state = subprocess.run([str(self.control_script), "state", runtime["appId"]], capture_output=True, text=True, timeout=120, check=False)
 
             mount_verify = subprocess.run(
-                ["docker", "inspect", f"{BCH_APP_ID}_node_1", "--format", "{{json .Mounts}}"],
+                ["docker", "inspect", f"{runtime['appId']}_node_1", "--format", "{{json .Mounts}}"],
                 capture_output=True,
                 text=True,
                 timeout=30,
