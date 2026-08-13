@@ -43,7 +43,7 @@ services:
       BTC_RPC_PASSWORD: ${BTC_RPC_PASSWORD:-change-me-before-production}
 
     volumes:
-      - ${APP_DATA_DIR}/data/node:/data
+      - ${SEYMOUR_BLOCKCHAIN_DATA_PATH:-${APP_DATA_DIR}/data/node}:/data
       - ${APP_DATA_DIR}/data/generated:/generated
       - ${APP_DATA_DIR}/data/state:/state
       - >-
@@ -70,7 +70,7 @@ services:
 
     volumes:
       - ${APP_DATA_DIR}/data/status:/app:ro
-      - ${APP_DATA_DIR}/data/node:/node-data:ro
+      - ${SEYMOUR_BLOCKCHAIN_DATA_PATH:-${APP_DATA_DIR}/data/node}:/node-data:ro
       - ${APP_DATA_DIR}/data/contracts:/contracts:ro
 
     depends_on:

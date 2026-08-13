@@ -1,0 +1,14 @@
+{
+  "id": "SBP-058",
+  "name": "Blockchain Runtime Storage Binding Execution",
+  "version": "1.0.0",
+  "requires": [
+    "SBP-054",
+    "SBP-055",
+    "SBP-056",
+    "SBP-057"
+  ],
+  "safeInstall": true,
+  "startsRuntime": false,
+  "movesBlockchainData": false
+}

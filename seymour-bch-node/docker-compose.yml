@@ -33,7 +33,7 @@ services:
       retries: 5
 
     volumes:
-      - ${APP_DATA_DIR}/data/node:/data
+      - ${SEYMOUR_BLOCKCHAIN_DATA_PATH:-${APP_DATA_DIR}/data/node}:/data
       - ${APP_DATA_DIR}/data/generated:/generated
       - ${APP_DATA_DIR}/data/state:/state
       - ${APP_DATA_DIR}/data/node/entrypoint.sh:/usr/local/bin/seymour-entrypoint:ro
@@ -67,7 +67,7 @@ services:
 
     volumes:
       - ${APP_DATA_DIR}/data/status:/app:ro
-      - ${APP_DATA_DIR}/data/node:/node-data
+      - ${SEYMOUR_BLOCKCHAIN_DATA_PATH:-${APP_DATA_DIR}/data/node}:/node-data
       - ${APP_DATA_DIR}/data/state:/state
       - ${APP_DATA_DIR}/data/contracts:/contracts:ro
       - ${APP_DATA_DIR}/data/provisioning:/provisioning:ro
