@@ -1,0 +1,30 @@
+{
+  "contract": "seymour.lifecycle-event",
+  "version": "1.0",
+  "sourceContract": "seymour.app-lifecycle-execution/1.0",
+  "purpose": "Stable lifecycle operational event projection",
+  "eventTypes": [
+    "lifecycle.action.planned",
+    "lifecycle.action.rejected",
+    "lifecycle.action.blocked",
+    "lifecycle.action.succeeded",
+    "lifecycle.action.failed"
+  ],
+  "fields": [
+    "contract",
+    "version",
+    "correlation_id",
+    "observed_at",
+    "event_type",
+    "severity",
+    "source",
+    "app_id",
+    "action",
+    "lifecycle_state",
+    "success",
+    "message",
+    "error"
+  ],
+  "persistenceRequired": false,
+  "directDockerLifecycle": false
+}

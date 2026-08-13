@@ -1,0 +1,110 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "shared"))
+
+from umbrel_control import UmbrelAppControlBridge
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Guarded Seymour bridge to Umbrel app lifecycle API."
+    )
+
+    parser.add_argument(
+        "action",
+        choices=[
+            "list",
+            "state",
+            "logs",
+            "install",
+            "uninstall",
+            "start",
+            "stop",
+            "restart",
+            "update",
+        ],
+    )
+    parser.add_argument(
+        "app_id",
+        nargs="?",
+    )
+    parser.add_argument(
+        "--execute",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--confirm",
+    )
+    parser.add_argument(
+        "--data-directory",
+        type=Path,
+        default=Path("/home/umbrel/umbrel"),
+    )
+    parser.add_argument(
+        "--endpoint",
+        default="ws://localhost/trpc",
+    )
+    parser.add_argument(
+        "--evidence-directory",
+        type=Path,
+        default=REPO / "runtime-evidence" / "app-control",
+    )
+
+    args = parser.parse_args()
+
+    if args.action != "list" and not args.app_id:
+        parser.error(
+            f"{args.action} requires app_id"
+        )
+
+    bridge = UmbrelAppControlBridge(
+        helper_path=(
+            REPO
+            / "shared"
+            / "umbrel_control"
+            / "native-client.ts"
+        ),
+        data_directory=args.data_directory,
+        endpoint=args.endpoint,
+        evidence_directory=args.evidence_directory,
+    )
+
+    try:
+        operation = bridge.execute(
+            args.action,
+            args.app_id,
+            execute=args.execute,
+            confirmation=args.confirm,
+        )
+    except Exception as exc:
+        print(
+            json.dumps(
+                {
+                    "success": False,
+                    "error": str(exc),
+                },
+                indent=2,
+            )
+        )
+        raise SystemExit(1)
+
+    print(
+        json.dumps(
+            operation.to_dict(),
+            indent=2,
+        )
+    )
+
+    if operation.success is False:
+        raise SystemExit(1)
+
+
+if __name__ == "__main__":
+    main()

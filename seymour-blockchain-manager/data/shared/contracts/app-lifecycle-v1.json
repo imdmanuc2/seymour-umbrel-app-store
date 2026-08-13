@@ -1,0 +1,30 @@
+{
+  "contract": "seymour.app-lifecycle",
+  "version": "1.0",
+  "actions": [
+    "install",
+    "start",
+    "stop",
+    "restart",
+    "update",
+    "uninstall"
+  ],
+  "states": [
+    "not-installed",
+    "installing",
+    "stopped",
+    "starting",
+    "syncing",
+    "running",
+    "restarting",
+    "updating",
+    "uninstalling",
+    "degraded",
+    "offline",
+    "error",
+    "unknown"
+  ],
+  "writeOperationsRequireConfirmation": true,
+  "directDockerLifecycle": false,
+  "nativeUmbrelLifecyclePreferred": true
+}

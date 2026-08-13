@@ -1,0 +1,18 @@
+{
+  "contract": "seymour.lifecycle-api-response",
+  "version": "1.0",
+  "sourceContract": "seymour.lifecycle-operation-response/1.0",
+  "purpose": "Stable frontend/API lifecycle operation envelope",
+  "executionOwner": "SBP-031 LifecycleExecutor via SBP-034 LifecycleOperationService",
+  "duplicateExecutionPath": false,
+  "directDockerLifecycle": false,
+  "camelCaseFrontendFields": true,
+  "confirmationTokenForwardedFromCanonicalResult": true,
+  "fields": [
+    "contract", "version", "correlationId", "appId", "action", "allowed",
+    "executed", "success", "beforeState", "afterState", "lifecycleState",
+    "reason", "error", "confirmationRequired", "confirmationToken",
+    "eventType", "severity", "observedAt", "auditPersisted", "auditId"
+  ],
+  "historyContract": "seymour.lifecycle-api-history/1.0"
+}

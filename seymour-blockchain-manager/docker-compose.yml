@@ -13,9 +13,6 @@ services:
       - python
       - /app/app.py
 
-    env_file:
-      - /home/umbrel/seymour-umbrel-app-store-git/private/nexus-registration.env
-
     environment:
       PROVIDER_CATALOG_PATH: /catalog/providers.v1.json
       BCH_APP_ID: seymour-bch-node
@@ -29,6 +26,7 @@ services:
       DOCKER_SOCKET: /var/run/docker.sock
       SEYMOUR_UMBREL_CONTROL_SCRIPT: /control/seymour-umbrel-app
       SEYMOUR_PLATFORM_ROOT: /seymour-platform
+      PYTHONPATH: /seymour-platform
       SEYMOUR_LIFECYCLE_AUDIT_PATH: /evidence/lifecycle-audit.jsonl
       SEYMOUR_LIFECYCLE_NATIVE_EVIDENCE_PATH: /evidence/native-app-control
       LIFECYCLE_EVIDENCE_PATH: /evidence/lifecycle.jsonl
@@ -61,6 +59,6 @@ services:
       - ${APP_DATA_DIR}/data/catalog:/catalog:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${APP_DATA_DIR}/data/evidence:/evidence
-      - /home/umbrel/seymour-umbrel-app-store-git/scripts:/control:ro
-      - /home/umbrel/seymour-umbrel-app-store-git/shared:/seymour-platform/shared:ro
+      - ${APP_DATA_DIR}/data/control:/control:ro
+      - ${APP_DATA_DIR}/data/shared:/seymour-platform/shared:ro
       - /home/umbrel/umbrel/app-data/seymour-bch-node/data/node:/bch-data:ro

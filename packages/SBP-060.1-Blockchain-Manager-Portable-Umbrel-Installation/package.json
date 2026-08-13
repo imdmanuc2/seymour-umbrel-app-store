@@ -1,0 +1,11 @@
+{
+  "id": "SBP-060.1",
+  "name": "Blockchain Manager Portable Umbrel Installation",
+  "version": "1.0.0",
+  "requires": [
+    "SBP-060"
+  ],
+  "safeInstall": true,
+  "startsRuntime": false,
+  "movesBlockchainData": false
+}
