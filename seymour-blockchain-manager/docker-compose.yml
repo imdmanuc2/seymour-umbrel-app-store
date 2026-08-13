@@ -1,11 +1,15 @@
 services:
   app_proxy:
     environment:
-      APP_HOST: seymour-blockchain-manager_web_1
+      APP_HOST: seymour-blockchain-manager-web
       APP_PORT: 8080
 
   web:
     image: python:3.12-alpine
+    networks:
+      default:
+        aliases:
+          - seymour-blockchain-manager-web
     restart: on-failure
     working_dir: /app
 

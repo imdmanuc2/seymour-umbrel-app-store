@@ -6,7 +6,7 @@ cd "$ROOT"
 python3 - <<'PY'
 from pathlib import Path
 text = Path("seymour-blockchain-manager/docker-compose.yml").read_text()
-assert "APP_HOST: seymour-blockchain-manager_web_1" in text
+assert "APP_HOST: seymour-blockchain-manager-web" in text
 assert "APP_HOST: web" not in text
 assert "APP_PORT: 8080" in text
 print("SBP-060.2 source contract tests: PASS")

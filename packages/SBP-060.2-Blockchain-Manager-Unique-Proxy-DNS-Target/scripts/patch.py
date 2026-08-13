@@ -14,5 +14,20 @@ if old in text:
 elif new not in text:
     raise SystemExit("SBP-060.2 APP_HOST anchor not found")
 
+anchor = """  web:
+    image: python:3.12-alpine
+"""
+replacement = """  web:
+    image: python:3.12-alpine
+    networks:
+      default:
+        aliases:
+          - seymour-blockchain-manager-web
+"""
+if "          - seymour-blockchain-manager-web\\n" not in text:
+    if anchor not in text:
+        raise SystemExit("SBP-060.2 web alias anchor not found")
+    text = text.replace(anchor, replacement, 1)
+
 path.write_text(text)
 print("SBP-060.2 unique proxy DNS target: PASS")
