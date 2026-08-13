@@ -1,7 +1,7 @@
 services:
   app_proxy:
     environment:
-      APP_HOST: web
+      APP_HOST: seymour-blockchain-manager_web_1
       APP_PORT: 8080
 
   web:

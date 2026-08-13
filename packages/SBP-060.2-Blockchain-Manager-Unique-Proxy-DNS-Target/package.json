@@ -1,0 +1,9 @@
+{
+  "id": "SBP-060.2",
+  "name": "Blockchain Manager Unique Proxy DNS Target",
+  "version": "1.0.0",
+  "requires": [
+    "SBP-060.1"
+  ],
+  "safeInstall": true
+}

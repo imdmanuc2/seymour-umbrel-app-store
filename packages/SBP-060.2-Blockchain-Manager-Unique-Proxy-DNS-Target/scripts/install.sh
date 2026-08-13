@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+PKG="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+"$PKG/scripts/doctor.sh" "$ROOT"
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+BACKUP="$ROOT/backups/sbp-060.2-$STAMP"
+mkdir -p "$BACKUP/seymour-blockchain-manager"
+cp -a "$ROOT/seymour-blockchain-manager/docker-compose.yml" "$BACKUP/seymour-blockchain-manager/"
+python3 "$PKG/scripts/patch.py" "$ROOT"
+cp "$PKG/payload/tests/test_blockchain_manager_unique_proxy_dns.py" "$ROOT/tests/test_blockchain_manager_unique_proxy_dns.py"
+printf '%s\n' "$BACKUP" > "$ROOT/backups/sbp-060.2-latest"
+echo "Backup: $BACKUP"
+echo "SBP-060.2 unique proxy DNS target installed: PASS"
+echo "SBP-060.2 install readiness contract installed: PASS"
+echo "SBP-060.2 install: PASS"
+echo "No running app was restarted."
