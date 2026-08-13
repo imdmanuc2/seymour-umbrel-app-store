@@ -1,0 +1,165 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+import socket
+import sys
+
+REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO))
+
+from shared.blockchain_install.materialize import (
+    build_nfs_plan,
+    command_available,
+    ensure_line,
+    run,
+    verify_mount,
+    write_evidence,
+)
+
+
+def parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        description="Guarded Seymour remote blockchain storage materializer."
+    )
+    p.add_argument("--provider-id", required=True)
+    p.add_argument("--storage-host", required=True)
+    p.add_argument("--storage-path", required=True)
+    p.add_argument("--runtime-host", required=True)
+    p.add_argument("--runtime-mount-path", required=True)
+    p.add_argument("--client-cidr", default="192.168.0.0/16")
+    p.add_argument("--minimum-free-bytes", type=int, default=0)
+    p.add_argument("--role", choices=["storage-host", "runtime-host"], required=True)
+    p.add_argument("--execute", action="store_true")
+    p.add_argument("--confirm")
+    p.add_argument(
+        "--evidence-path",
+        type=Path,
+        default=REPO / "runtime-evidence" / "storage-materialization.json",
+    )
+    return p
+
+
+def main() -> None:
+    args = parser().parse_args()
+
+    plan = build_nfs_plan(
+        provider_id=args.provider_id,
+        storage_host=args.storage_host,
+        storage_path=args.storage_path,
+        runtime_host=args.runtime_host,
+        runtime_mount_path=args.runtime_mount_path,
+        client_cidr=args.client_cidr,
+    )
+
+    payload = {
+        "contract": "seymour.blockchain-storage-materialization",
+        "version": "1.0",
+        "mode": "execute" if args.execute else "plan",
+        "role": args.role,
+        "host": socket.gethostname(),
+        "plan": plan.to_dict(),
+        "executed": False,
+        "success": False,
+        "steps": [],
+    }
+
+    if not args.execute:
+        payload["success"] = plan.eligible
+        print(json.dumps(payload, indent=2))
+        raise SystemExit(0 if plan.eligible else 1)
+
+    if args.confirm != plan.confirmation:
+        payload["error"] = "confirmation-mismatch"
+        payload["expectedConfirmation"] = plan.confirmation
+        print(json.dumps(payload, indent=2))
+        raise SystemExit(1)
+
+    if not plan.eligible:
+        payload["error"] = "plan-ineligible"
+        print(json.dumps(payload, indent=2))
+        raise SystemExit(1)
+
+    if args.role == "storage-host":
+        if not command_available("exportfs"):
+            payload["error"] = "exportfs-unavailable"
+            print(json.dumps(payload, indent=2))
+            raise SystemExit(1)
+
+        storage_path = Path(plan.storage_path)
+        storage_path.mkdir(parents=True, exist_ok=True)
+
+        export_line = (
+            f"{plan.storage_path} "
+            f"{args.client_cidr}(rw,sync,no_subtree_check,no_root_squash)"
+        )
+        exports_file = Path(plan.exports_file)
+        changed = ensure_line(exports_file, export_line)
+        payload["steps"].append({
+            "step": "write-export",
+            "changed": changed,
+            "file": str(exports_file),
+            "line": export_line,
+        })
+
+        export_result = run(["exportfs", "-ra"])
+        payload["steps"].append({
+            "step": "reload-exports",
+            **export_result,
+        })
+
+        payload["executed"] = True
+        payload["success"] = export_result["success"]
+
+    else:
+        if not command_available("mount"):
+            payload["error"] = "mount-unavailable"
+            print(json.dumps(payload, indent=2))
+            raise SystemExit(1)
+
+        mount_path = Path(plan.runtime_mount_path)
+        mount_path.mkdir(parents=True, exist_ok=True)
+
+        fstab_line = (
+            f"{plan.nfs_source} {plan.runtime_mount_path} "
+            f"nfs4 defaults,_netdev,nofail,x-systemd.automount 0 0"
+        )
+        fstab_file = Path(plan.fstab_file)
+        changed = ensure_line(fstab_file, fstab_line)
+        payload["steps"].append({
+            "step": "write-fstab",
+            "changed": changed,
+            "file": str(fstab_file),
+            "line": fstab_line,
+        })
+
+        mount_result = run(["mount", plan.runtime_mount_path], timeout=60)
+        payload["steps"].append({
+            "step": "mount-target",
+            **mount_result,
+        })
+
+        data_path = Path(plan.data_path)
+        if mount_result["success"]:
+            data_path.mkdir(parents=True, exist_ok=True)
+
+        verification = verify_mount(
+            mount_path=mount_path,
+            minimum_free_bytes=args.minimum_free_bytes,
+        )
+        payload["verification"] = verification
+        payload["executed"] = True
+        payload["success"] = (
+            mount_result["success"]
+            and verification["healthy"]
+        )
+
+    write_evidence(args.evidence_path, payload)
+    print(json.dumps(payload, indent=2))
+    raise SystemExit(0 if payload["success"] else 1)
+
+
+if __name__ == "__main__":
+    main()

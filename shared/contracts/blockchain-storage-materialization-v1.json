@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "seymour.blockchain-storage-materialization-v1",
+  "title": "Seymour Blockchain Storage Materialization",
+  "type": "object",
+  "required": [
+    "contract",
+    "version",
+    "mode",
+    "role",
+    "plan",
+    "executed",
+    "success"
+  ]
+}

@@ -10,3 +10,4 @@ __all__ = [
     "profile","read_mounts","registered_remote_target","target_from_path","umbrel_available",
 ]
 from .binding import StorageBindingPlan, build_binding_plan, provider_storage_name
+from .materialize import NfsMaterializationPlan, build_nfs_plan, confirmation_token, verify_mount

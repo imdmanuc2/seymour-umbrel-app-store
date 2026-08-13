@@ -1,0 +1,15 @@
+{
+  "id": "SBP-057",
+  "name": "Remote Storage Target Materialization",
+  "version": "1.0.0",
+  "requires": [
+    "SBP-054",
+    "SBP-055",
+    "SBP-056"
+  ],
+  "safeInstall": true,
+  "startsRuntime": false,
+  "movesBlockchainData": false,
+  "defaultExecution": "plan",
+  "remoteProtocol": "nfs"
+}
