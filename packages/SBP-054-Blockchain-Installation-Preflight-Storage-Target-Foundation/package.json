@@ -1,0 +1,11 @@
+{
+  "id": "SBP-054",
+  "name": "Blockchain Installation Preflight & Storage Target Foundation",
+  "version": "1.0.0",
+  "safeInstall": true,
+  "providerNeutral": true,
+  "startsRuntime": false,
+  "restartsRuntime": false,
+  "movesBlockchainData": false,
+  "configuresRemoteStorage": false
+}

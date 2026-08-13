@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "seymour.blockchain-install-preflight-v1",
+  "title": "Seymour Blockchain Install Preflight",
+  "type": "object",
+  "required": [
+    "provider_id",
+    "compatible",
+    "host",
+    "storage_target",
+    "capacity",
+    "checks",
+    "errors",
+    "warnings"
+  ]
+}
