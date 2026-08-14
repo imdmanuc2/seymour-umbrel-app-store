@@ -1,0 +1,11 @@
+{
+  "id": "SBP-061",
+  "name": "Blockchain Runtime RPC Load Control & Telemetry Resilience",
+  "version": "1.0.0",
+  "requires": [
+    "SBP-060.10"
+  ],
+  "safeInstall": true,
+  "restartsBlockchainRuntimeDuringInstall": false,
+  "modifiesBlockchainData": false
+}
