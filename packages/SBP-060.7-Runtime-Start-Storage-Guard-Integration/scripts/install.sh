@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+PKG="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+"$PKG/scripts/doctor.sh" "$ROOT"
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+BACKUP="$ROOT/backups/sbp-060.7-$STAMP"
+mkdir -p "$BACKUP" "$ROOT/tests"
+cp -a "$ROOT/shared/umbrel_control/bridge.py" "$BACKUP/bridge.py"
+cp "$PKG/payload/shared/blockchain_install/start_guard.py" "$ROOT/shared/blockchain_install/start_guard.py"
+cp "$PKG/payload/tests/test_start_guard.py" "$ROOT/tests/test_start_guard.py"
+python3 "$PKG/scripts/patch.py"
+echo "Backup: $BACKUP"
+echo "SBP-060.7 pre-start storage guard installed: PASS"
+echo "SBP-060.7 post-start live mount verification installed: PASS"
+echo "SBP-060.7 protective native stop-on-mismatch installed: PASS"
+echo "SBP-060.7 install: PASS"
+echo "No blockchain runtime was restarted or modified."

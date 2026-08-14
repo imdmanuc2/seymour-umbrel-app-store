@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+PKG="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+"$PKG/scripts/doctor.sh" "$ROOT"
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+BACKUP="$ROOT/backups/sbp-060.6-$STAMP"
+mkdir -p "$BACKUP" "$ROOT/tests"
+cp -a "$ROOT/seymour-blockchain-manager/data/web/installer.py" "$BACKUP/installer.py"
+cp "$PKG/payload/shared/blockchain_install/runtime_binding.py" "$ROOT/shared/blockchain_install/runtime_binding.py"
+cp "$PKG/payload/shared/blockchain_install/prestart_guard.py" "$ROOT/shared/blockchain_install/prestart_guard.py"
+cp "$PKG/payload/tests/test_runtime_binding.py" "$ROOT/tests/test_runtime_binding.py"
+echo "Backup: $BACKUP"
+echo "SBP-060.6 persistent binding library installed: PASS"
+echo "SBP-060.6 pre-start verification foundation installed: PASS"
+echo "SBP-060.6 install: PASS"
+echo "No blockchain runtime was restarted and no blockchain data was moved."

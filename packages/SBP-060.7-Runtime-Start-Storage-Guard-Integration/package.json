@@ -1,0 +1,11 @@
+{
+  "id": "SBP-060.7",
+  "name": "Runtime Start Storage Guard Integration",
+  "version": "1.0.0",
+  "requires": [
+    "SBP-060.6"
+  ],
+  "safeInstall": true,
+  "directDockerLifecycle": false,
+  "restartsRuntimeDuringInstall": false
+}

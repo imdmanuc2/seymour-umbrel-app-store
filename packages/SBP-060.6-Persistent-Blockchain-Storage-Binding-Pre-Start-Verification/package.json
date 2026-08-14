@@ -1,0 +1,13 @@
+{
+  "id": "SBP-060.6",
+  "name": "Persistent Blockchain Storage Binding Pre-Start Verification",
+  "version": "1.0.0",
+  "requires": [
+    "SBP-060.3",
+    "SBP-060.4",
+    "SBP-060.5"
+  ],
+  "safeInstall": true,
+  "restartsRuntime": false,
+  "movesBlockchainData": false
+}
