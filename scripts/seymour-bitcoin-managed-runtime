@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+
+# SBP-060.10 architecture guard
+case " $* " in
+  *" install "*|*" start "*)
+    "$(dirname "$0")/seymour-bitcoin-architecture-preflight"       --require-compatible
+    ;;
+esac
 from __future__ import annotations
 
 import argparse

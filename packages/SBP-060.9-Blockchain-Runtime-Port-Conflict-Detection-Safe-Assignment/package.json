@@ -1,0 +1,13 @@
+{
+  "id": "SBP-060.9",
+  "name": "Blockchain Runtime Port Conflict Detection Safe Assignment",
+  "version": "1.0.0",
+  "requires": [
+    "SBP-060.4",
+    "SBP-060.7",
+    "SBP-060.8"
+  ],
+  "safeInstall": true,
+  "restartsRuntimeDuringInstall": false,
+  "destructiveRepair": false
+}

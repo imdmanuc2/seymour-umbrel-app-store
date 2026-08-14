@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from shared.blockchain_install.start_guard import (
+from blockchain_install.start_guard import (
     resolve_storage_expectation,
     verify_expected_path,
 )
@@ -232,6 +232,21 @@ class UmbrelAppControlBridge:
                 app_id,
             )
             operation.executed = True
+
+            # Umbrel mutations may exit successfully while
+            # explicitly returning false. A false native result
+            # is a failed operation, not a successful command.
+            native_value = operation.result
+
+            if (
+                action in WRITE_ACTIONS
+                and native_value is False
+            ):
+                raise RuntimeError(
+                    f"Umbrel native {action} returned false "
+                    f"for {app_id}"
+                )
+
             operation.success = True
 
             if storage_expectation is not None:

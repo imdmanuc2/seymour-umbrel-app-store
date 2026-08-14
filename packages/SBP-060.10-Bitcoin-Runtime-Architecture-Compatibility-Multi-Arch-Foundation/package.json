@@ -1,0 +1,13 @@
+{
+  "id": "SBP-060.10",
+  "name": "Bitcoin Runtime Architecture Compatibility & Multi-Arch Image Foundation",
+  "version": "1.0.0",
+  "requires": [
+    "SBP-060.8",
+    "SBP-060.9"
+  ],
+  "safeInstall": true,
+  "restartsRuntimeDuringInstall": false,
+  "modifiesBlockchainData": false,
+  "destructiveRepair": false
+}

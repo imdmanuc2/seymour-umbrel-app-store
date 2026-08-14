@@ -6,7 +6,7 @@ BRIDGE = ROOT / "shared" / "umbrel_control" / "bridge.py"
 
 text = BRIDGE.read_text()
 
-import_block = '''from shared.blockchain_install.start_guard import (
+import_block = '''from blockchain_install.start_guard import (
     resolve_storage_expectation,
     verify_expected_path,
 )
@@ -14,7 +14,7 @@ import_block = '''from shared.blockchain_install.start_guard import (
 
 # Remove an older 060.7 import form if present.
 text = text.replace(
-'''from shared.blockchain_install.start_guard import (
+'''from blockchain_install.start_guard import (
     resolve_storage_expectation,
     verify_expected_path,
     wait_for_live_binding,

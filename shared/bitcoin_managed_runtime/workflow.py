@@ -240,22 +240,160 @@ class BitcoinManagedRuntimeWorkflow:
                 f"Expected: {expected}"
             )
 
-        install_result = self._run(
-            [
-                str(self.control_script),
-                "install",
-                APP_ID,
-                "--execute",
-                "--confirm",
-                expected,
-            ]
+        source_compose = (
+            self.repository
+            / APP_ID
+            / "docker-compose.yml"
         )
 
-        if not install_result["success"]:
+        if not source_compose.is_file():
+            raise RuntimeError(
+                "Repository Bitcoin compose not found."
+            )
+
+        original_compose = (
+            source_compose.read_text()
+        )
+
+        staged = False
+
+        try:
+            # Stage the selected storage path BEFORE Umbrel
+            # creates containers. This prevents creation with
+            # the local app-data fallback.
+            persist_runtime_binding(
+                provider_id=PROVIDER_ID,
+                app_id=APP_ID,
+                compose_path=source_compose,
+                data_path=self.data_path,
+            )
+
+            staged_text = (
+                source_compose.read_text()
+            )
+
+            if (
+                f"{self.data_path}:/data"
+                not in staged_text
+            ):
+                raise RuntimeError(
+                    "Bitcoin source compose storage "
+                    "binding was not staged."
+                )
+
+            staged = True
+
+            install_result = self._run(
+                [
+                    str(self.control_script),
+                    "install",
+                    APP_ID,
+                    "--execute",
+                    "--confirm",
+                    expected,
+                ]
+            )
+
+        finally:
+            # Never leave machine-specific storage in Git source.
+            source_compose.write_text(
+                original_compose
+            )
+
+        native_payload = (
+            install_result.get("payload")
+            if isinstance(
+                install_result,
+                dict,
+            )
+            else None
+        )
+
+        native_success = (
+            install_result.get("success") is True
+            and isinstance(
+                native_payload,
+                dict,
+            )
+            and native_payload.get(
+                "success"
+            ) is True
+        )
+
+        if not native_success:
             return {
                 "success": False,
                 "phase": "native-install",
+                "storageStaged": staged,
                 "installResult": install_result,
+            }
+
+        # Native command success is not enough. Umbrel must
+        # actually recognize the application afterward. Allow
+        # a bounded registration window because Umbrel may
+        # finish the mutation before apps.state reflects it.
+        import time
+
+        state_result = None
+        state_value = None
+        deadline = time.monotonic() + 90
+
+        while time.monotonic() < deadline:
+            state_result = self._run(
+                [
+                    str(self.control_script),
+                    "state",
+                    APP_ID,
+                ],
+                timeout=30,
+            )
+
+            state_payload = (
+                state_result.get("payload")
+                if isinstance(
+                    state_result,
+                    dict,
+                )
+                else None
+            )
+
+            state_value = None
+
+            if isinstance(
+                state_payload,
+                dict,
+            ):
+                result_value = (
+                    state_payload.get("result")
+                )
+
+                if isinstance(
+                    result_value,
+                    dict,
+                ):
+                    state_value = (
+                        result_value.get("state")
+                    )
+
+            if state_value not in {
+                None,
+                "not-installed",
+            }:
+                break
+
+            time.sleep(3)
+
+        if state_value in {
+            None,
+            "not-installed",
+        }:
+            return {
+                "success": False,
+                "phase": "registration-verification",
+                "storageStaged": staged,
+                "installResult": install_result,
+                "stateResult": state_result,
+                "state": state_value,
             }
 
         if not self.installed_compose_path.is_file():

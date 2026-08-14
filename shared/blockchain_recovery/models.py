@@ -12,6 +12,8 @@ class RecoveryKind(StrEnum):
     STARTUP_WARMUP="startup-warmup"
     REGISTRATION_MISSING="registration-missing"
     SUSPICIOUS_FRESH_SYNC="suspicious-fresh-sync"
+    RUNTIME_PORT_CONFLICT="runtime-port-conflict"
+    RUNTIME_IMAGE_ARCHITECTURE_MISMATCH="runtime-image-architecture-mismatch"
 
 @dataclass
 class Finding:

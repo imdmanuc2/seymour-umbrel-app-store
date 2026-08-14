@@ -50,7 +50,7 @@ services:
         ${APP_DATA_DIR}/data/node/entrypoint.sh:/usr/local/bin/seymour-entrypoint:ro
 
     ports:
-      - "8333:8333"
+      - "${BTC_P2P_HOST_PORT:-8335}:8333"
 
   status:
     image: python:3.12-alpine

@@ -1,6 +1,8 @@
 from pathlib import Path
 import json, shutil, socket, subprocess
 from .models import Finding,RecoveryKind,RecoveryReport,RecoveryState
+from .port_guard import inspect_port_conflict
+from .image_architecture import image_architecture_finding_payload
 
 def _findmnt(path:Path):
     r=subprocess.run(["findmnt","-J","-T",str(path)],capture_output=True,text=True)
@@ -55,6 +57,37 @@ def registration_missing_finding(installed_app_path:Path,external_data_path:Path
             evidence={"installedAppPath":str(installed_app_path),"externalDataPath":str(external_data_path)})
     return None
 
+def runtime_image_architecture_finding(provider_id:str,image:str):
+    result=image_architecture_finding_payload(image)
+    if not result["conflict"]:
+        return None
+    return Finding(
+        RecoveryKind.RUNTIME_IMAGE_ARCHITECTURE_MISMATCH,
+        RecoveryState.BLOCKED,
+        "Runtime container image architecture does not match the runtime host. Install/start is blocked.",
+        False,
+        evidence={"providerId":provider_id,**result},
+    )
+
+def runtime_port_conflict_finding(
+    provider_id:str,
+    requested_port:int,
+    candidate_ports:list[int],
+):
+    result=inspect_port_conflict(
+        requested_port=requested_port,
+        candidates=candidate_ports,
+    )
+    if not result["conflict"]:
+        return None
+    return Finding(
+        RecoveryKind.RUNTIME_PORT_CONFLICT,
+        RecoveryState.BLOCKED,
+        f"Requested host TCP port {requested_port} is already in use. Existing owner will not be stopped automatically.",
+        False,
+        evidence={"providerId":provider_id, **result},
+    )
+
 def suspicious_fresh_sync_finding(external_data_path:Path,live_blocks:int,live_size_on_disk:int):
     try:
         r=subprocess.run(["du","-s","-B1",str(external_data_path)],capture_output=True,text=True,timeout=60)
@@ -68,7 +101,8 @@ def suspicious_fresh_sync_finding(external_data_path:Path,live_blocks:int,live_s
 
 def plan(provider_id:str,runtime_host:str,storage_target=None,expected_source=None,expected_fstype=None,
          dns_alias=None,installed_app_path=None,external_data_path=None,rpc_output=None,
-         live_blocks=None,live_size_on_disk=None):
+         live_blocks=None,live_size_on_disk=None,requested_host_port=None,candidate_host_ports=None,
+         runtime_image=None):
     fs=[]
     if storage_target:
         f=storage_mount_finding(Path(storage_target),provider_id,expected_source,expected_fstype)
@@ -84,6 +118,16 @@ def plan(provider_id:str,runtime_host:str,storage_target=None,expected_source=No
         if f: fs.append(f)
     if external_data_path is not None and live_blocks is not None and live_size_on_disk is not None:
         f=suspicious_fresh_sync_finding(Path(external_data_path),live_blocks,live_size_on_disk)
+        if f: fs.append(f)
+    if requested_host_port is not None:
+        f=runtime_port_conflict_finding(
+            provider_id,
+            int(requested_host_port),
+            [int(x) for x in (candidate_host_ports or [])],
+        )
+        if f: fs.append(f)
+    if runtime_image is not None:
+        f=runtime_image_architecture_finding(provider_id,str(runtime_image))
         if f: fs.append(f)
     state=RecoveryState.HEALTHY
     if any(x.state==RecoveryState.BLOCKED for x in fs): state=RecoveryState.BLOCKED
