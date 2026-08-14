@@ -1,0 +1,13 @@
+{
+  "id": "SBP-062",
+  "name": "Bitcoin Multi-Arch Runtime Image Foundation",
+  "version": "1.0.0",
+  "requires": [
+    "SBP-060.10",
+    "SBP-061"
+  ],
+  "safeInstall": true,
+  "publishesImageDuringInstall": false,
+  "restartsBlockchainRuntimeDuringInstall": false,
+  "modifiesBlockchainData": false
+}
