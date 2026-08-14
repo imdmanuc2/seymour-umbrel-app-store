@@ -1,0 +1,13 @@
+{
+  "id": "SBP-060.8",
+  "name": "Bitcoin Managed Runtime Registration Activation",
+  "version": "1.0.0",
+  "requires": [
+    "SBP-060.5",
+    "SBP-060.6",
+    "SBP-060.7"
+  ],
+  "safeInstall": true,
+  "installsBitcoinDuringPackageInstall": false,
+  "startsBitcoinDuringPackageInstall": false
+}
