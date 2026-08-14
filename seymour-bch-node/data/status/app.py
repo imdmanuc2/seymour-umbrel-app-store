@@ -127,6 +127,7 @@ def status_payload() -> dict:
             "status": "starting",
             "chain": "bitcoin-cash",
             "rpcReachable": False,
+            "rpcHealthy": False,
             "error": str(exc),
             "storage": storage_payload(),
         }
@@ -150,7 +151,9 @@ def status_payload() -> dict:
             "status": "rpc-slow",
             "chain": "bitcoin-cash",
             "rpcReachable": True,
+            "rpcHealthy": True,
             "uptime": uptime,
+            "warning": "Detailed blockchain telemetry is temporarily slow.",
             "error": str(exc),
             "storage": storage_payload(),
         }
@@ -160,6 +163,7 @@ def status_payload() -> dict:
         "status": "online",
         "chain": "bitcoin-cash",
         "rpcReachable": True,
+        "rpcHealthy": True,
         "uptime": uptime,
         "blocks": blockchain.get(
             "blocks"
@@ -205,6 +209,7 @@ def health_payload() -> dict:
             "status": "online",
             "chain": "bitcoin-cash",
             "rpcReachable": True,
+            "rpcHealthy": True,
             "uptime": uptime,
             "storage": storage_payload(),
         }
@@ -215,6 +220,7 @@ def health_payload() -> dict:
             "status": "starting",
             "chain": "bitcoin-cash",
             "rpcReachable": False,
+            "rpcHealthy": False,
             "error": str(exc),
             "storage": storage_payload(),
         }
