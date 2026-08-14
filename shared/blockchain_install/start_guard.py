@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+import socket
+from urllib.parse import quote
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,30 +16,99 @@ class StorageExpectation:
     app_id: str
     compose_path: Path
     data_path: Path
+    status_data_path: Path | None = None
 
 
-def resolve_storage_expectation(*, data_directory: Path, app_id: str) -> StorageExpectation | None:
-    compose = data_directory / "app-data" / app_id / "docker-compose.yml"
+def resolve_storage_expectation(
+    *,
+    data_directory: Path,
+    app_id: str,
+) -> StorageExpectation | None:
+    compose = (
+        data_directory
+        / "app-data"
+        / app_id
+        / "docker-compose.yml"
+    )
+
     if not compose.is_file():
         return None
+
     text = compose.read_text()
-    matches = re.findall(
+
+    data_matches = re.findall(
         r'^\s*-\s+(.+):/data(?::(?:ro|rw))?\s*$',
         text,
         flags=re.MULTILINE,
     )
-    if not matches:
+
+    if not data_matches:
         return None
-    source = matches[0].strip().strip("'\\\"")
+
+    source = (
+        data_matches[0]
+        .strip()
+        .strip("'\"")
+    )
+
     if "$" in source:
         raise RuntimeError(
-            f"Blockchain runtime storage binding is not persisted for {app_id}; refusing start."
+            "Blockchain runtime storage binding "
+            f"is not persisted for {app_id}; "
+            "refusing start."
         )
-    path = Path(source)
-    if not path.is_absolute():
-        raise RuntimeError(f"Blockchain runtime /data source is not absolute: {source}")
-    return StorageExpectation(app_id=app_id, compose_path=compose, data_path=path)
 
+    data_path = Path(source)
+
+    if not data_path.is_absolute():
+        raise RuntimeError(
+            "Blockchain runtime /data source "
+            f"is not absolute: {source}"
+        )
+
+    status_matches = re.findall(
+        r'^\s*-\s+(.+):/node-data(?::(?:ro|rw))?\s*$',
+        text,
+        flags=re.MULTILINE,
+    )
+
+    status_data_path = None
+
+    if status_matches:
+        status_source = (
+            status_matches[0]
+            .strip()
+            .strip("'\"")
+        )
+
+        if "$" in status_source:
+            raise RuntimeError(
+                "Blockchain status storage binding "
+                f"is not persisted for {app_id}; "
+                "refusing start."
+            )
+
+        status_data_path = Path(
+            status_source
+        )
+
+        if (
+            status_data_path.resolve()
+            != data_path.resolve()
+        ):
+            raise RuntimeError(
+                "Blockchain runtime /data and "
+                "/node-data bindings disagree: "
+                f"{data_path} != "
+                f"{status_data_path}"
+            )
+
+    return StorageExpectation(
+        app_id=app_id,
+        compose_path=compose,
+        data_path=data_path,
+        status_data_path=status_data_path,
+    )
 
 def verify_expected_path(expectation: StorageExpectation) -> dict[str, Any]:
     path = expectation.data_path
@@ -80,32 +151,122 @@ def verify_expected_path(expectation: StorageExpectation) -> dict[str, Any]:
     return result
 
 
-def discover_node_container(app_id: str) -> str | None:
-    proc = subprocess.run(
-        [
-            "docker", "ps", "-a",
-            "--filter", f"label=com.docker.compose.project={app_id}",
-            "--filter", "label=com.docker.compose.service=node",
-            "--format", "{{.Names}}",
-        ],
-        capture_output=True, text=True, timeout=10, check=False,
-    )
-    if proc.returncode != 0:
-        return None
-    names = [x.strip() for x in proc.stdout.splitlines() if x.strip()]
-    return names[0] if names else None
+def _docker_request(path: str) -> tuple[int, bytes]:
+    docker_socket = Path("/var/run/docker.sock")
 
+    if not docker_socket.exists():
+        return 0, b""
+
+    sock = socket.socket(
+        socket.AF_UNIX,
+        socket.SOCK_STREAM,
+    )
+    sock.settimeout(5)
+    sock.connect(str(docker_socket))
+
+    sock.sendall(
+        (
+            f"GET {path} HTTP/1.1\r\n"
+            "Host: docker\r\n"
+            "Connection: close\r\n"
+            "\r\n"
+        ).encode()
+    )
+
+    chunks = []
+
+    while True:
+        chunk = sock.recv(65536)
+
+        if not chunk:
+            break
+
+        chunks.append(chunk)
+
+    sock.close()
+
+    raw = b"".join(chunks)
+    head, _, body = raw.partition(
+        b"\r\n\r\n"
+    )
+
+    try:
+        status = int(
+            head.splitlines()[0].split()[1]
+        )
+    except Exception:
+        status = 0
+
+    return status, body
+
+
+def discover_node_container(
+    app_id: str,
+) -> str | None:
+    filters = quote(
+        json.dumps(
+            {
+                "label": [
+                    (
+                        "com.docker.compose.project="
+                        f"{app_id}"
+                    ),
+                    "com.docker.compose.service=node",
+                ]
+            }
+        ),
+        safe="",
+    )
+
+    status, body = _docker_request(
+        f"/containers/json?all=1&filters={filters}"
+    )
+
+    if status != 200:
+        return None
+
+    try:
+        containers = json.loads(
+            body.decode()
+        )
+    except Exception:
+        return None
+
+    if not isinstance(containers, list):
+        return None
+
+    for container in containers:
+        names = container.get("Names") or []
+
+        if names:
+            return str(names[0]).lstrip("/")
+
+    return None
 
 def verify_live_binding(*, expectation: StorageExpectation, container_name: str) -> dict[str, Any]:
-    proc = subprocess.run(
-        ["docker", "inspect", container_name, "--format", "{{json .Mounts}}"],
-        capture_output=True, text=True, timeout=10, check=False,
+    status, body = _docker_request(
+        "/containers/"
+        + quote(container_name, safe="")
+        + "/json"
     )
+
     mounts = []
-    if proc.returncode == 0:
+
+    if status == 200:
         try:
-            value = json.loads(proc.stdout.strip())
-            mounts = value if isinstance(value, list) else []
+            payload = json.loads(
+                body.decode()
+            )
+
+            value = payload.get(
+                "Mounts"
+            )
+
+            mounts = (
+                value
+                if isinstance(value, list)
+                else []
+            )
         except Exception:
             pass
 
