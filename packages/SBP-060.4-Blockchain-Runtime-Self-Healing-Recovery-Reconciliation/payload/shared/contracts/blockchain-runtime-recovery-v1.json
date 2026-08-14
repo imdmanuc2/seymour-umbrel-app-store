@@ -1,0 +1,10 @@
+{
+  "contract": "seymour.blockchain-runtime-recovery",
+  "version": "1.0",
+  "states": [
+    "healthy",
+    "recovering",
+    "blocked",
+    "degraded"
+  ]
+}

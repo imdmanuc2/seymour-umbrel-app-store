@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+import argparse,json,socket,sys
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[1]
+sys.path.insert(0,str(ROOT/"shared"))
+from blockchain_recovery import plan,execute_safe_repairs
+p=argparse.ArgumentParser()
+p.add_argument("--provider-id",required=True); p.add_argument("--runtime-host",default=socket.gethostname())
+p.add_argument("--storage-target"); p.add_argument("--expected-source"); p.add_argument("--expected-fstype")
+p.add_argument("--dns-alias"); p.add_argument("--installed-app-path"); p.add_argument("--external-data-path")
+p.add_argument("--rpc-output"); p.add_argument("--live-blocks",type=int); p.add_argument("--live-size-on-disk",type=int)
+p.add_argument("--execute",action="store_true"); p.add_argument("--confirm"); p.add_argument("--mount-target")
+a=p.parse_args()
+r=plan(a.provider_id,a.runtime_host,a.storage_target,a.expected_source,a.expected_fstype,
+       a.dns_alias,a.installed_app_path,a.external_data_path,a.rpc_output,a.live_blocks,a.live_size_on_disk)
+if a.execute: r=execute_safe_repairs(r,a.confirm,a.mount_target)
+print(json.dumps(r.to_dict(),indent=2))

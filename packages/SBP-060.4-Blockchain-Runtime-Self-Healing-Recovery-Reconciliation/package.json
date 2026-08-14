@@ -1,0 +1,13 @@
+{
+  "id": "SBP-060.4",
+  "name": "Blockchain Runtime Self-Healing Recovery Reconciliation",
+  "version": "1.0.0",
+  "requires": [
+    "SBP-057",
+    "SBP-058",
+    "SBP-060.2",
+    "SBP-060.3"
+  ],
+  "safeInstall": true,
+  "destructiveActions": false
+}
