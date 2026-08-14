@@ -104,7 +104,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push ${{ matrix.arch }}
+      - name: Build ${{ matrix.arch }} locally
         shell: bash
         run: |
           set -euxo pipefail
@@ -112,9 +112,41 @@ jobs:
           docker buildx build \
             --progress=plain \
             --platform "${{ matrix.platform }}" \
-            --tag "${IMAGE_NAME}:${BITCOIN_VERSION}-${{ matrix.arch }}" \
-            --push \
+            --tag "seymour-bitcoin-node:${BITCOIN_VERSION}-${{ matrix.arch }}" \
+            --load \
             runtime-images/bitcoin-core
+
+      - name: Verify built ${{ matrix.arch }} image
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          docker image inspect \
+            "seymour-bitcoin-node:${BITCOIN_VERSION}-${{ matrix.arch }}"
+
+          docker run \
+            --rm \
+            --platform "${{ matrix.platform }}" \
+            --entrypoint /usr/local/bin/bitcoind \
+            "seymour-bitcoin-node:${BITCOIN_VERSION}-${{ matrix.arch }}" \
+            --version
+
+      - name: Tag ${{ matrix.arch }} for GHCR
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          docker tag \
+            "seymour-bitcoin-node:${BITCOIN_VERSION}-${{ matrix.arch }}" \
+            "${IMAGE_NAME}:${BITCOIN_VERSION}-${{ matrix.arch }}"
+
+      - name: Push ${{ matrix.arch }} to GHCR
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          docker push \
+            "${IMAGE_NAME}:${BITCOIN_VERSION}-${{ matrix.arch }}"
 
       - name: Inspect architecture tag
         shell: bash
