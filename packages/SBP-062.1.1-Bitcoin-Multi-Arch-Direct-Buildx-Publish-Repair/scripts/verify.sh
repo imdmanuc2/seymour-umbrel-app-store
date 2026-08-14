@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+WF="$ROOT/.github/workflows/seymour-bitcoin-node-multiarch.yml"
+echo "SBP-062.1.1 verify: direct Buildx publish repair"
+! grep -q 'docker/build-push-action@v6' "$WF"
+grep -q 'docker buildx build' "$WF"
+grep -q -- '--push' "$WF"
+grep -q 'platform: linux/amd64' "$WF"
+grep -q 'platform: linux/arm64' "$WF"
+grep -q 'imagetools create' "$WF"
+grep -q "grep -q 'linux/amd64'" "$WF"
+grep -q "grep -q 'linux/arm64'" "$WF"
+echo "SBP-062.1.1 direct buildx build contract: PASS"
+echo "SBP-062.1.1 architecture push contract: PASS"
+echo "SBP-062.1.1 manifest publish contract: PASS"
+echo "SBP-062.1.1 final verification: PASS"
+echo "No image was published and no live runtime was modified."
