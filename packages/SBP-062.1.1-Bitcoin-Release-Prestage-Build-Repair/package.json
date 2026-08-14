@@ -1,0 +1,12 @@
+{
+  "id": "SBP-062.1.1",
+  "name": "Bitcoin Release Prestage Build Repair",
+  "version": "1.0.0",
+  "requires": [
+    "SBP-062.1"
+  ],
+  "safeInstall": true,
+  "publishesImageDuringInstall": false,
+  "restartsBlockchainRuntimeDuringInstall": false,
+  "modifiesBlockchainData": false
+}
