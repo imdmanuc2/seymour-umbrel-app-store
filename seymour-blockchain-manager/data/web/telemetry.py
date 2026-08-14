@@ -12,6 +12,7 @@ import time
 from typing import Any
 from urllib import request
 from bch_runtime_probe import probe as probe_bch_runtime
+from runtime_registry import dashboard_runtimes
 
 
 BCH_APP_ID = os.environ.get("BCH_APP_ID", "seymour-bch-node")
@@ -109,19 +110,11 @@ def docker_available() -> bool:
         return False
 
     try:
-        result = subprocess.run(
-            [
-                "docker",
-                "version",
-                "--format",
-                "{{.Server.Version}}",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=3,
-            check=False,
-        )
-        return result.returncode == 0
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock.settimeout(2)
+        sock.connect(str(DOCKER_SOCKET))
+        sock.close()
+        return True
     except Exception:
         return False
 
@@ -380,7 +373,7 @@ def dashboard_payload() -> dict[str, Any]:
     return {
         "generatedAt": time.time(),
         "host": host_telemetry(),
-        "providers": {
-            "bitcoin-cash-mainnet": bch_telemetry(),
-        },
+        "providers": dashboard_runtimes(
+            bch_telemetry=bch_telemetry,
+        ),
     }

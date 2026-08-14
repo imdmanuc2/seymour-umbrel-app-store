@@ -137,5 +137,9 @@ def probe()->dict[str,Any]:
  lifecycle="not-installed" if not installed else "stopped" if not running else "running" if rpc else "degraded"
  result = {"providerId":"bitcoin-cash-mainnet","appId":"seymour-bch-node","installed":installed,"running":running,"lifecycleStatus":lifecycle,"container":container,"rpc":{"reachable":rpc,"probe":rpc_probe,"health":legacy_health,"status":legacy_status}}
  result["operationalState"] = normalize_runtime_state(result)
+ status_payload = legacy_status.get("payload") if isinstance(legacy_status.get("payload"),dict) else {}
+ status_state = str(status_payload.get("status") or "").strip().lower()
+ if running and not rpc and status_state in {"starting","verifying","warming-up","recovering"}:
+  result["operationalState"] = {**result["operationalState"],"state":"starting","reason":"Runtime is verifying or warming existing blockchain data."}
  result["lifecycleStatus"] = result["operationalState"]["state"]
  return result

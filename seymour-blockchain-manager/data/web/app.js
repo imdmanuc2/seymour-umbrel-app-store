@@ -143,9 +143,11 @@ function progressBar(value, label) {
 }
 
 function installedProviders() {
-  return state.providers.filter(
-    (provider) => provider.availability === "live"
-  );
+  return state.providers.filter((provider) => {
+    if (provider.availability !== "live") return false;
+    const telemetry = providerTelemetry(provider.providerId);
+    return telemetry?.installed === true;
+  });
 }
 
 function plannedProviders() {
@@ -219,89 +221,57 @@ function renderRuntimeFocus() {
     return;
   }
 
-  const provider = live[0];
-  const presentation = presentedRuntime(provider);
-  const telemetry = presentation.telemetry || {};
-  const sync = telemetry.sync || {};
-  const stateLabel = lifecycleLabel(presentation.state);
-  const rawProgress = Number(sync.progressPercent);
-  const progress = Number.isFinite(rawProgress) ? rawProgress : null;
+  const renderCard = (provider) => {
+    const presentation = presentedRuntime(provider);
+    const telemetry = presentation.telemetry || {};
+    const sync = telemetry.sync || {};
+    const stateLabel = lifecycleLabel(presentation.state);
+    const rawProgress = Number(sync.progressPercent);
+    const progress = Number.isFinite(rawProgress) ? rawProgress : null;
+    const rawHeight = Number(sync.height);
+    const rawHeaders = Number(sync.headers);
+    const height = Number.isFinite(rawHeight) ? rawHeight : null;
+    const headers = Number.isFinite(rawHeaders) ? rawHeaders : null;
+    const peers = telemetry.peers ?? "—";
+    const rpcHealthy =
+      telemetry.runtimeRpcHealthy ??
+      telemetry.rpc?.healthy ??
+      telemetry.rpc?.reachable ??
+      false;
 
-  const rawHeight = Number(sync.height);
-  const rawHeaders = Number(sync.headers);
-  const height = Number.isFinite(rawHeight) ? rawHeight : null;
-  const headers = Number.isFinite(rawHeaders) ? rawHeaders : null;
-  const peers = telemetry.peers ?? "—";
-  const rpcHealthy =
-    telemetry.runtimeRpcHealthy ??
-    telemetry.rpc?.healthy ??
-    telemetry.rpc?.reachable ??
-    false;
-
-  target.innerHTML = `
-    <article class="runtime-focus-card ${presentation.state}">
-      <div class="runtime-focus-heading">
-        <div>
-          <p class="provider-family">managed runtime</p>
-          <h2>${provider.displayName}</h2>
-          <p class="implementation">
-            ${provider.implementation} ${provider.nodeVersion}
-          </p>
+    return `
+      <article class="runtime-focus-card ${presentation.state}">
+        <div class="runtime-focus-heading">
+          <div>
+            <p class="provider-family">managed runtime</p>
+            <h2>${provider.displayName}</h2>
+            <p class="implementation">${provider.implementation} ${provider.nodeVersion}</p>
+          </div>
+          <span class="status-pill">${stateLabel}</span>
         </div>
-        <span class="status-pill">${stateLabel}</span>
-      </div>
+        ${
+          presentation.state === "syncing" && progress !== null
+            ? `<div class="runtime-focus-progress">${progressBar(progress, "Blockchain sync")}<div class="runtime-focus-blocks"><span>Blocks</span><strong>${height !== null && headers !== null ? `${height.toLocaleString()} / ${headers.toLocaleString()}` : "Telemetry warming up"}</strong></div></div>`
+            : ["starting", "recovering"].includes(presentation.state)
+              ? `<div class="telemetry-grace-note">Runtime is verifying or warming existing blockchain data.</div>`
+              : ""
+        }
+        <div class="runtime-focus-kpis">
+          <article><span>Runtime</span><strong>${stateLabel}</strong></article>
+          <article><span>RPC</span><strong class="${rpcHealthy ? "metric-good" : "metric-bad"}">${rpcHealthy ? "Healthy" : ["starting", "recovering"].includes(presentation.state) ? "Warming up" : "Unavailable"}</strong></article>
+          <article><span>Peers</span><strong>${peers}</strong></article>
+          <article><span>Chain data</span><strong>${formatBytes(telemetry.data?.usedBytes)}</strong></article>
+        </div>
+        <div class="runtime-focus-actions">
+          <button class="secondary" data-focus-details="${provider.providerId}">Open</button>
+          <button class="secondary" data-focus-operations="${provider.providerId}">Operations</button>
+          <button class="primary" data-focus-manage="${provider.providerId}">Manage</button>
+        </div>
+      </article>
+    `;
+  };
 
-      ${
-        presentation.state === "syncing" && progress !== null
-          ? `
-            <div class="runtime-focus-progress">
-              ${progressBar(progress, "Blockchain sync")}
-              <div class="runtime-focus-blocks">
-                <span>Blocks</span>
-                <strong>${
-                  height !== null && headers !== null
-                    ? `${height.toLocaleString()} / ${headers.toLocaleString()}`
-                    : "Telemetry warming up"
-                }</strong>
-              </div>
-            </div>
-          `
-          : presentation.state === "syncing"
-            ? `
-              <div class="telemetry-grace-note">
-                Sync telemetry is warming up after a runtime transition.
-              </div>
-            `
-            : ""
-      }
-
-      <div class="runtime-focus-kpis">
-        <article><span>Runtime</span><strong>${stateLabel}</strong></article>
-        <article><span>RPC</span><strong class="${rpcHealthy ? "metric-good" : "metric-bad"}">${rpcHealthy ? "Healthy" : "Unavailable"}</strong></article>
-        <article><span>Peers</span><strong>${peers}</strong></article>
-        <article><span>Chain data</span><strong>${formatBytes(telemetry.data?.usedBytes)}</strong></article>
-      </div>
-
-      <div class="runtime-focus-actions">
-        <button class="secondary" data-focus-details="${provider.providerId}">Open</button>
-        <button class="secondary" data-focus-operations="${provider.providerId}">Operations</button>
-        <button class="primary" data-focus-manage="${provider.providerId}">Manage</button>
-      </div>
-    </article>
-  `;
-
-  target.querySelector("[data-focus-details]")?.addEventListener(
-    "click",
-    () => showDetails(provider.providerId)
-  );
-  target.querySelector("[data-focus-operations]")?.addEventListener(
-    "click",
-    () => showOperationsCenter(provider.providerId)
-  );
-  target.querySelector("[data-focus-manage]")?.addEventListener(
-    "click",
-    () => showManage(provider.providerId)
-  );
+  target.innerHTML = live.map(renderCard).join("");
 }
 
 function renderHost() {

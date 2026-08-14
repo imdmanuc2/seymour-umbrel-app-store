@@ -1,0 +1,9 @@
+{
+  "id": "SBP-060.5",
+  "name": "Provider-Neutral Runtime Projection Startup Classification",
+  "version": "1.0.0",
+  "requires": ["SBP-060.4"],
+  "safeInstall": true,
+  "restartsRuntime": false,
+  "movesBlockchainData": false
+}
