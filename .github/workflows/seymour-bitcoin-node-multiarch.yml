@@ -190,6 +190,7 @@ jobs:
 
           docker buildx imagetools create \
             --tag "${IMAGE_NAME}:${BITCOIN_VERSION}" \
+            --tag "${IMAGE_NAME}:${BITCOIN_VERSION}.0" \
             "${IMAGE_NAME}:${BITCOIN_VERSION}-amd64" \
             "${IMAGE_NAME}:${BITCOIN_VERSION}-arm64"
 
