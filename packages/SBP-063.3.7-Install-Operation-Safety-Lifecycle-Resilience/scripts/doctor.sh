@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+PKG="$(cd "$(dirname "$0")/.." && pwd)"
+echo "SBP-063.3.7 doctor: checking install safety prerequisites"
+python3 -m py_compile "$PKG/payload/web/installer.py" "$PKG/payload/shared/umbrel_control/bridge.py" "$PKG/payload/shared/umbrel_control/http_client.py"
+echo "SBP-063.3.7 Python compile contract: PASS"
+grep -q 'installButton.disabled = true' "$PKG/payload/web/app.js"
+grep -q 'Installation in progress' "$PKG/payload/web/app.js"
+echo "SBP-063.3.7 UI lock contract: PASS"
+grep -q '_active_install_for_app' "$PKG/payload/web/installer.py"
+grep -q 'Installation already in progress' "$PKG/payload/web/installer.py"
+echo "SBP-063.3.7 duplicate install guard contract: PASS"
+grep -q 'mutation_timeout_seconds: float = 1800' "$PKG/payload/shared/umbrel_control/http_client.py"
+grep -q 'timeout=self.mutation_timeout_seconds' "$PKG/payload/shared/umbrel_control/http_client.py"
+echo "SBP-063.3.7 lifecycle timeout contract: PASS"
+echo "SBP-063.3.7 doctor: PASS"

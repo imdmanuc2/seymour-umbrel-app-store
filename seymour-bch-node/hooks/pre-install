@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+APP_DATA_DIR="${APP_DATA_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+UMBREL_ROOT="${UMBREL_ROOT:-$(cd "$APP_DATA_DIR/../.." && pwd)}"
+BINDING_FILE="$UMBREL_ROOT/app-data/seymour-blockchain-manager/data/evidence/runtime-bindings/seymour-bch-node.env"
+COMPOSE="$APP_DATA_DIR/docker-compose.yml"
+
+# No Seymour binding file means use the portable compose defaults.
+if [[ ! -f "$BINDING_FILE" ]]; then
+  exit 0
+fi
+
+if [[ ! -f "$COMPOSE" ]]; then
+  echo "Seymour BCH pre-install: compose file not found: $COMPOSE" >&2
+  exit 1
+fi
+
+local_data=""
+blocks_path=""
+while IFS='=' read -r key value; do
+  case "$key" in
+    SEYMOUR_BLOCKCHAIN_LOCAL_DATA_PATH) local_data="$value" ;;
+    SEYMOUR_BLOCKCHAIN_BLOCKS_PATH) blocks_path="$value" ;;
+  esac
+done < "$BINDING_FILE"
+
+for value in "$local_data" "$blocks_path"; do
+  if [[ -z "$value" || "$value" != /* || "$value" == *$'\n'* || "$value" == *$'\r'* ]]; then
+    echo "Seymour BCH pre-install: invalid runtime binding path" >&2
+    exit 1
+  fi
+done
+
+python3 - "$COMPOSE" "$local_data" "$blocks_path" <<'PY'
+from pathlib import Path
+import sys
+
+compose = Path(sys.argv[1])
+local_data = sys.argv[2]
+blocks_path = sys.argv[3]
+text = compose.read_text()
+
+replacements = {
+    "${SEYMOUR_BLOCKCHAIN_LOCAL_DATA_PATH:-${APP_DATA_DIR}/data/node}:/data": f"{local_data}:/data",
+    "${SEYMOUR_BLOCKCHAIN_BLOCKS_PATH:-${APP_DATA_DIR}/data/node/blocks}:/data/blocks": f"{blocks_path}:/data/blocks",
+    "${SEYMOUR_BLOCKCHAIN_LOCAL_DATA_PATH:-${APP_DATA_DIR}/data/node}:/node-data": f"{local_data}:/node-data",
+    "${SEYMOUR_BLOCKCHAIN_BLOCKS_PATH:-${APP_DATA_DIR}/data/node/blocks}:/node-data/blocks": f"{blocks_path}:/node-data/blocks",
+}
+
+changed = 0
+for old, new in replacements.items():
+    if old in text:
+        text = text.replace(old, new, 1)
+        changed += 1
+    elif new in text:
+        changed += 1
+
+if changed != 4:
+    raise SystemExit(
+        f"Seymour BCH pre-install: expected 4 storage anchors, resolved {changed}"
+    )
+
+compose.write_text(text)
+PY
+
+echo "Seymour BCH pre-install: hybrid storage binding prepared."

@@ -307,6 +307,16 @@ def bch_telemetry() -> dict[str, Any]:
 
     runtime_state = operational_state.get("state") or runtime.get("lifecycleStatus") or "unknown"
 
+    # Container/runtime presence is authoritative for terminal lifecycle state.
+    # Slow or cached RPC telemetry may describe an earlier syncing state, but it
+    # must not make a stopped managed app appear to still be running.
+    installed = bool(runtime.get("installed"))
+    running = bool(runtime.get("running"))
+    if not installed:
+        runtime_state = "not-installed"
+    elif not running:
+        runtime_state = "stopped"
+
     progress = rpc_probe.get("progressPercent")
     if progress is None:
         verification = operational_state.get("verificationProgress")
@@ -343,8 +353,8 @@ def bch_telemetry() -> dict[str, Any]:
     return {
         "providerId": "bitcoin-cash-mainnet",
         "appId": runtime.get("appId", BCH_APP_ID),
-        "installed": bool(runtime.get("installed")),
-        "running": bool(runtime.get("running")),
+        "installed": installed,
+        "running": running,
         "lifecycleStatus": runtime_state,
         "runtimeState": runtime_state,
         "runtimeStateReason": operational_state.get("reason"),

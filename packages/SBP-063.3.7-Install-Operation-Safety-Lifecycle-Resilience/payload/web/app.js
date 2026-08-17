@@ -67,18 +67,6 @@ function presentedRuntime(provider) {
     return {state: rawState, telemetry, graceHeld: false};
   }
 
-  // Definitive lifecycle states must never be hidden by the sync telemetry
-  // grace window. Clear any remembered syncing presentation immediately.
-  if (["stopped", "offline", "not-installed"].includes(rawState)) {
-    delete state.runtimePresentation[providerId];
-    return {
-      state: rawState,
-      telemetry,
-      graceHeld: false,
-      authoritativeLifecycle: true,
-    };
-  }
-
   const current = state.runtimePresentation[providerId] || null;
   const isGoodLiveState = ["running", "syncing", "starting"].includes(rawState);
   const completeSyncTelemetry =

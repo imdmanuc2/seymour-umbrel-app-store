@@ -546,50 +546,9 @@ class Installer:
 
         return operations[:max(0, int(limit))]
 
-    def _active_install_for_app(self, app_id: str) -> dict[str, Any] | None:
-        now = datetime.now(UTC)
-        for payload in self.list_recent(limit=100):
-            request_payload = payload.get("request", {})
-            if not isinstance(request_payload, dict):
-                continue
-            candidate_app_id = str(
-                request_payload.get("app_id")
-                or request_payload.get("appId")
-                or ""
-            )
-            if candidate_app_id != app_id or payload.get("status") != InstallStatus.RUNNING.value:
-                continue
-            updated_raw = str(payload.get("updated_at") or payload.get("updatedAt") or "")
-            try:
-                updated = datetime.fromisoformat(updated_raw.replace("Z", "+00:00"))
-                if (now - updated).total_seconds() > 3600:
-                    continue
-            except Exception:
-                pass
-            return payload
-        return None
-
     def execute(self, value: InstallRequest) -> InstallOperation:
         validate_request(value)
         runtime = provider_runtime(value.provider_id)
-        active = self._active_install_for_app(value.app_id)
-        if active is not None:
-            now = utc_now()
-            operation = InstallOperation(
-                str(uuid4()),
-                InstallStatus.FAILED,
-                now,
-                now,
-                asdict(value),
-                {},
-                error=(
-                    "Installation already in progress for "
-                    f"{value.app_id}; active operation "
-                    f"{active.get('operation_id') or active.get('operationId') or 'unknown'}."
-                ),
-            )
-            self._save(operation)
-            return operation
         checks = preflight(value.storage_target_id, value.provider_id)
         now = utc_now()
         operation = InstallOperation(str(uuid4()), InstallStatus.PLANNED, now, now, asdict(value), checks)

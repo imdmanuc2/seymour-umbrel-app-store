@@ -1,0 +1,8 @@
+{
+  "id": "SBP-063.3.6",
+  "name": "Hybrid Storage Fresh Install Integration",
+  "version": "1.0.0",
+  "scope": "Seymour Blockchain Manager and BCH Umbrel install package",
+  "requiresRestart": ["seymour-blockchain-manager"],
+  "runtimeRestartedByInstaller": false
+}

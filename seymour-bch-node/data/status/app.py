@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import subprocess
+import threading
+import time
+
 import base64
 import json
 import os
@@ -45,6 +49,100 @@ DATA_PATH = Path(
         "/node-data",
     )
 )
+
+STORAGE_FOOTPRINT_TTL_SECONDS = max(
+    60,
+    int(os.environ.get("BCH_STORAGE_FOOTPRINT_TTL_SECONDS", "900")),
+)
+STORAGE_FOOTPRINT_TIMEOUT_SECONDS = max(
+    2,
+    int(os.environ.get("BCH_STORAGE_FOOTPRINT_TIMEOUT_SECONDS", "8")),
+)
+_STORAGE_FOOTPRINT_LOCK = threading.Lock()
+_STORAGE_FOOTPRINT_CACHE = {
+    "measuredAt": 0.0,
+    "usedBytes": None,
+    "localBytes": None,
+    "blocksBytes": None,
+}
+
+
+def _du_bytes(path: Path, *, one_filesystem: bool = False) -> int:
+    command = ["du", "-sk"]
+    if one_filesystem:
+        command.append("-x")
+    command.append(str(path))
+    completed = subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        timeout=STORAGE_FOOTPRINT_TIMEOUT_SECONDS,
+        check=False,
+    )
+    if completed.returncode != 0 or not completed.stdout.strip():
+        raise RuntimeError(
+            completed.stderr.strip()
+            or f"du failed for {path}"
+        )
+    kib = int(completed.stdout.split()[0])
+    return kib * 1024
+
+
+def runtime_storage_footprint() -> dict:
+    now = time.monotonic()
+    with _STORAGE_FOOTPRINT_LOCK:
+        cached_at = float(_STORAGE_FOOTPRINT_CACHE.get("measuredAt") or 0.0)
+        if (
+            _STORAGE_FOOTPRINT_CACHE.get("usedBytes") is not None
+            and now - cached_at < STORAGE_FOOTPRINT_TTL_SECONDS
+        ):
+            return {
+                **_STORAGE_FOOTPRINT_CACHE,
+                "source": "cached-directory-footprint",
+                "stale": False,
+            }
+
+        previous = dict(_STORAGE_FOOTPRINT_CACHE)
+        try:
+            # Do not cross into the nested remote blocks mount while measuring
+            # local runtime metadata/chainstate. Measure blocks exactly once.
+            local_bytes = _du_bytes(DATA_PATH, one_filesystem=True)
+            blocks_path = DATA_PATH / "blocks"
+            blocks_bytes = (
+                _du_bytes(blocks_path)
+                if blocks_path.exists()
+                else 0
+            )
+            _STORAGE_FOOTPRINT_CACHE.update(
+                {
+                    "measuredAt": now,
+                    "usedBytes": local_bytes + blocks_bytes,
+                    "localBytes": local_bytes,
+                    "blocksBytes": blocks_bytes,
+                }
+            )
+            return {
+                **_STORAGE_FOOTPRINT_CACHE,
+                "source": "directory-footprint",
+                "stale": False,
+            }
+        except Exception as exc:
+            if previous.get("usedBytes") is not None:
+                return {
+                    **previous,
+                    "source": "cached-directory-footprint",
+                    "stale": True,
+                    "error": str(exc),
+                }
+            return {
+                "measuredAt": now,
+                "usedBytes": None,
+                "localBytes": None,
+                "blocksBytes": None,
+                "source": "unavailable",
+                "stale": True,
+                "error": str(exc),
+            }
 
 
 def rpc_call(
@@ -95,11 +193,24 @@ def storage_payload() -> dict:
         usage = shutil.disk_usage(
             DATA_PATH
         )
+        footprint = runtime_storage_footprint()
+        runtime_used = footprint.get("usedBytes")
         return {
             "path": str(DATA_PATH),
             "totalBytes": usage.total,
-            "usedBytes": usage.used,
+            "usedBytes": (
+                runtime_used
+                if runtime_used is not None
+                else usage.used
+            ),
             "freeBytes": usage.free,
+            "filesystemUsedBytes": usage.used,
+            "runtimeFootprint": footprint,
+            "usageSemantics": (
+                "runtime-footprint"
+                if runtime_used is not None
+                else "filesystem-fallback"
+            ),
             "healthy": True,
         }
     except Exception as exc:
