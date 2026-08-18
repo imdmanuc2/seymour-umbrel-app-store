@@ -5,6 +5,11 @@ services:
       APP_PORT: 8080
 
   node:
+    networks:
+      default:
+        aliases:
+          - ${SEYMOUR_BLOCKCHAIN_RPC_HOST}
+
     image: ghcr.io/imdmanuc2/seymour-bitcoin-node:29.0.0
     entrypoint:
       - /usr/local/bin/seymour-entrypoint
@@ -53,6 +58,11 @@ services:
       - "${BTC_P2P_HOST_PORT:-8335}:8333"
 
   status:
+    networks:
+      default:
+        aliases:
+          - ${SEYMOUR_BLOCKCHAIN_STATUS_HOST}
+
     image: python:3.12-alpine
     restart: on-failure
     working_dir: /app
@@ -62,7 +72,7 @@ services:
       - /app/app.py
 
     environment:
-      BTC_RPC_HOST: node
+      BTC_RPC_HOST: ${SEYMOUR_BLOCKCHAIN_RPC_HOST}
       BTC_RPC_PORT: "8332"
       BTC_RPC_USER: ${BTC_RPC_USER:-seymour_rpc}
       BTC_RPC_PASSWORD: ${BTC_RPC_PASSWORD:-change-me-before-production}

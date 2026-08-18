@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+APP_DATA_DIR="${APP_DATA_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+COMPOSE="$APP_DATA_DIR/docker-compose.yml"
+
+app_id="$(basename "$APP_DATA_DIR")"
+
+if [[ ! "$app_id" =~ ^[a-z0-9][a-z0-9._-]*$ ]]; then
+  echo "Seymour RPC identity: invalid app id: $app_id" >&2
+  exit 1
+fi
+
+rpc_host="${app_id}-rpc"
+status_host="${app_id}-status"
+
+if [[ ! "$rpc_host" =~ ^[a-z0-9][a-z0-9._-]*$ ]]; then
+  echo "Seymour RPC identity: invalid derived RPC host: $rpc_host" >&2
+  exit 1
+fi
+
+if [[ ! -f "$COMPOSE" ]]; then
+  echo "Seymour RPC identity: compose file not found: $COMPOSE" >&2
+  exit 1
+fi
+
+python3 - "$COMPOSE" "$rpc_host" "$status_host" <<'PY'
+from pathlib import Path
+import sys
+
+compose = Path(sys.argv[1])
+rpc_host = sys.argv[2]
+status_host = sys.argv[3]
+text = compose.read_text()
+
+node_variable = "- ${SEYMOUR_BLOCKCHAIN_RPC_HOST}"
+status_variable = "BTC_RPC_HOST: ${SEYMOUR_BLOCKCHAIN_RPC_HOST}"
+
+node_literal = f"- {rpc_host}"
+status_literal = f"BTC_RPC_HOST: {rpc_host}"
+
+node_ok = False
+status_ok = False
+
+if node_variable in text:
+    text = text.replace(node_variable, node_literal, 1)
+    node_ok = True
+elif node_literal in text:
+    node_ok = True
+
+if status_variable in text:
+    text = text.replace(status_variable, status_literal, 1)
+    status_ok = True
+elif status_literal in text:
+    status_ok = True
+
+if not node_ok:
+    raise SystemExit("Seymour RPC identity: node alias anchor not found")
+
+if not status_ok:
+    raise SystemExit("Seymour RPC identity: status RPC host anchor not found")
+
+status_variable = "- ${SEYMOUR_BLOCKCHAIN_STATUS_HOST}"
+status_literal = f"- {status_host}"
+if status_variable in text:
+    text = text.replace(status_variable, status_literal, 1)
+elif status_literal not in text:
+    raise SystemExit("status alias anchor not found")
+
+compose.write_text(text)
+PY
+
+echo "Seymour RPC identity materialized for app=$app_id"

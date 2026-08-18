@@ -4,6 +4,7 @@ const state = {
   family: "all",
   query: "",
   runtimePresentation: {},
+  syncEstimates: {},
 };
 
 const RUNTIME_PRESENTATION_GRACE_MS = 20000;
@@ -178,6 +179,84 @@ function formatSyncProgress(value) {
   return `${normalized.toFixed(2)}%`;
 }
 
+function blockHeightProgress(height, headers) {
+  const h = Number(height);
+  const target = Number(headers);
+
+  if (!Number.isFinite(h) || !Number.isFinite(target) || target <= 0) {
+    return null;
+  }
+
+  return Math.max(0, Math.min((h / target) * 100, 100));
+}
+
+function updateSyncEstimate(providerId, height, headers) {
+  const h = Number(height);
+  const target = Number(headers);
+  const now = Date.now();
+
+  if (!Number.isFinite(h) || !Number.isFinite(target) || target <= 0) {
+    return {rate: null, etaSeconds: null};
+  }
+
+  const current = state.syncEstimates[providerId];
+
+  if (!current || h < current.height || now <= current.timestamp) {
+    state.syncEstimates[providerId] = {
+      height: h,
+      headers: target,
+      timestamp: now,
+      smoothedRate: null,
+    };
+    return {rate: null, etaSeconds: null};
+  }
+
+  const elapsed = (now - current.timestamp) / 1000;
+  const delta = h - current.height;
+  let smoothedRate = current.smoothedRate;
+
+  if (elapsed >= 1 && delta >= 0) {
+    const instantRate = delta / elapsed;
+    if (instantRate > 0) {
+      smoothedRate =
+        smoothedRate === null || smoothedRate === undefined
+          ? instantRate
+          : (smoothedRate * 0.75) + (instantRate * 0.25);
+    }
+  }
+
+  state.syncEstimates[providerId] = {
+    height: h,
+    headers: target,
+    timestamp: now,
+    smoothedRate,
+  };
+
+  const remaining = Math.max(target - h, 0);
+  const etaSeconds =
+    smoothedRate && smoothedRate > 0
+      ? Math.round(remaining / smoothedRate)
+      : null;
+
+  return {rate: smoothedRate, etaSeconds};
+}
+
+function formatSyncEta(seconds) {
+  if (!Number.isFinite(Number(seconds)) || Number(seconds) < 0) {
+    return "Calculating…";
+  }
+
+  const value = Math.round(Number(seconds));
+  const days = Math.floor(value / 86400);
+  const hours = Math.floor((value % 86400) / 3600);
+  const minutes = Math.floor((value % 3600) / 60);
+
+  if (days > 0) return `~${days}d ${hours}h`;
+  if (hours > 0) return `~${hours}h ${minutes}m`;
+  if (minutes > 0) return `~${minutes}m`;
+  return "< 1m";
+}
+
 function progressBar(value, label) {
   const normalized = Math.max(0, Math.min(Number(value || 0), 100));
   return `
@@ -289,6 +368,13 @@ function renderRuntimeFocus() {
       height !== null && headers !== null && headers > 0
         ? `${height.toLocaleString()} / ${headers.toLocaleString()}`
         : "Telemetry warming up";
+    const heightProgress = blockHeightProgress(height, headers);
+    const verificationProgress = progress !== null ? progress : null;
+    const estimate = updateSyncEstimate(
+      provider.providerId,
+      height,
+      headers
+    );
 
     return `
       <article class="runtime-focus-card ${presentation.state}">
@@ -302,7 +388,25 @@ function renderRuntimeFocus() {
         </div>
         ${
           presentation.state === "syncing" && progress !== null
-            ? `<div class="runtime-focus-progress">${progressBar(progress, "Blockchain sync")}<div class="runtime-focus-blocks"><span>Live block progress</span><strong>${blockProgress}</strong></div><div class="telemetry-grace-note">${health.summary} ${health.detail}</div></div>`
+            ? `<div class="runtime-focus-progress">
+                ${progressBar(heightProgress ?? 0, "Block height progress")}
+                <div class="runtime-focus-blocks">
+                  <span>Blocks downloaded / known headers</span>
+                  <strong>${blockProgress}</strong>
+                </div>
+                <div class="runtime-focus-blocks">
+                  <span>Verification progress</span>
+                  <strong>${verificationProgress !== null ? formatSyncProgress(verificationProgress) : "—"}</strong>
+                </div>
+                <div class="runtime-focus-blocks">
+                  <span>Estimated time remaining</span>
+                  <strong>${formatSyncEta(estimate.etaSeconds)}</strong>
+                </div>
+                <div class="telemetry-grace-note">
+                  ${health.summary} ${health.detail}
+                  ETA is based on recent block-height speed and may change as later blocks become heavier to validate.
+                </div>
+              </div>`
             : ["starting", "recovering"].includes(presentation.state)
               ? `<div class="telemetry-grace-note">Runtime is verifying or warming existing blockchain data.</div>`
               : ""
@@ -545,6 +649,12 @@ function showManage(providerId) {
     sync.progressPercent !== null && sync.progressPercent !== undefined
       ? formatSyncProgress(sync.progressPercent)
       : "—";
+  const heightProgress = blockHeightProgress(sync.height, sync.headers);
+  const estimate = updateSyncEstimate(
+    provider.providerId,
+    sync.height,
+    sync.headers
+  );
   const health = runtimeHealthGuidance(telemetry);
 
   dialogContent.innerHTML = `
@@ -556,7 +666,7 @@ function showManage(providerId) {
         <span class="runtime-state-dot ${runtimeState}"></span>
         ${lifecycleLabel(runtimeState)}
       </strong>
-      <span>${runtimeState === "syncing" ? progress + " verified" : "Canonical runtime state"}</span>
+      <span>${runtimeState === "syncing" ? `${heightProgress !== null ? formatSyncProgress(heightProgress) : "—"} block height · ${progress} verified · ${formatSyncEta(estimate.etaSeconds)} remaining` : "Canonical runtime state"}</span>
     </div>
 
     <section class="runtime-guidance-card ${health.state}">
