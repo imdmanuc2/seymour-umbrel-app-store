@@ -1,0 +1,7 @@
+{
+  "id": "SBP-063.3.9",
+  "name": "Fresh Install Acceptance & Recovery Validation",
+  "version": "1.0.0",
+  "type": "acceptance-gate",
+  "destructive": false
+}
