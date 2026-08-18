@@ -13,6 +13,7 @@ from typing import Any
 from urllib import request
 from bch_runtime_probe import probe as probe_bch_runtime
 from runtime_registry import dashboard_runtimes
+from runtime_health import runtime_health
 
 
 BCH_APP_ID = os.environ.get("BCH_APP_ID", "seymour-bch-node")
@@ -350,6 +351,17 @@ def bch_telemetry() -> dict[str, Any]:
         else rpc_probe.get("healthy")
     )
 
+    health = runtime_health(
+        runtime_state=runtime_state,
+        rpc_reachable=rpc_reachable,
+        rpc_healthy=rpc_healthy,
+        sync=sync,
+        sync_analysis={},
+        storage=storage,
+        telemetry_stale=bool(runtime.get("telemetryStale")),
+        runtime_reason=operational_state.get("reason"),
+    )
+
     return {
         "providerId": "bitcoin-cash-mainnet",
         "appId": runtime.get("appId", BCH_APP_ID),
@@ -358,6 +370,7 @@ def bch_telemetry() -> dict[str, Any]:
         "lifecycleStatus": runtime_state,
         "runtimeState": runtime_state,
         "runtimeStateReason": operational_state.get("reason"),
+        "health": health,
         "telemetryFresh": runtime.get("telemetryFresh"),
         "telemetryStale": runtime.get("telemetryStale"),
         "telemetryAgeSeconds": runtime.get("telemetryAgeSeconds"),

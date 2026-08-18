@@ -129,6 +129,22 @@ function lifecycle(provider) {
   return presentedRuntime(provider).state;
 }
 
+function runtimeHealthGuidance(telemetry = {}) {
+  const health = telemetry?.health || {};
+  return {
+    state: health.state || "unknown",
+    reasonCode: health.reasonCode || "runtime-unknown",
+    summary: health.summary || "Runtime health is unknown.",
+    detail: health.detail || "Run diagnostics for more information.",
+    recommendedAction: health.recommendedAction || "diagnostics",
+    destructive: health.destructive === true,
+  };
+}
+
+function healthStateLabel(value) {
+  return {healthy: "Healthy", warning: "Attention", critical: "Critical", unknown: "Unknown"}[value] || value;
+}
+
 function lifecycleLabel(value) {
   return {
     "running": "Running",
@@ -506,6 +522,7 @@ function showManage(providerId) {
     sync.progressPercent !== null && sync.progressPercent !== undefined
       ? `${Number(sync.progressPercent).toFixed(2)}%`
       : "—";
+  const health = runtimeHealthGuidance(telemetry);
 
   dialogContent.innerHTML = `
     <p class="provider-family">management</p>
@@ -518,6 +535,15 @@ function showManage(providerId) {
       </strong>
       <span>${runtimeState === "syncing" ? progress + " verified" : "Canonical runtime state"}</span>
     </div>
+
+    <section class="runtime-guidance-card ${health.state}">
+      <div class="runtime-guidance-heading">
+        <strong>${health.summary}</strong>
+        <span class="status-pill">${healthStateLabel(health.state)}</span>
+      </div>
+      <p>${health.detail}</p>
+      <small>Reason: ${health.reasonCode} · Recommended action: ${health.recommendedAction}</small>
+    </section>
 
     <div class="manage-grid">
       <article><span>RPC</span><strong>${telemetry.rpc?.reachable ? "Healthy" : "Unavailable"}</strong></article>
@@ -1014,6 +1040,7 @@ async function showOperationsCenter(providerId) {
     sync.progressPercent !== null && sync.progressPercent !== undefined
       ? `${Number(sync.progressPercent).toFixed(2)}%`
       : "—";
+  const health = runtimeHealthGuidance(telemetry);
 
   dialogContent.innerHTML = `
     <div class="ops-shell">
@@ -1049,6 +1076,17 @@ async function showOperationsCenter(providerId) {
           <span>Sync</span>
           <strong>${progress}</strong>
         </article>
+      </section>
+
+      <section class="ops-section ops-health-guidance">
+        <div class="runtime-guidance-card ${health.state}">
+          <div class="runtime-guidance-heading">
+            <strong>${health.summary}</strong>
+            <span class="status-pill">${healthStateLabel(health.state)}</span>
+          </div>
+          <p>${health.detail}</p>
+          <small>Reason: ${health.reasonCode} · Recommended action: ${health.recommendedAction}</small>
+        </div>
       </section>
 
       <section class="ops-section">

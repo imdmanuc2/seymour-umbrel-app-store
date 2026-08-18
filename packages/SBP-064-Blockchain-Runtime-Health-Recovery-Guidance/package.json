@@ -1,0 +1,7 @@
+{
+  "id": "SBP-064",
+  "name": "Blockchain Runtime Health & Recovery Guidance",
+  "version": "1.0.0",
+  "type": "integration",
+  "destructive": false
+}
