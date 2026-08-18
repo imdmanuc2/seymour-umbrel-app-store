@@ -1,0 +1,8 @@
+{
+  "id": "SBP-063.3.10",
+  "name": "Recovery Evidence & Cleanup Policy",
+  "version": "1.0.0",
+  "type": "guarded-cleanup",
+  "destructive": true,
+  "confirmation": "DELETE-BCH-RECOVERY-20260818-000411"
+}
