@@ -1,0 +1,6 @@
+{
+  "id": "SBP-064.1",
+  "name": "Blockchain Live Sync Progress UI",
+  "version": "1.0.0",
+  "description": "Improve managed blockchain runtime synchronization presentation using the existing live dashboard telemetry refresh."
+}

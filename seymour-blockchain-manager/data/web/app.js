@@ -160,11 +160,29 @@ function lifecycleLabel(value) {
   }[value] || value;
 }
 
+function formatSyncProgress(value) {
+  const numeric = Number(value);
+
+  if (!Number.isFinite(numeric)) return "—";
+
+  const normalized = Math.max(0, Math.min(numeric, 100));
+
+  if (normalized > 0 && normalized < 0.01) {
+    return `${normalized.toFixed(4)}%`;
+  }
+
+  if (normalized < 1) {
+    return `${normalized.toFixed(3)}%`;
+  }
+
+  return `${normalized.toFixed(2)}%`;
+}
+
 function progressBar(value, label) {
   const normalized = Math.max(0, Math.min(Number(value || 0), 100));
   return `
     <div class="progress-row">
-      <div><span>${label}</span><strong>${normalized.toFixed(2)}%</strong></div>
+      <div><span>${label}</span><strong>${formatSyncProgress(normalized)}</strong></div>
       <div class="progress"><i style="width:${normalized}%"></i></div>
     </div>
   `;
@@ -266,6 +284,11 @@ function renderRuntimeFocus() {
       telemetry.rpc?.healthy ??
       telemetry.rpc?.reachable ??
       false;
+    const health = runtimeHealthGuidance(telemetry);
+    const blockProgress =
+      height !== null && headers !== null && headers > 0
+        ? `${height.toLocaleString()} / ${headers.toLocaleString()}`
+        : "Telemetry warming up";
 
     return `
       <article class="runtime-focus-card ${presentation.state}">
@@ -279,7 +302,7 @@ function renderRuntimeFocus() {
         </div>
         ${
           presentation.state === "syncing" && progress !== null
-            ? `<div class="runtime-focus-progress">${progressBar(progress, "Blockchain sync")}<div class="runtime-focus-blocks"><span>Blocks</span><strong>${height !== null && headers !== null ? `${height.toLocaleString()} / ${headers.toLocaleString()}` : "Telemetry warming up"}</strong></div></div>`
+            ? `<div class="runtime-focus-progress">${progressBar(progress, "Blockchain sync")}<div class="runtime-focus-blocks"><span>Live block progress</span><strong>${blockProgress}</strong></div><div class="telemetry-grace-note">${health.summary} ${health.detail}</div></div>`
             : ["starting", "recovering"].includes(presentation.state)
               ? `<div class="telemetry-grace-note">Runtime is verifying or warming existing blockchain data.</div>`
               : ""
@@ -520,7 +543,7 @@ function showManage(providerId) {
   const sync = telemetry.sync || {};
   const progress =
     sync.progressPercent !== null && sync.progressPercent !== undefined
-      ? `${Number(sync.progressPercent).toFixed(2)}%`
+      ? formatSyncProgress(sync.progressPercent)
       : "—";
   const health = runtimeHealthGuidance(telemetry);
 
