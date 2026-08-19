@@ -88,8 +88,9 @@ jobs:
             "${MONEROD}" \
             runtime-images/monero/staged/monerod
 
-          runtime-images/monero/staged/monerod \
-            --version
+          # Do not execute the staged binary here.
+          # The GitHub runner is amd64; arm64 execution is
+          # verified later after QEMU/Buildx setup.
 
           sha256sum \
             runtime-images/monero/staged/monerod

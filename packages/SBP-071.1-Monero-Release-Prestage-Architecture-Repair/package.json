@@ -1,0 +1,7 @@
+{
+  "id": "SBP-071.1",
+  "name": "Monero Release Prestage Architecture Repair",
+  "version": "1.0.0",
+  "type": "build-workflow-repair",
+  "destructive": false
+}
