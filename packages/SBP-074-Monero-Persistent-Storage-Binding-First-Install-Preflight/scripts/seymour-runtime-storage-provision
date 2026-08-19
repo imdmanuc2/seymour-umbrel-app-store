@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PROVIDER=""
+STORAGE_ROOT=""
+UMBREL_ROOT="${UMBREL_ROOT:-/home/umbrel/umbrel}"
+CATALOG=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --provider) PROVIDER="${2:-}"; shift 2 ;;
+    --storage-root) STORAGE_ROOT="${2:-}"; shift 2 ;;
+    --umbrel-root) UMBREL_ROOT="${2:-}"; shift 2 ;;
+    --catalog) CATALOG="${2:-}"; shift 2 ;;
+    *) echo "Unknown argument: $1" >&2; exit 2 ;;
+  esac
+done
+
+if [[ -z "$PROVIDER" || -z "$STORAGE_ROOT" || -z "$CATALOG" ]]; then
+  echo "Usage: $0 --provider <providerId> --storage-root <absolute-path> --catalog <providers.v1.json> [--umbrel-root <path>]" >&2
+  exit 2
+fi
+
+for value in "$STORAGE_ROOT" "$UMBREL_ROOT" "$CATALOG"; do
+  [[ "$value" = /* ]] || { echo "ERROR: absolute path required: $value" >&2; exit 1; }
+done
+
+APP_ID="$(
+python3 - "$CATALOG" "$PROVIDER" <<'PY'
+import json,re,sys
+from pathlib import Path
+provider_id=sys.argv[2]
+if not re.fullmatch(r"[a-z0-9][a-z0-9._-]*", provider_id):
+    raise SystemExit("ERROR: unsafe provider id")
+data=json.loads(Path(sys.argv[1]).read_text())
+p=next((p for p in data.get("providers",[]) if p.get("providerId")==provider_id),None)
+if not p:
+    raise SystemExit("ERROR: provider not found")
+if not p.get("selectable"):
+    raise SystemExit("ERROR: provider is not selectable")
+runtime=p.get("runtime") or {}
+app_id=str(runtime.get("appId") or "")
+if not app_id:
+    raise SystemExit("ERROR: provider runtime appId missing")
+print(app_id)
+PY
+)"
+
+# Runtime ownership defaults to the account invoking this helper.
+# Explicit overrides are supported for non-interactive automation.
+UID_VALUE="${SEYMOUR_RUNTIME_UID:-$(id -u)}"
+GID_VALUE="${SEYMOUR_RUNTIME_GID:-$(id -g)}"
+
+case "$UID_VALUE" in
+  ''|*[!0-9]*)
+    echo "ERROR: invalid runtime UID: $UID_VALUE" >&2
+    exit 1
+    ;;
+esac
+
+case "$GID_VALUE" in
+  ''|*[!0-9]*)
+    echo "ERROR: invalid runtime GID: $GID_VALUE" >&2
+    exit 1
+    ;;
+esac
+
+TARGET="$STORAGE_ROOT/$PROVIDER"
+
+case "$TARGET" in
+  "$STORAGE_ROOT"/*) ;;
+  *) echo "ERROR: derived target escaped storage root" >&2; exit 1 ;;
+esac
+
+sudo mkdir -p "$TARGET"
+sudo chown "$UID_VALUE:$GID_VALUE" "$TARGET"
+sudo chmod 0755 "$TARGET"
+
+echo "Waiting for storage ownership to become visible..."
+
+OWNERSHIP_OK=false
+
+for attempt in $(seq 1 15); do
+  ACTUAL_UID="$(stat -c '%u' "$TARGET")"
+  ACTUAL_GID="$(stat -c '%g' "$TARGET")"
+
+  if [[ "$ACTUAL_UID" = "$UID_VALUE" && "$ACTUAL_GID" = "$GID_VALUE" ]]; then
+    OWNERSHIP_OK=true
+    break
+  fi
+
+  sleep 1
+done
+
+if [[ "$OWNERSHIP_OK" != "true" ]]; then
+  echo "ERROR: provider storage ownership did not converge" >&2
+  echo "expected=${UID_VALUE}:${GID_VALUE}" >&2
+  echo "actual=$(stat -c '%u:%g' "$TARGET")" >&2
+  exit 1
+fi
+
+WRITE_OK=false
+
+for attempt in $(seq 1 15); do
+  TEST="$TARGET/.seymour-write-test-$$-$attempt"
+
+  if touch "$TEST" 2>/dev/null; then
+    rm -f "$TEST"
+    WRITE_OK=true
+    break
+  fi
+
+  sleep 1
+done
+
+if [[ "$WRITE_OK" != "true" ]]; then
+  echo "ERROR: provider storage is not writable by the runtime user" >&2
+  exit 1
+fi
+
+BINDING_DIR="$UMBREL_ROOT/app-data/seymour-blockchain-manager/data/evidence/runtime-bindings"
+BINDING_FILE="$BINDING_DIR/$APP_ID.env"
+
+sudo mkdir -p "$BINDING_DIR"
+TMP="$(mktemp)"
+cat > "$TMP" <<EOF
+SEYMOUR_BLOCKCHAIN_PROVIDER_ID=$PROVIDER
+SEYMOUR_BLOCKCHAIN_APP_ID=$APP_ID
+SEYMOUR_BLOCKCHAIN_DATA_PATH=$TARGET
+EOF
+sudo cp "$TMP" "$BINDING_FILE"
+sudo chmod 0600 "$BINDING_FILE"
+rm -f "$TMP"
+
+echo "providerId=$PROVIDER"
+echo "appId=$APP_ID"
+echo "storageRoot=$STORAGE_ROOT"
+echo "dataPath=$TARGET"
+echo "runtimeUid=$UID_VALUE"
+echo "runtimeGid=$GID_VALUE"
+echo "bindingFile=$BINDING_FILE"
+echo "healthy=true"

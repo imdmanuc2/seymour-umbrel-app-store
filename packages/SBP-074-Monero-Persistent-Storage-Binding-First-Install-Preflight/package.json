@@ -1,0 +1,7 @@
+{
+  "id": "SBP-074",
+  "name": "Monero Persistent Storage Binding & First-Install Preflight",
+  "version": "1.0.0",
+  "type": "runtime-storage-preflight",
+  "destructive": false
+}

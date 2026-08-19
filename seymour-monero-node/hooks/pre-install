@@ -4,8 +4,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DATA_DIR="${APP_DATA_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 COMPOSE="$APP_DATA_DIR/docker-compose.yml"
+UMBREL_ROOT="${UMBREL_ROOT:-$(cd "$APP_DATA_DIR/../.." && pwd)}"
 
 app_id="$(basename "$APP_DATA_DIR")"
+BINDING_FILE="$UMBREL_ROOT/app-data/seymour-blockchain-manager/data/evidence/runtime-bindings/$app_id.env"
 
 if [[ ! "$app_id" =~ ^[a-z0-9][a-z0-9._-]*$ ]]; then
   echo "Seymour Monero identity: invalid app id: $app_id" >&2
@@ -15,13 +17,31 @@ fi
 rpc_host="${app_id}-rpc"
 status_host="${app_id}-status"
 
-python3 - "$COMPOSE" "$rpc_host" "$status_host" <<'PY'
+data_path=""
+
+if [[ -f "$BINDING_FILE" ]]; then
+  while IFS='=' read -r key value; do
+    case "$key" in
+      SEYMOUR_BLOCKCHAIN_DATA_PATH)
+        data_path="$value"
+        ;;
+    esac
+  done < "$BINDING_FILE"
+fi
+
+if [[ -z "$data_path" || "$data_path" != /* || "$data_path" == *$'\n'* || "$data_path" == *$'\r'* ]]; then
+  echo "Seymour Monero storage binding is missing or invalid: $BINDING_FILE" >&2
+  exit 1
+fi
+
+python3 - "$COMPOSE" "$rpc_host" "$status_host" "$data_path" <<'PY'
 from pathlib import Path
 import sys
 
 compose = Path(sys.argv[1])
 rpc_host = sys.argv[2]
 status_host = sys.argv[3]
+data_path = sys.argv[4]
 
 text = compose.read_text()
 
@@ -30,6 +50,8 @@ replacements = {
     "XMR_RPC_HOST: ${SEYMOUR_BLOCKCHAIN_RPC_HOST}": f"XMR_RPC_HOST: {rpc_host}",
     "APP_HOST: ${SEYMOUR_BLOCKCHAIN_STATUS_HOST}": f"APP_HOST: {status_host}",
     "- ${SEYMOUR_BLOCKCHAIN_STATUS_HOST}": f"- {status_host}",
+    "${SEYMOUR_BLOCKCHAIN_DATA_PATH:-${APP_DATA_DIR}/data/node}:/data": f"{data_path}:/data",
+    "${SEYMOUR_BLOCKCHAIN_DATA_PATH:-${APP_DATA_DIR}/data/node}:/node-data": f"{data_path}:/node-data",
 }
 
 for old, new in replacements.items():
