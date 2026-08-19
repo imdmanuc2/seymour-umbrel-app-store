@@ -11,6 +11,7 @@ RPC_PASSWORD=os.environ.get("BTC_RPC_PASSWORD","change-me-before-production")
 DATA_PATH=Path(os.environ.get("BTC_DATA_PATH","/node-data"))
 REACHABILITY_TIMEOUT=float(os.environ.get("BTC_RPC_REACHABILITY_TIMEOUT_SECONDS","5"))
 HEAVY_TIMEOUT=float(os.environ.get("BTC_RPC_HEAVY_TIMEOUT_SECONDS","120"))
+REACHABILITY_TIMEOUT=float(os.environ.get("BTC_RPC_REACHABILITY_TIMEOUT_SECONDS","30"))
 REFRESH_INTERVAL=float(os.environ.get("BTC_TELEMETRY_REFRESH_INTERVAL_SECONDS","15"))
 STALE_AFTER=float(os.environ.get("BTC_TELEMETRY_STALE_AFTER_SECONDS","180"))
 

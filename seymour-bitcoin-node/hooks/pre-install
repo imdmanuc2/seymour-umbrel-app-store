@@ -61,6 +61,14 @@ if not node_ok:
 if not status_ok:
     raise SystemExit("Seymour RPC identity: status RPC host anchor not found")
 
+app_host_variable = "APP_HOST: ${SEYMOUR_BLOCKCHAIN_STATUS_HOST}"
+app_host_literal = f"APP_HOST: {status_host}"
+
+if app_host_variable in text:
+    text = text.replace(app_host_variable, app_host_literal, 1)
+elif app_host_literal not in text:
+    raise SystemExit("app proxy status host anchor not found")
+
 status_variable = "- ${SEYMOUR_BLOCKCHAIN_STATUS_HOST}"
 status_literal = f"- {status_host}"
 if status_variable in text:

@@ -1,0 +1,7 @@
+{
+  "id": "SBP-071.2",
+  "name": "Bitcoin IBD Healthcheck Telemetry Timeout Resilience",
+  "version": "1.0.0",
+  "type": "runtime-observer-repair",
+  "destructive": false
+}
