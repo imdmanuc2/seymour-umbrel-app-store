@@ -1,0 +1,7 @@
+{
+  "id": "SBP-066",
+  "name": "Bitcoin V1 Fresh-Install Acceptance",
+  "version": "1.0.0",
+  "type": "acceptance-gate",
+  "destructive": false
+}
