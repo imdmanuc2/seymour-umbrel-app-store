@@ -1,0 +1,195 @@
+name: Build Seymour Monero Node Multi-Arch
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [develop]
+    paths:
+      - "runtime-images/monero/**"
+      - ".github/workflows/seymour-monero-node-multiarch.yml"
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: ghcr.io/imdmanuc2/seymour-monero-node
+  MONERO_VERSION: "0.18.5.1"
+
+jobs:
+  build-platform:
+    name: build-${{ matrix.arch }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            release_arch: x64
+            platform: linux/amd64
+            archive: monero-linux-x64-v0.18.5.1.tar.bz2
+            sha256: 22a7dda7b0cb699fdd6b7674c3b4a4465b337cc98a54983523b759e1e7cc9958
+          - arch: arm64
+            release_arch: armv8
+            platform: linux/arm64
+            archive: monero-linux-armv8-v0.18.5.1.tar.bz2
+            sha256: c0caf042cb7c7b760f5ad6be188084b59352440b32990a78b8051497b9398dbc
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download and verify Monero release
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          ARCHIVE="${{ matrix.archive }}"
+          URL="https://downloads.getmonero.org/cli/${ARCHIVE}"
+
+          curl \
+            --fail \
+            --show-error \
+            --location \
+            --retry 5 \
+            --retry-all-errors \
+            --retry-delay 5 \
+            --connect-timeout 20 \
+            --max-time 900 \
+            --output "/tmp/${ARCHIVE}" \
+            "${URL}"
+
+          printf '%s  %s\n' \
+            "${{ matrix.sha256 }}" \
+            "/tmp/${ARCHIVE}" \
+            | sha256sum -c -
+
+          rm -rf /tmp/monero-release
+          mkdir -p /tmp/monero-release
+
+          tar -xjf "/tmp/${ARCHIVE}" \
+            -C /tmp/monero-release
+
+          MONEROD="$(
+            find /tmp/monero-release \
+              -type f \
+              -name monerod \
+              -print \
+              -quit
+          )"
+
+          test -n "${MONEROD}"
+          test -x "${MONEROD}"
+
+          mkdir -p runtime-images/monero/staged
+
+          install -m 0755 \
+            "${MONEROD}" \
+            runtime-images/monero/staged/monerod
+
+          runtime-images/monero/staged/monerod \
+            --version
+
+          sha256sum \
+            runtime-images/monero/staged/monerod
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push architecture tag
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          docker buildx build \
+            --progress=plain \
+            --platform "${{ matrix.platform }}" \
+            --tag "${IMAGE_NAME}:${MONERO_VERSION}-${{ matrix.arch }}" \
+            --push \
+            runtime-images/monero
+
+      - name: Inspect architecture image
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          docker buildx imagetools inspect \
+            "${IMAGE_NAME}:${MONERO_VERSION}-${{ matrix.arch }}"
+
+      - name: Smoke-test architecture image
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          docker pull \
+            --platform "${{ matrix.platform }}" \
+            "${IMAGE_NAME}:${MONERO_VERSION}-${{ matrix.arch }}"
+
+          docker run \
+            --rm \
+            --platform "${{ matrix.platform }}" \
+            "${IMAGE_NAME}:${MONERO_VERSION}-${{ matrix.arch }}" \
+            --version
+
+  publish-manifest:
+    name: publish-manifest
+    runs-on: ubuntu-latest
+    needs: [build-platform]
+
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify architecture tags exist
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          docker buildx imagetools inspect \
+            "${IMAGE_NAME}:${MONERO_VERSION}-amd64"
+
+          docker buildx imagetools inspect \
+            "${IMAGE_NAME}:${MONERO_VERSION}-arm64"
+
+      - name: Publish canonical multi-arch manifest
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          docker buildx imagetools create \
+            --tag "${IMAGE_NAME}:${MONERO_VERSION}" \
+            "${IMAGE_NAME}:${MONERO_VERSION}-amd64" \
+            "${IMAGE_NAME}:${MONERO_VERSION}-arm64"
+
+      - name: Verify canonical manifest
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          docker buildx imagetools inspect \
+            "${IMAGE_NAME}:${MONERO_VERSION}" \
+            | tee /tmp/seymour-monero-manifest.txt
+
+          grep -q 'linux/amd64' \
+            /tmp/seymour-monero-manifest.txt
+
+          grep -q 'linux/arm64' \
+            /tmp/seymour-monero-manifest.txt

@@ -1,0 +1,12 @@
+{
+  "id": "SBP-071",
+  "name": "Monero Multi-Arch Runtime Image Foundation",
+  "version": "1.0.0",
+  "type": "runtime-image-foundation",
+  "destructive": false,
+  "image": "ghcr.io/imdmanuc2/seymour-monero-node:0.18.5.1",
+  "platforms": [
+    "linux/amd64",
+    "linux/arm64"
+  ]
+}
