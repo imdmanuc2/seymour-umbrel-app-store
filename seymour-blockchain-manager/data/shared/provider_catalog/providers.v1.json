@@ -184,7 +184,7 @@
       "estimatedDiskBytes": 250000000000,
       "availability": "planned",
       "selectable": false,
-      "productionImage": null,
+      "productionImage": "ghcr.io/imdmanuc2/seymour-monero-node:0.18.5.1",
       "runtime": {
         "appId": "seymour-monero-node",
         "service": "node",
