@@ -1,0 +1,7 @@
+{
+  "id": "SBP-069",
+  "name": "Provider-Neutral Installation Contract",
+  "version": "1.0.0",
+  "type": "architecture-foundation",
+  "destructive": false
+}

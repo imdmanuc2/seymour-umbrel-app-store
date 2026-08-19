@@ -50,7 +50,7 @@ BCH_LOCAL_DATA_PATH = Path(
     )
 )
 
-PROVIDERS = {
+INSTALL_ADAPTERS = {
     "bitcoin-mainnet": {
         "appId": os.environ.get("BTC_APP_ID", "seymour-bitcoin-node"),
         "installScript": Path(os.environ.get(
@@ -163,10 +163,57 @@ def _provider(provider_id: str) -> dict[str, Any]:
         if item["providerId"] == provider_id
     )
 
+def _runtime_contract(provider: dict[str, Any]) -> dict[str, Any]:
+    runtime = provider.get("runtime")
+    if not isinstance(runtime, dict):
+        raise ValueError("Provider runtime contract is missing.")
+    return runtime
+
+
+def _rpc_contract(provider: dict[str, Any]) -> dict[str, Any]:
+    rpc = _runtime_contract(provider).get("rpc")
+    if not isinstance(rpc, dict):
+        raise ValueError("Provider RPC contract is missing.")
+    return rpc
+
+
+def _p2p_contract(provider: dict[str, Any]) -> dict[str, Any]:
+    p2p = _runtime_contract(provider).get("p2p")
+    if not isinstance(p2p, dict):
+        raise ValueError("Provider P2P contract is missing.")
+    return p2p
+
+
+def _runtime_port(contract: dict[str, Any], name: str) -> int:
+    value = int(contract.get("port", 0))
+    if not 1 <= value <= 65535:
+        raise ValueError(f"Provider {name} port is invalid.")
+    return value
+
+
+def _rpc_authentication(provider: dict[str, Any]) -> str:
+    value = str(_rpc_contract(provider).get("authentication") or "").strip()
+    if value not in {"none", "username-password"}:
+        raise ValueError("Provider RPC authentication contract is unsupported.")
+    return value
+
+
 def provider_runtime(provider_id: str) -> dict[str, Any]:
-    if provider_id not in PROVIDERS:
-        raise ValueError("Provider is not enabled for installation.")
-    return PROVIDERS[provider_id]
+    provider = _provider(provider_id)
+    runtime = _runtime_contract(provider)
+
+    adapter = INSTALL_ADAPTERS.get(provider_id)
+
+    result = dict(runtime)
+    result["providerId"] = provider_id
+    result["selectable"] = bool(provider.get("selectable"))
+    result["productionImage"] = provider.get("productionImage")
+    result["installAdapterEnabled"] = adapter is not None
+
+    if adapter is not None:
+        result.update(adapter)
+
+    return result
 
 def _preflight_host_profile() -> HostProfile:
     base = host_profile()
@@ -417,9 +464,20 @@ def preflight(
         "productionImage": provider["productionImage"],
         "networkAvailable": _network_available(),
         "ports": {
-            "rpc": {"port": 8332, "available": _port_available(8332)},
-            "p2p": {"port": 8333, "available": _port_available(8333)},
+            "rpc": {
+                "port": _runtime_port(_rpc_contract(provider), "RPC"),
+                "available": _port_available(
+                    _runtime_port(_rpc_contract(provider), "RPC")
+                ),
+            },
+            "p2p": {
+                "port": _runtime_port(_p2p_contract(provider), "P2P"),
+                "available": _port_available(
+                    _runtime_port(_p2p_contract(provider), "P2P")
+                ),
+            },
         },
+        "rpcAuthentication": _rpc_authentication(provider),
         "storageTargets": inventory,
         "selectedStorageTargetId": selected.target_id if selected else None,
     }
@@ -459,12 +517,29 @@ def validate_request(value: InstallRequest) -> None:
         raise ValueError("Node name is required.")
     if not value.storage_target_id:
         raise ValueError("Storage target is required.")
-    if not value.rpc_user:
-        raise ValueError("RPC user is required.")
-    if len(value.rpc_password) < 24:
-        raise ValueError("RPC password must contain at least 24 characters.")
-    if not 1 <= value.rpc_port <= 65535 or not 1 <= value.p2p_port <= 65535:
-        raise ValueError("Port is invalid.")
+    provider = _provider(value.provider_id)
+    rpc_authentication = _rpc_authentication(provider)
+
+    if rpc_authentication == "username-password":
+        if not value.rpc_user:
+            raise ValueError("RPC user is required.")
+        if len(value.rpc_password) < 24:
+            raise ValueError(
+                "RPC password must contain at least 24 characters."
+            )
+
+    expected_rpc_port = _runtime_port(_rpc_contract(provider), "RPC")
+    expected_p2p_port = _runtime_port(_p2p_contract(provider), "P2P")
+
+    if value.rpc_port != expected_rpc_port:
+        raise ValueError(
+            f"RPC port does not match provider contract: expected {expected_rpc_port}."
+        )
+
+    if value.p2p_port != expected_p2p_port:
+        raise ValueError(
+            f"P2P port does not match provider contract: expected {expected_p2p_port}."
+        )
 
 def _write_runtime_binding_config(
     *,
@@ -572,6 +647,8 @@ class Installer:
     def execute(self, value: InstallRequest) -> InstallOperation:
         validate_request(value)
         runtime = provider_runtime(value.provider_id)
+        if not runtime.get("installAdapterEnabled"):
+            raise ValueError("Provider installation adapter is not enabled.")
         active = self._active_install_for_app(value.app_id)
         if active is not None:
             now = utc_now()
