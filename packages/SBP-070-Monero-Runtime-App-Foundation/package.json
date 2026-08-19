@@ -1,0 +1,7 @@
+{
+  "id": "SBP-070",
+  "name": "Monero Runtime App Foundation",
+  "version": "1.0.0",
+  "type": "runtime-foundation",
+  "destructive": false
+}

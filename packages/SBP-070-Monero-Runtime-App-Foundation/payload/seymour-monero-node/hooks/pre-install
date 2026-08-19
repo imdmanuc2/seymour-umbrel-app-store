@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+APP_DATA_DIR="${APP_DATA_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+COMPOSE="$APP_DATA_DIR/docker-compose.yml"
+
+app_id="$(basename "$APP_DATA_DIR")"
+
+if [[ ! "$app_id" =~ ^[a-z0-9][a-z0-9._-]*$ ]]; then
+  echo "Seymour Monero identity: invalid app id: $app_id" >&2
+  exit 1
+fi
+
+rpc_host="${app_id}-rpc"
+status_host="${app_id}-status"
+
+python3 - "$COMPOSE" "$rpc_host" "$status_host" <<'PY'
+from pathlib import Path
+import sys
+
+compose = Path(sys.argv[1])
+rpc_host = sys.argv[2]
+status_host = sys.argv[3]
+
+text = compose.read_text()
+
+replacements = {
+    "- ${SEYMOUR_BLOCKCHAIN_RPC_HOST}": f"- {rpc_host}",
+    "XMR_RPC_HOST: ${SEYMOUR_BLOCKCHAIN_RPC_HOST}": f"XMR_RPC_HOST: {rpc_host}",
+    "APP_HOST: ${SEYMOUR_BLOCKCHAIN_STATUS_HOST}": f"APP_HOST: {status_host}",
+    "- ${SEYMOUR_BLOCKCHAIN_STATUS_HOST}": f"- {status_host}",
+}
+
+for old, new in replacements.items():
+    if old in text:
+        text = text.replace(old, new, 1)
+    elif new not in text:
+        raise SystemExit(f"Seymour Monero identity anchor not found: {old}")
+
+compose.write_text(text)
+PY
+
+echo "Seymour Monero runtime identity materialized for app=$app_id"

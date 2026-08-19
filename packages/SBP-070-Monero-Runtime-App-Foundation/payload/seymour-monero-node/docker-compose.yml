@@ -1,0 +1,72 @@
+services:
+  app_proxy:
+    environment:
+      APP_HOST: ${SEYMOUR_BLOCKCHAIN_STATUS_HOST}
+      APP_PORT: 8080
+
+  node:
+    networks:
+      default:
+        aliases:
+          - ${SEYMOUR_BLOCKCHAIN_RPC_HOST}
+
+    image: ${SEYMOUR_MONERO_IMAGE:-ghcr.io/imdmanuc2/seymour-monero-node:0.18.5.1}
+    restart: on-failure
+    stop_grace_period: 2m
+
+    command:
+      - monerod
+      - --non-interactive
+      - --data-dir=/data
+      - --p2p-bind-ip=0.0.0.0
+      - --p2p-bind-port=18080
+      - --rpc-bind-ip=0.0.0.0
+      - --rpc-bind-port=18081
+      - --confirm-external-bind
+      - --no-igd
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          wget -qO- --timeout=5
+          --header='Content-Type: application/json'
+          --post-data='{"jsonrpc":"2.0","id":"0","method":"get_info"}'
+          http://127.0.0.1:18081/json_rpc
+          >/dev/null 2>&1
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 5
+
+    volumes:
+      - ${SEYMOUR_BLOCKCHAIN_DATA_PATH:-${APP_DATA_DIR}/data/node}:/data
+
+    ports:
+      - "${XMR_P2P_HOST_PORT:-18080}:18080"
+
+  status:
+    networks:
+      default:
+        aliases:
+          - ${SEYMOUR_BLOCKCHAIN_STATUS_HOST}
+
+    image: python:3.12-alpine
+    restart: on-failure
+    working_dir: /app
+
+    command:
+      - python
+      - /app/app.py
+
+    environment:
+      XMR_RPC_HOST: ${SEYMOUR_BLOCKCHAIN_RPC_HOST}
+      XMR_RPC_PORT: "18081"
+      XMR_DATA_PATH: /node-data
+
+    volumes:
+      - ${APP_DATA_DIR}/data/status:/app:ro
+      - ${SEYMOUR_BLOCKCHAIN_DATA_PATH:-${APP_DATA_DIR}/data/node}:/node-data:ro
+
+    depends_on:
+      - node
