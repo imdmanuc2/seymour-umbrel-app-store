@@ -45,7 +45,10 @@ data_path = sys.argv[4]
 
 text = compose.read_text()
 
+image = "ghcr.io/imdmanuc2/seymour-monero-node:0.18.5.1"
+
 replacements = {
+    "image: ${SEYMOUR_MONERO_IMAGE:-ghcr.io/imdmanuc2/seymour-monero-node:0.18.5.1}": f"image: {image}",
     "- ${SEYMOUR_BLOCKCHAIN_RPC_HOST}": f"- {rpc_host}",
     "XMR_RPC_HOST: ${SEYMOUR_BLOCKCHAIN_RPC_HOST}": f"XMR_RPC_HOST: {rpc_host}",
     "APP_HOST: ${SEYMOUR_BLOCKCHAIN_STATUS_HOST}": f"APP_HOST: {status_host}",

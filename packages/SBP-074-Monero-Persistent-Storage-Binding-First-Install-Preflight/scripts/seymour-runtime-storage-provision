@@ -129,8 +129,17 @@ SEYMOUR_BLOCKCHAIN_APP_ID=$APP_ID
 SEYMOUR_BLOCKCHAIN_DATA_PATH=$TARGET
 EOF
 sudo cp "$TMP" "$BINDING_FILE"
+sudo chown "$UID_VALUE:$GID_VALUE" "$BINDING_FILE"
 sudo chmod 0600 "$BINDING_FILE"
 rm -f "$TMP"
+
+ACTUAL_BINDING_UID="$(stat -c '%u' "$BINDING_FILE")"
+ACTUAL_BINDING_GID="$(stat -c '%g' "$BINDING_FILE")"
+
+if [[ "$ACTUAL_BINDING_UID" != "$UID_VALUE" || "$ACTUAL_BINDING_GID" != "$GID_VALUE" ]]; then
+  echo "ERROR: runtime binding ownership mismatch" >&2
+  exit 1
+fi
 
 echo "providerId=$PROVIDER"
 echo "appId=$APP_ID"
