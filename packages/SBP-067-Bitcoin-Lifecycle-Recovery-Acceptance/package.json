@@ -1,0 +1,7 @@
+{
+  "id": "SBP-067",
+  "name": "Bitcoin Lifecycle & Recovery Acceptance",
+  "version": "1.0.0",
+  "type": "acceptance-gate",
+  "destructive": false
+}
