@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CONTROL="$ROOT/scripts/seymour-umbrel-app"
+
+APP_ID="${XMR_APP_ID:-seymour-monero-node}"
+EXPECTED="INSTALL-${APP_ID}"
+
+EXECUTE=false
+CONFIRM=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --execute)
+      EXECUTE=true
+      shift
+      ;;
+    --confirm)
+      CONFIRM="${2:-}"
+      shift 2
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      exit 2
+      ;;
+  esac
+done
+
+if [[ "$EXECUTE" != "true" ]]; then
+  cat <<JSON
+{
+  "appId": "$APP_ID",
+  "executed": false,
+  "requiredConfirmation": "$EXPECTED"
+}
+JSON
+  exit 0
+fi
+
+if [[ "$CONFIRM" != "$EXPECTED" ]]; then
+  echo "Confirmation mismatch. Expected: $EXPECTED" >&2
+  exit 2
+fi
+
+exec "$CONTROL" \
+  install "$APP_ID" \
+  --execute \
+  --confirm "$EXPECTED"

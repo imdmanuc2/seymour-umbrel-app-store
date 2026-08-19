@@ -182,8 +182,8 @@
         "p2p": 18080
       },
       "estimatedDiskBytes": 250000000000,
-      "availability": "planned",
-      "selectable": false,
+      "availability": "available",
+      "selectable": true,
       "productionImage": "ghcr.io/imdmanuc2/seymour-monero-node:0.18.5.1",
       "runtime": {
         "appId": "seymour-monero-node",

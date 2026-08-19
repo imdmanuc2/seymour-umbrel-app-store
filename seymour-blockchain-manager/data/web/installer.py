@@ -67,6 +67,14 @@ INSTALL_ADAPTERS = {
         )),
         "rpcPrefix": "BCH",
     },
+    "monero-mainnet": {
+        "appId": os.environ.get("XMR_APP_ID", "seymour-monero-node"),
+        "installScript": Path(os.environ.get(
+            "SEYMOUR_XMR_INSTALL_SCRIPT",
+            "/control/seymour-install-monero",
+        )),
+        "rpcPrefix": "XMR",
+    },
 }
 
 class InstallStatus(StrEnum):

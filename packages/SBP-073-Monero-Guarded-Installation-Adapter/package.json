@@ -1,0 +1,6 @@
+{
+  "packageId": "SBP-073",
+  "name": "Monero Guarded Installation Adapter",
+  "version": "1.0.0",
+  "description": "Adds the guarded Monero installation adapter and promotes Monero to selectable without installing a runtime."
+}
