@@ -28,6 +28,18 @@
       "installAction": {
         "appId": "seymour-bitcoin-node",
         "confirmation": "INSTALL-seymour-bitcoin-node"
+      },
+      "runtime": {
+        "appId": "seymour-bitcoin-node",
+        "service": "node",
+        "dataDirectory": "/data",
+        "rpc": {
+          "port": 8332,
+          "authentication": "username-password"
+        },
+        "p2p": {
+          "port": 8333
+        }
       }
     },
     {
@@ -50,7 +62,19 @@
       "estimatedDiskBytes": 600000000000,
       "availability": "live",
       "selectable": true,
-      "productionImage": "ghcr.io/imdmanuc2/seymour-bitcoin-cash-node:29.1.0"
+      "productionImage": "ghcr.io/imdmanuc2/seymour-bitcoin-cash-node:29.1.0",
+      "runtime": {
+        "appId": "seymour-bch-node",
+        "service": "node",
+        "dataDirectory": "/data",
+        "rpc": {
+          "port": 8332,
+          "authentication": "username-password"
+        },
+        "p2p": {
+          "port": 8333
+        }
+      }
     },
     {
       "providerId": "litecoin-mainnet",
@@ -160,7 +184,19 @@
       "estimatedDiskBytes": 250000000000,
       "availability": "planned",
       "selectable": false,
-      "productionImage": null
+      "productionImage": null,
+      "runtime": {
+        "appId": "seymour-monero-node",
+        "service": "node",
+        "dataDirectory": "/data",
+        "rpc": {
+          "port": 18081,
+          "authentication": "none"
+        },
+        "p2p": {
+          "port": 18080
+        }
+      }
     },
     {
       "providerId": "kaspa-mainnet",

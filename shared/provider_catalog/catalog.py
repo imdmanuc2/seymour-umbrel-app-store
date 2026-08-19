@@ -26,6 +26,7 @@ class ProviderRecord:
     availability: str
     selectable: bool
     production_image: str | None
+    runtime: dict[str, Any] | None
 
     @classmethod
     def from_dict(
@@ -89,6 +90,11 @@ class ProviderRecord:
                 if data["productionImage"]
                 else None
             ),
+            runtime=(
+                dict(data["runtime"])
+                if isinstance(data.get("runtime"), dict)
+                else None
+            ),
         )
         record.validate()
         return record
@@ -150,6 +156,11 @@ class ProviderRecord:
             "availability": self.availability,
             "selectable": self.selectable,
             "productionImage": self.production_image,
+            "runtime": (
+                dict(self.runtime)
+                if self.runtime is not None
+                else None
+            ),
         }
 
 
@@ -210,35 +221,9 @@ class ProviderCatalog:
         return catalog
 
     def validate(self) -> None:
-        live = [
-            provider
-            for provider in self.providers
-            if provider.availability == "live"
-        ]
-
-        selectable = [
-            provider
-            for provider in self.providers
-            if provider.selectable
-        ]
-
-        if len(live) != 1:
+        if not self.providers:
             raise CatalogValidationError(
-                "SBP-007 requires exactly one live provider"
-            )
-
-        if len(selectable) != 1:
-            raise CatalogValidationError(
-                "SBP-007 requires exactly one "
-                "selectable provider"
-            )
-
-        if (
-            live[0].provider_id
-            != "bitcoin-cash-mainnet"
-        ):
-            raise CatalogValidationError(
-                "Bitcoin Cash must remain the live provider"
+                "Provider catalog contains no providers"
             )
 
     def get(
