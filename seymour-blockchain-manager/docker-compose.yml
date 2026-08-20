@@ -6,6 +6,8 @@ services:
 
   web:
     image: python:3.12-alpine
+    env_file:
+      - ${APP_DATA_DIR}/data/private/nexus-registration.env
     networks:
       default:
         aliases:
@@ -57,6 +59,7 @@ services:
       NEXUS_REFRESH_INTERVAL_SECONDS: "60"
       NEXUS_REFRESH_INITIAL_DELAY_SECONDS: "15"
       NEXUS_REFRESH_STATE_PATH: /evidence/nexus-refresh-state.json
+      SEYMOUR_HOST_MACHINE_ID_PATH: /host-identity/machine-id
 
     volumes:
       - ${APP_DATA_DIR}/data/web:/app:ro
@@ -65,4 +68,5 @@ services:
       - ${APP_DATA_DIR}/data/evidence:/evidence
       - ${APP_DATA_DIR}/data/control:/control:ro
       - ${APP_DATA_DIR}/data/shared:/seymour-platform/shared:ro
+      - /etc/machine-id:/host-identity/machine-id:ro
       - /home/umbrel/umbrel/app-data/seymour-bch-node/data/node:/bch-data:ro

@@ -38,10 +38,39 @@ def load_catalog() -> dict[str, Any]:
     return json.loads(CATALOG_PATH.read_text())
 
 
+HOST_MACHINE_ID_PATH = Path(
+    os.environ.get(
+        "SEYMOUR_HOST_MACHINE_ID_PATH",
+        "/host-identity/machine-id",
+    )
+)
+
+
+def host_identity() -> str:
+    """
+    Return a stable identity for the Umbrel host.
+
+    Container hostname MUST NOT participate in canonical asset identity.
+    """
+
+    try:
+        value = HOST_MACHINE_ID_PATH.read_text().strip()
+    except Exception:
+        value = ""
+
+    if value:
+        return f"machine-id:{value}"
+
+    raise RuntimeError(
+        "Stable Umbrel host identity is unavailable."
+    )
+
+
 def manager_identity() -> dict[str, Any]:
     hostname = socket.gethostname()
+    host_id = host_identity()
     return {
-        "assetId": stable_id("asset", f"{hostname}:{MANAGER_APP_ID}"),
+        "assetId": stable_id("asset", f"{host_id}:{MANAGER_APP_ID}"),
         "assetType": "blockchain-manager",
         "name": "Seymour Blockchain Manager",
         "hostname": hostname,
@@ -53,8 +82,9 @@ def manager_identity() -> dict[str, Any]:
 
 def node_identity() -> dict[str, Any]:
     hostname = socket.gethostname()
+    host_id = host_identity()
     return {
-        "assetId": stable_id("asset", f"{hostname}:{BCH_APP_ID}"),
+        "assetId": stable_id("asset", f"{host_id}:{BCH_APP_ID}"),
         "assetType": "blockchain-node",
         "name": "Seymour Bitcoin Cash Node",
         "hostname": hostname,

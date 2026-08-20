@@ -1,0 +1,5 @@
+{
+  "package": "SBP-078",
+  "name": "Persistent Umbrel Asset Identity",
+  "description": "Provide stable host-derived Nexus CMDB identities for Seymour Umbrel applications."
+}
