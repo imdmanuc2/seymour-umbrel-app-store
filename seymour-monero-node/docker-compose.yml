@@ -10,7 +10,7 @@ services:
         aliases:
           - ${SEYMOUR_BLOCKCHAIN_RPC_HOST}
 
-    image: ${SEYMOUR_MONERO_IMAGE:-ghcr.io/imdmanuc2/seymour-monero-node:0.18.5.1}
+    image: ghcr.io/imdmanuc2/seymour-monero-node:0.18.5.1
     restart: on-failure
     stop_grace_period: 2m
 
