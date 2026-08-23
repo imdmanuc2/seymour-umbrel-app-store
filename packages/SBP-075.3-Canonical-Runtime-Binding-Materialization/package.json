@@ -1,0 +1,6 @@
+{
+  "id": "SBP-075.3",
+  "name": "Canonical Runtime Binding Materialization",
+  "version": "1.0.0",
+  "scope": "blockchain-runtime-binding"
+}
