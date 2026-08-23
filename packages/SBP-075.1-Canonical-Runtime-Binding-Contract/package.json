@@ -1,0 +1,6 @@
+{
+  "id": "SBP-075.1",
+  "name": "Canonical Runtime Binding Contract",
+  "description": "Defines canonical single-path and hybrid-blocks blockchain runtime storage binding contracts.",
+  "version": "1.0.0"
+}
