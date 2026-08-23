@@ -134,3 +134,88 @@ def serialize_runtime_binding(
     ]
 
     return "\n".join(lines) + "\n"
+
+def parse_runtime_binding(
+    text: str,
+) -> RuntimeBinding:
+    values: dict[str, str] = {}
+
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+
+        if not line or line.startswith("#"):
+            continue
+
+        if "=" not in line:
+            raise ValueError(
+                f"invalid runtime binding line: {raw_line!r}"
+            )
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+
+        if not key:
+            raise ValueError(
+                f"invalid runtime binding key: {raw_line!r}"
+            )
+
+        values[key] = value
+
+    provider_id = values.get(
+        "SEYMOUR_BLOCKCHAIN_PROVIDER_ID",
+        "",
+    )
+    app_id = values.get(
+        "SEYMOUR_BLOCKCHAIN_APP_ID",
+        "",
+    )
+
+    data_path = values.get(
+        "SEYMOUR_BLOCKCHAIN_DATA_PATH"
+    )
+    local_data_path = values.get(
+        "SEYMOUR_BLOCKCHAIN_LOCAL_DATA_PATH"
+    )
+    blocks_path = values.get(
+        "SEYMOUR_BLOCKCHAIN_BLOCKS_PATH"
+    )
+
+    if data_path:
+        binding = RuntimeBinding(
+            provider_id=provider_id,
+            app_id=app_id,
+            mode=RuntimeBindingMode.SINGLE_PATH,
+            data_path=Path(data_path),
+        )
+
+    elif local_data_path and blocks_path:
+        binding = RuntimeBinding(
+            provider_id=provider_id,
+            app_id=app_id,
+            mode=RuntimeBindingMode.HYBRID_BLOCKS,
+            local_data_path=Path(local_data_path),
+            blocks_path=Path(blocks_path),
+        )
+
+    else:
+        raise ValueError(
+            "runtime binding does not contain a complete "
+            "single-path or hybrid-blocks contract"
+        )
+
+    binding.validate()
+    return binding
+
+
+def load_runtime_binding(
+    path: Path,
+) -> RuntimeBinding:
+    if not path.is_file():
+        raise FileNotFoundError(
+            f"runtime binding not found: {path}"
+        )
+
+    return parse_runtime_binding(
+        path.read_text()
+    )

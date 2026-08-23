@@ -1,0 +1,6 @@
+{
+  "id": "SBP-075.4",
+  "name": "Native Install Runtime Binding Reconciliation",
+  "version": "1.0.0",
+  "scope": "blockchain-runtime-binding"
+}
