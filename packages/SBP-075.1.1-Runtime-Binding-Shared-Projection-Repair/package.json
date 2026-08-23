@@ -1,0 +1,6 @@
+{
+  "id": "SBP-075.1.1",
+  "name": "Runtime Binding Shared Projection Repair",
+  "description": "Synchronizes the canonical runtime binding contract into the Blockchain Manager shared module projection.",
+  "version": "1.0.0"
+}
