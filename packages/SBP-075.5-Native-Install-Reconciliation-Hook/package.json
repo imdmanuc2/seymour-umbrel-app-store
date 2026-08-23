@@ -1,0 +1,6 @@
+{
+  "id": "SBP-075.5",
+  "name": "Native Install Reconciliation Hook",
+  "version": "1.0.0",
+  "scope": "umbrel-runtime-lifecycle"
+}

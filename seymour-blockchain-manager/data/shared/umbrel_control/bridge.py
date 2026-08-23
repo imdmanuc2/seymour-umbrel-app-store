@@ -17,10 +17,16 @@ try:
         resolve_storage_expectation,
         verify_expected_path,
     )
+    from shared.blockchain_install.runtime_binding_reconciler import (
+        reconcile_installed_runtime_binding,
+    )
 except ModuleNotFoundError:
     from blockchain_install.start_guard import (
         resolve_storage_expectation,
         verify_expected_path,
+    )
+    from blockchain_install.runtime_binding_reconciler import (
+        reconcile_installed_runtime_binding,
     )
 
 
@@ -286,6 +292,8 @@ class UmbrelAppControlBridge:
                 self.write_evidence(operation)
                 return operation
 
+        post_install_reconciliation_started = False
+
         try:
             operation.result = self._invoke(
                 action,
@@ -309,9 +317,84 @@ class UmbrelAppControlBridge:
 
             operation.success = True
 
-            if storage_expectation is not None:
+            runtime_binding_reconciliation = None
+
+            if action == "install" and app_id is not None:
+                binding_path = (
+                    self.data_directory
+                    / "app-data"
+                    / "seymour-blockchain-manager"
+                    / "data"
+                    / "evidence"
+                    / "runtime-bindings"
+                    / f"{app_id}.env"
+                )
+
+                if binding_path.is_file():
+                    post_install_reconciliation_started = True
+
+                    runtime_binding_reconciliation = (
+                        reconcile_installed_runtime_binding(
+                            data_directory=self.data_directory,
+                            binding_path=binding_path,
+                        )
+                    )
+
+                    if runtime_binding_reconciliation.get(
+                        "changed"
+                    ):
+                        restart_result = self._invoke(
+                            "restart",
+                            app_id,
+                        )
+
+                        if restart_result is False:
+                            raise RuntimeError(
+                                "Umbrel native restart returned "
+                                f"false for {app_id} after runtime "
+                                "binding reconciliation"
+                            )
+
+                        state_payload = self.wait_for_state(
+                            app_id,
+                            accepted_states={
+                                "ready",
+                                "running",
+                            },
+                        )
+
+                        runtime_binding_reconciliation[
+                            "restart"
+                        ] = {
+                            "executed": True,
+                            "nativeResult": restart_result,
+                            "state": state_payload,
+                        }
+
+                    else:
+                        runtime_binding_reconciliation[
+                            "restart"
+                        ] = {
+                            "executed": False,
+                            "reason": (
+                                "installed compose already "
+                                "matches canonical binding"
+                            ),
+                        }
+
+            if runtime_binding_reconciliation is not None:
                 operation.result = {
                     "nativeResult": operation.result,
+                    "runtimeBindingReconciliation": (
+                        runtime_binding_reconciliation
+                    ),
+                }
+
+            if storage_expectation is not None:
+                existing_result = operation.result
+
+                operation.result = {
+                    "nativeResult": existing_result,
                     "storageGuard": {
                         "phase": "pre-start-verified",
                         "preflight": storage_preflight,
@@ -323,7 +406,16 @@ class UmbrelAppControlBridge:
 
         except Exception as exc:
             operation.executed = True
-            if app_id is not None and action in {"start", "restart", "stop", "install"}:
+            if (
+                not post_install_reconciliation_started
+                and app_id is not None
+                and action in {
+                    "start",
+                    "restart",
+                    "stop",
+                    "install",
+                }
+            ):
                 try:
                     state_payload = self._invoke("state", app_id)
                     state = state_payload.get("result", state_payload) if isinstance(state_payload, dict) else state_payload
