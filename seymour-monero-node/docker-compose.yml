@@ -28,11 +28,8 @@ services:
       test:
         - CMD-SHELL
         - >-
-          wget -qO- --timeout=5
-          --header='Content-Type: application/json'
-          --post-data='{"jsonrpc":"2.0","id":"0","method":"get_info"}'
-          http://127.0.0.1:18081/json_rpc
-          >/dev/null 2>&1
+          /usr/bin/bash -lc
+          'exec 3<>/dev/tcp/127.0.0.1/18081'
       interval: 30s
       timeout: 10s
       start_period: 90s
