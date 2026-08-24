@@ -13,11 +13,21 @@ DOCKER_SOCKET = Path(os.environ.get("DOCKER_SOCKET", "/var/run/docker.sock"))
 BTC_STATUS_PORT=int(os.environ.get("BTC_STATUS_PORT","8080"))
 BTC_STATUS_TIMEOUT_SECONDS=float(os.environ.get("BTC_STATUS_TIMEOUT_SECONDS","10"))
 
+MONERO_STATUS_PORT=int(os.environ.get("MONERO_STATUS_PORT","8080"))
+MONERO_STATUS_TIMEOUT_SECONDS=float(
+    os.environ.get("MONERO_STATUS_TIMEOUT_SECONDS","5")
+)
+
 RUNTIMES = {
     "bitcoin-mainnet": {
         "appId": os.environ.get("BTC_APP_ID", "seymour-bitcoin-node"),
         "service": os.environ.get("BTC_NODE_SERVICE", "node"),
         "dataPath": Path(os.environ.get("BTC_DATA_PATH", "/bitcoin-data")),
+    },
+    "monero-mainnet": {
+        "appId": os.environ.get("MONERO_APP_ID", "seymour-monero-node"),
+        "service": os.environ.get("MONERO_NODE_SERVICE", "node"),
+        "dataPath": Path(os.environ.get("MONERO_DATA_PATH", "/monero-data")),
     },
 }
 
@@ -304,8 +314,209 @@ def btc_telemetry() -> dict[str, Any]:
     }
 
 
+def _monero_status_url(runtime: dict[str, Any]) -> str:
+    app_id = str(runtime["appId"])
+    host = os.environ.get(
+        "MONERO_STATUS_HOST",
+        f"{app_id}-status",
+    )
+    return (
+        f"http://{host}:{MONERO_STATUS_PORT}"
+        "/api/status"
+    )
+
+
+def _read_monero_status(
+    runtime: dict[str, Any],
+) -> dict[str, Any]:
+    url = _monero_status_url(runtime)
+
+    try:
+        with request.urlopen(
+            url,
+            timeout=MONERO_STATUS_TIMEOUT_SECONDS,
+        ) as response:
+            payload = json.loads(
+                response.read().decode()
+            )
+
+        return (
+            payload
+            if isinstance(payload, dict)
+            else {"error": "invalid-status-payload"}
+        )
+
+    except Exception as exc:
+        return {
+            "error": str(exc),
+            "runtimeRpcReachable": False,
+            "runtimeRpcHealthy": False,
+        }
+
+
+def monero_telemetry() -> dict[str, Any]:
+    runtime = RUNTIMES["monero-mainnet"]
+
+    container = docker_compose_container(
+        str(runtime["appId"]),
+        str(runtime["service"]),
+    )
+
+    installed = bool(container.get("found"))
+    running = bool(container.get("running"))
+
+    status = (
+        _read_monero_status(runtime)
+        if installed and running
+        else {}
+    )
+
+    if not installed:
+        state = "not-installed"
+        reason = "Runtime is not installed."
+
+    elif not running:
+        state = "stopped"
+        reason = "Runtime is installed but stopped."
+
+    else:
+        state = str(
+            status.get("runtimeState")
+            or "starting"
+        )
+        reason = str(
+            status.get("runtimeStateReason")
+            or status.get("error")
+            or "Monero telemetry is initializing."
+        )
+
+    rpc_reachable = bool(
+        status.get("runtimeRpcReachable")
+    )
+    rpc_healthy = bool(
+        status.get("runtimeRpcHealthy")
+    )
+
+    verification = status.get(
+        "runtimeVerificationProgress"
+    )
+
+    if not isinstance(verification, (int, float)):
+        verification = status.get(
+            "verificationProgress"
+        )
+
+    progress = (
+        float(verification) * 100.0
+        if isinstance(verification, (int, float))
+        else None
+    )
+
+    ibd = status.get(
+        "runtimeInitialBlockDownload"
+    )
+
+    sync = {
+        "height": status.get("height"),
+        "headers": status.get("targetHeight"),
+        "progressPercent": progress,
+        "initialBlockDownload": ibd,
+    }
+
+    storage = (
+        status.get("storage")
+        if isinstance(status.get("storage"), dict)
+        else {}
+    )
+
+    health = runtime_health(
+        runtime_state=state,
+        rpc_reachable=rpc_reachable,
+        rpc_healthy=rpc_healthy,
+        sync=sync,
+        sync_analysis={},
+        storage=storage,
+        telemetry_stale=bool(
+            status.get("telemetryStale")
+        ),
+        runtime_reason=reason,
+    )
+
+    database_size = status.get(
+        "databaseSizeBytes"
+    )
+
+    if not isinstance(database_size, (int, float)):
+        database_size = 0
+
+    return {
+        "providerId": "monero-mainnet",
+        "appId": runtime["appId"],
+        "installed": installed,
+        "running": running,
+        "lifecycleStatus": state,
+        "runtimeState": state,
+        "runtimeStateReason": reason,
+        "health": health,
+        "telemetryFresh": status.get(
+            "telemetryFresh",
+            False,
+        ),
+        "telemetryStale": status.get(
+            "telemetryStale",
+            False,
+        ),
+        "telemetryAgeSeconds": status.get(
+            "telemetryAgeSeconds"
+        ),
+        "telemetrySource": status.get(
+            "telemetrySource",
+            "unavailable",
+        ),
+        "telemetryError": status.get(
+            "telemetryError"
+        ),
+        "runtimeRpcReachable": rpc_reachable,
+        "runtimeRpcHealthy": rpc_healthy,
+        "runtimeInitialBlockDownload": ibd,
+        "runtimeVerificationProgress": verification,
+        "operationalState": {
+            "state": state,
+            "reason": reason,
+            "installed": installed,
+            "running": running,
+            "containerHealth": container.get(
+                "health"
+            ),
+            "rpcReachable": rpc_reachable,
+            "rpcHealthy": rpc_healthy,
+            "initialBlockDownload": ibd,
+            "verificationProgress": verification,
+        },
+        "container": container,
+        "rpc": {
+            "reachable": rpc_reachable,
+            "healthy": rpc_healthy,
+        },
+        "sync": sync,
+        "height": status.get("height"),
+        "targetHeight": status.get(
+            "targetHeight"
+        ),
+        "verificationProgress": verification,
+        "peers": status.get("peers"),
+        "nettype": status.get("nettype"),
+        "version": status.get("version"),
+        "data": {
+            "path": str(runtime["dataPath"]),
+            "usedBytes": int(database_size),
+        },
+    }
+
+
 def dashboard_runtimes(*, bch_telemetry) -> dict[str, Any]:
     return {
         "bitcoin-mainnet": btc_telemetry(),
         "bitcoin-cash-mainnet": bch_telemetry(),
+        "monero-mainnet": monero_telemetry(),
     }

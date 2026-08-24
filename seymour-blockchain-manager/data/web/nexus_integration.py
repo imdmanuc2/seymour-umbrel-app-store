@@ -545,52 +545,54 @@ def _managed_runtime_assets(
             catalog=catalog,
         )
 
-        # BCH already has richer canonical telemetry. Preserve it while
-        # retaining Umbrel native lifecycle state as the registration
-        # existence/lifecycle authority.
-        if provider_id == BCH_PROVIDER_ID:
-            existing = (
-                dashboard
-                .get("providers", {})
-                .get(BCH_PROVIDER_ID)
+        # Enrich every managed runtime from the provider telemetry
+        # registry when richer canonical telemetry is available. Umbrel
+        # native lifecycle remains the installation/lifecycle authority.
+        existing = (
+            dashboard
+            .get("providers", {})
+            .get(provider_id)
+        )
+
+        if isinstance(existing, dict):
+            telemetry = dict(existing)
+
+            telemetry["providerId"] = provider_id
+            telemetry["appId"] = app_id
+            telemetry["installed"] = bool(
+                native.get("installed")
+            )
+            telemetry["running"] = bool(
+                native.get("running")
+            )
+            telemetry["lifecycleStatus"] = (
+                native.get(
+                    "lifecycleStatus",
+                    "unknown",
+                )
+            )
+            telemetry["nativeState"] = native.get(
+                "nativeState",
+                {},
             )
 
-            if isinstance(existing, dict):
-                telemetry = dict(existing)
-                telemetry["providerId"] = provider_id
-                telemetry["appId"] = app_id
-                telemetry["installed"] = bool(
-                    native.get("installed")
-                )
-                telemetry["running"] = bool(
-                    native.get("running")
-                )
-                telemetry["lifecycleStatus"] = (
-                    native.get(
-                        "lifecycleStatus",
-                        "unknown",
-                    )
-                )
-                telemetry["nativeState"] = native.get(
-                    "nativeState",
-                    {},
-                )
+            asset["telemetry"] = telemetry
+            asset["status"] = telemetry[
+                "lifecycleStatus"
+            ]
+            asset["runtimeState"] = (
+                telemetry.get("runtimeState")
+                or telemetry["lifecycleStatus"]
+            )
 
-                asset["telemetry"] = telemetry
-                asset["status"] = telemetry[
-                    "lifecycleStatus"
-                ]
-                asset["runtimeState"] = (
-                    telemetry.get("runtimeState")
-                    or telemetry["lifecycleStatus"]
-                )
+            operational = telemetry.get(
+                "operationalState"
+            )
 
-                operational = telemetry.get(
-                    "operationalState"
+            if isinstance(operational, dict):
+                asset["operationalState"] = (
+                    operational
                 )
-
-                if isinstance(operational, dict):
-                    asset["operationalState"] = operational
 
         assets.append(asset)
 
