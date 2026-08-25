@@ -4,7 +4,7 @@ name: Seymour Blockchain Manager
 tagline: Install and manage supported blockchain nodes
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/seymour-blockchain-manager.png
 category: bitcoin
-version: "0.1.1-alpha"
+version: "0.1.2-alpha"
 port: 8570
 description: >-
   Catalog-driven blockchain management for Bitcoin, Bitcoin Cash, Litecoin,
