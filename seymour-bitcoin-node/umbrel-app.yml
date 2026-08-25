@@ -2,7 +2,7 @@ manifestVersion: 1
 id: seymour-bitcoin-node
 name: Bitcoin Core
 tagline: Seymour-managed Bitcoin Core full node
-icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/bitcoin-core.svg
+icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/bitcoin-core.png
 category: Blockchain
 version: "0.2.1"
 port: 8562

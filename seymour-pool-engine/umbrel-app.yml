@@ -2,7 +2,7 @@ manifestVersion: 1
 id: seymour-pool-engine
 name: Seymour Pool Engine
 tagline: Native Seymour pool engine and Stratum platform
-icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/seymour-pool-engine.svg
+icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/seymour-pool-engine.png
 category: Mining Infrastructure
 version: "0.1.1"
 port: 8564

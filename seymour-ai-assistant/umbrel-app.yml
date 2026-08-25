@@ -2,7 +2,7 @@ manifestVersion: 1
 id: seymour-ai-assistant
 name: Seymour AI Assistant
 tagline: AI operations and engineering assistant
-icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/seymour-ai-assistant.svg
+icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/seymour-ai-assistant.png
 category: Development
 version: "0.1.1"
 port: 8567

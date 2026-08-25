@@ -41,7 +41,7 @@
           "port": 8333
         }
       },
-      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/bitcoin-core.svg"
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/bitcoin-core.png"
     },
     {
       "providerId": "bitcoin-cash-mainnet",
@@ -76,7 +76,7 @@
           "port": 8333
         }
       },
-      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/bitcoin-cash-node.svg"
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/bitcoin-cash-node.png"
     },
     {
       "providerId": "litecoin-mainnet",
@@ -99,7 +99,7 @@
       "availability": "coming-soon",
       "selectable": false,
       "productionImage": null,
-      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/litecoin-node.svg",
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/litecoin-node.png",
       "install": null
     },
     {
@@ -123,7 +123,7 @@
       "availability": "coming-soon",
       "selectable": false,
       "productionImage": null,
-      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/dogecoin-node.svg",
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/dogecoin-node.png",
       "install": null
     },
     {
@@ -147,7 +147,7 @@
       "availability": "planned",
       "selectable": false,
       "productionImage": null,
-      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/dash-node.svg"
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/dash-node.png"
     },
     {
       "providerId": "zcash-mainnet",
@@ -170,7 +170,7 @@
       "availability": "coming-soon",
       "selectable": false,
       "productionImage": null,
-      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/zcash-node.svg",
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/zcash-node.png",
       "install": null
     },
     {
@@ -206,7 +206,7 @@
           "port": 18080
         }
       },
-      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/monero-node.svg"
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/monero-node.png"
     },
     {
       "providerId": "kaspa-mainnet",
@@ -229,7 +229,7 @@
       "availability": "coming-soon",
       "selectable": false,
       "productionImage": null,
-      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/kaspa-node.svg",
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/kaspa-node.png",
       "install": null
     },
     {
@@ -253,7 +253,7 @@
       "availability": "coming-soon",
       "selectable": false,
       "productionImage": null,
-      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/ergo-node.svg",
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/ergo-node.png",
       "install": null
     },
     {
@@ -263,7 +263,7 @@
       "network": "mainnet",
       "implementation": "Core-Geth",
       "description": "Ethereum Classic proof-of-work node runtime for Seymour.",
-      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/ethereum-classic-node.svg",
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/ethereum-classic-node.png",
       "availability": "coming-soon",
       "selectable": false,
       "install": null,
