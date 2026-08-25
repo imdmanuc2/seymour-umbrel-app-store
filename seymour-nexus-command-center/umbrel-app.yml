@@ -4,7 +4,7 @@ name: Nexus Command Center
 tagline: Complete command center for miners, pools, nodes and infrastructure
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/nexus-command-center.svg
 category: Mining Infrastructure
-version: "0.1.0"
+version: "0.1.1"
 port: 8560
 description: >-
   Nexus Command Center is the central management platform for the Seymour Mining Suite.

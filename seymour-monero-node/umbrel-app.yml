@@ -2,7 +2,7 @@ manifestVersion: 1
 id: seymour-monero-node
 category: bitcoin
 name: Seymour Monero Node
-version: "0.18.5.1"
+version: "0.18.5.2"
 tagline: Managed Monero mainnet runtime for the Seymour platform
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/monero-node.svg
 description: >-

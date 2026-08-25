@@ -4,7 +4,7 @@ name: Bitcoin Core
 tagline: Seymour-managed Bitcoin Core full node
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/bitcoin-core.svg
 category: Blockchain
-version: "0.2.0"
+version: "0.2.1"
 port: 8562
 description: >-
   Seymour-managed Bitcoin Core full node for mining,

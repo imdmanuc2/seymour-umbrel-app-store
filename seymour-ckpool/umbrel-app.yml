@@ -4,7 +4,7 @@ name: Seymour CKPool
 tagline: High-performance Bitcoin solo mining pool
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/seymour-ckpool.svg
 category: Mining Infrastructure
-version: "0.1.0"
+version: "0.1.1"
 port: 8565
 description: >-
   Seymour-managed CKPool deployment for high-performance Bitcoin solo mining.
