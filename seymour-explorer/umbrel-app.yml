@@ -2,7 +2,7 @@ manifestVersion: 1
 id: seymour-explorer
 name: Seymour Explorer
 tagline: Infrastructure topology and mining relationship explorer
-icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/master/assets/icons/seymour-explorer.svg
+icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/seymour-explorer.svg
 category: Development
 version: "0.1.0"
 port: 8569

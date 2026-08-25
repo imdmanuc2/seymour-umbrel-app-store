@@ -40,7 +40,8 @@
         "p2p": {
           "port": 8333
         }
-      }
+      },
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/bitcoin-core.svg"
     },
     {
       "providerId": "bitcoin-cash-mainnet",
@@ -74,7 +75,8 @@
         "p2p": {
           "port": 8333
         }
-      }
+      },
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/bitcoin-cash-node.svg"
     },
     {
       "providerId": "litecoin-mainnet",
@@ -94,9 +96,11 @@
         "p2p": 9333
       },
       "estimatedDiskBytes": 300000000000,
-      "availability": "planned",
+      "availability": "coming-soon",
       "selectable": false,
-      "productionImage": null
+      "productionImage": null,
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/litecoin-node.svg",
+      "install": null
     },
     {
       "providerId": "dogecoin-mainnet",
@@ -116,9 +120,11 @@
         "p2p": 22556
       },
       "estimatedDiskBytes": 250000000000,
-      "availability": "planned",
+      "availability": "coming-soon",
       "selectable": false,
-      "productionImage": null
+      "productionImage": null,
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/dogecoin-node.svg",
+      "install": null
     },
     {
       "providerId": "dash-mainnet",
@@ -140,7 +146,8 @@
       "estimatedDiskBytes": 150000000000,
       "availability": "planned",
       "selectable": false,
-      "productionImage": null
+      "productionImage": null,
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/dash-node.svg"
     },
     {
       "providerId": "zcash-mainnet",
@@ -160,9 +167,11 @@
         "p2p": 8233
       },
       "estimatedDiskBytes": 350000000000,
-      "availability": "planned",
+      "availability": "coming-soon",
       "selectable": false,
-      "productionImage": null
+      "productionImage": null,
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/zcash-node.svg",
+      "install": null
     },
     {
       "providerId": "monero-mainnet",
@@ -182,7 +191,7 @@
         "p2p": 18080
       },
       "estimatedDiskBytes": 250000000000,
-      "availability": "available",
+      "availability": "live",
       "selectable": true,
       "productionImage": "ghcr.io/imdmanuc2/seymour-monero-node:0.18.5.1",
       "runtime": {
@@ -196,7 +205,8 @@
         "p2p": {
           "port": 18080
         }
-      }
+      },
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/monero-node.svg"
     },
     {
       "providerId": "kaspa-mainnet",
@@ -216,9 +226,11 @@
         "p2p": 16111
       },
       "estimatedDiskBytes": 250000000000,
-      "availability": "planned",
+      "availability": "coming-soon",
       "selectable": false,
-      "productionImage": null
+      "productionImage": null,
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/kaspa-node.svg",
+      "install": null
     },
     {
       "providerId": "ergo-mainnet",
@@ -238,9 +250,24 @@
         "p2p": 9030
       },
       "estimatedDiskBytes": 100000000000,
-      "availability": "planned",
+      "availability": "coming-soon",
       "selectable": false,
-      "productionImage": null
+      "productionImage": null,
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/ergo-node.svg",
+      "install": null
+    },
+    {
+      "providerId": "ethereum-classic-mainnet",
+      "displayName": "Ethereum Classic",
+      "family": "ethereum",
+      "network": "mainnet",
+      "implementation": "Core-Geth",
+      "description": "Ethereum Classic proof-of-work node runtime for Seymour.",
+      "icon": "https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/ethereum-classic-node.svg",
+      "availability": "coming-soon",
+      "selectable": false,
+      "install": null,
+      "ticker": "ETC"
     }
   ]
 }

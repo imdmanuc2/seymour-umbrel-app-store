@@ -1,12 +1,115 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-  <title id="title">Bitcoin Core</title>
-  <desc id="desc">Orange Bitcoin Core hex icon.</desc>
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1A0F03"/><stop offset="1" stop-color="#020617"/></linearGradient>
-    <linearGradient id="orange" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FBBF24"/><stop offset=".5" stop-color="#F59E0B"/><stop offset="1" stop-color="#F97316"/></linearGradient>
-    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="9" result="b"/><feColorMatrix in="b" type="matrix" values="0 0 0 0 .96 0 0 0 0 .62 0 0 0 0 .04 0 0 0 .8 0"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-  </defs>
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <path d="M256 42 439 148v216L256 470 73 364V148Z" fill="#111827" stroke="url(#orange)" stroke-width="16" filter="url(#glow)"/>
-  <text x="256" y="335" text-anchor="middle" font-size="220" font-family="Arial, Helvetica, sans-serif" font-weight="700" fill="url(#orange)" filter="url(#glow)">₿</text>
+<svg xmlns="http://www.w3.org/2000/svg"
+ viewBox="0 0 512 512" role="img">
+ <defs>
+   <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+     <stop offset="0" stop-color="#111827"/>
+     <stop offset="1" stop-color="#020617"/>
+   </linearGradient>
+
+   <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1">
+     <stop offset="0" stop-color="#F7931A"/>
+     <stop offset="1" stop-color="#FDBA2D"/>
+   </linearGradient>
+
+   <radialGradient id="shine" cx="32%" cy="22%" r="78%">
+     <stop offset="0" stop-color="#FFFFFF" stop-opacity=".34"/>
+     <stop offset=".36" stop-color="#FFFFFF" stop-opacity=".07"/>
+     <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+   </radialGradient>
+
+   <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+     <feDropShadow dx="0" dy="18" stdDeviation="20"
+       flood-color="#000000" flood-opacity=".48"/>
+   </filter>
+
+   <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+     <feGaussianBlur stdDeviation="16" result="blur"/>
+     <feMerge>
+       <feMergeNode in="blur"/>
+       <feMergeNode in="SourceGraphic"/>
+     </feMerge>
+   </filter>
+ </defs>
+
+ <rect
+   x="8"
+   y="8"
+   width="496"
+   height="496"
+   rx="112"
+   fill="url(#tile)"
+   stroke="#FFFFFF"
+   stroke-opacity=".08"
+   stroke-width="4"/>
+
+ <circle
+   cx="256"
+   cy="224"
+   r="160"
+   fill="#F7931A"
+   opacity=".14"
+   filter="url(#glow)"/>
+
+ <circle
+   cx="256"
+   cy="224"
+   r="148"
+   fill="url(#brand)"
+   filter="url(#shadow)"/>
+
+ <circle
+   cx="256"
+   cy="224"
+   r="123"
+   fill="#07101F"
+   fill-opacity=".36"
+   stroke="#FFFFFF"
+   stroke-opacity=".20"
+   stroke-width="4"/>
+
+ <circle
+   cx="256"
+   cy="224"
+   r="146"
+   fill="url(#shine)"/>
+
+ <path
+   d="M157 332 C207 362 305 362 355 332"
+   fill="none"
+   stroke="#FFFFFF"
+   stroke-opacity=".18"
+   stroke-width="4"
+   stroke-linecap="round"/>
+
+ <text
+   x="256"
+   y="273"
+   text-anchor="middle"
+   font-family="Arial,Helvetica,sans-serif"
+   font-size="148"
+   font-weight="800"
+   fill="#FFFFFF"
+   filter="url(#shadow)">₿</text>
+
+ <rect
+   x="136"
+   y="397"
+   width="240"
+   height="58"
+   rx="29"
+   fill="#FFFFFF"
+   fill-opacity=".08"
+   stroke="#FFFFFF"
+   stroke-opacity=".15"
+   stroke-width="2"/>
+
+ <text
+   x="256"
+   y="435"
+   text-anchor="middle"
+   font-family="Arial,Helvetica,sans-serif"
+   font-size="24"
+   font-weight="800"
+   letter-spacing="3"
+   fill="#FFFFFF">BTC</text>
 </svg>

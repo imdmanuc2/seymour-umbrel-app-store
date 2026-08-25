@@ -2,6 +2,7 @@ manifestVersion: 1
 id: seymour-blockchain-manager
 name: Seymour Blockchain Manager
 tagline: Install and manage supported blockchain nodes
+icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/seymour-blockchain-manager.svg
 category: bitcoin
 version: "0.1.0-alpha"
 port: 8570

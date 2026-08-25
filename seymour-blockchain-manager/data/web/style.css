@@ -1238,3 +1238,120 @@ body {
 
 /* SBP-047 — sync performance diagnostics */
 .sync-manager-tabs{display:flex;gap:7px;margin:12px 0 16px;padding-bottom:10px;border-bottom:1px solid rgba(83,145,224,.16)}.sync-tab{padding:8px 13px;border:1px solid rgba(83,145,224,.22);border-radius:9px;background:rgba(7,22,38,.78);color:var(--muted);cursor:pointer}.sync-tab.active{border-color:rgba(77,156,255,.55);background:rgba(26,103,182,.28);color:var(--text)}.performance-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}.performance-toolbar p,.performance-note,.performance-observation-count{color:var(--muted);font-size:11px}.performance-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}.performance-summary article,.performance-panel{padding:12px;border:1px solid rgba(83,145,224,.18);border-radius:11px;background:rgba(5,17,31,.58)}.performance-summary span{display:block;margin-bottom:5px;color:var(--muted);font-size:10px}.performance-summary strong{font-size:14px}.performance-columns{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px}.performance-peer-list{display:grid;gap:5px;margin-top:8px}.performance-peer-list article{display:flex;justify-content:space-between;gap:10px;padding:7px 8px;border:1px solid rgba(83,145,224,.12);border-radius:8px;background:rgba(4,14,26,.55)}.performance-peer-list strong{overflow:hidden;text-overflow:ellipsis;font-size:10px}.performance-peer-list span{color:var(--muted);font-size:9px;white-space:nowrap}.performance-observation-count{margin-top:9px;text-align:right}@media(max-width:700px){.performance-summary,.performance-columns{grid-template-columns:1fr}.performance-toolbar{align-items:stretch;flex-direction:column}}
+
+
+/* SBP-076.9 — Seymour blockchain provider icon system */
+
+.provider-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+  overflow: hidden;
+  border: 1px solid rgba(103, 164, 235, .26);
+  border-radius: 19px;
+  background:
+    radial-gradient(
+      circle at 30% 20%,
+      rgba(73, 156, 235, .16),
+      transparent 55%
+    ),
+    rgba(6, 18, 34, .96);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, .25),
+    inset 0 0 0 1px rgba(255, 255, 255, .025);
+}
+
+.provider-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.provider-icon-fallback,
+.provider-icon > span {
+  display: none;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: #dcecff;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: .06em;
+}
+
+.provider-icon.compact {
+  width: 58px;
+  height: 58px;
+  flex-basis: 58px;
+  border-radius: 16px;
+}
+
+.runtime-provider-identity {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  min-width: 0;
+}
+
+.runtime-provider-identity h2 {
+  margin-bottom: 4px;
+}
+
+.provider-ticker {
+  display: inline-block;
+  margin-left: 7px;
+  color: #7994ad;
+  font-size: .52em;
+  font-weight: 800;
+  letter-spacing: .07em;
+  vertical-align: middle;
+}
+
+.provider-card.catalog-card {
+  min-height: 420px;
+}
+
+.provider-card.catalog-card .card-top {
+  align-items: flex-start;
+}
+
+.provider-card.coming-soon {
+  border-color: rgba(89, 151, 221, .27);
+}
+
+.provider-card.coming-soon .status-pill {
+  color: #7dbaff;
+  border-color: rgba(77, 156, 255, .34);
+  background: rgba(26, 71, 121, .35);
+}
+
+.provider-card.planned {
+  opacity: .82;
+  border-color: rgba(245, 185, 66, .22);
+}
+
+.provider-card.planned .status-pill {
+  color: #f4c75e;
+  border-color: rgba(245, 185, 66, .32);
+  background: rgba(87, 66, 20, .34);
+}
+
+.catalog-actions {
+  grid-template-columns: 1fr 1fr !important;
+}
+
+@media (max-width: 650px) {
+  .provider-icon {
+    width: 64px;
+    height: 64px;
+    flex-basis: 64px;
+  }
+
+  .runtime-provider-identity {
+    align-items: flex-start;
+  }
+}

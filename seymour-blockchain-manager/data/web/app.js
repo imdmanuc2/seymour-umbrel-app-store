@@ -146,6 +146,58 @@ function healthStateLabel(value) {
   return {healthy: "Healthy", warning: "Attention", critical: "Critical", unknown: "Unknown"}[value] || value;
 }
 
+function providerAvailabilityLabel(provider) {
+  const availability = String(
+    provider?.availability || "planned"
+  ).toLowerCase();
+
+  if (availability === "live") {
+    return "Live";
+  }
+
+  if (availability === "coming-soon") {
+    return "Coming soon";
+  }
+
+  if (availability === "planned") {
+    return "Planned";
+  }
+
+  return availability
+    .replaceAll("-", " ")
+    .replace(/\\b\\w/g, (value) => value.toUpperCase());
+}
+
+function providerIcon(provider, compact = false) {
+  const ticker = String(provider?.ticker || "?");
+  const icon = String(provider?.icon || "").trim();
+
+  if (!icon) {
+    return `
+      <div class="provider-icon ${compact ? "compact" : ""}">
+        <span>${ticker}</span>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="provider-icon ${compact ? "compact" : ""}">
+      <img
+        src="${icon}"
+        alt="${provider.displayName || ticker} icon"
+        loading="lazy"
+        referrerpolicy="no-referrer"
+        onerror="
+          this.style.display='none';
+          this.nextElementSibling.style.display='grid';
+        "
+      >
+      <span class="provider-icon-fallback">${ticker}</span>
+    </div>
+  `;
+}
+
+
 function lifecycleLabel(value) {
   return {
     "running": "Running",
@@ -379,10 +431,13 @@ function renderRuntimeFocus() {
     return `
       <article class="runtime-focus-card ${presentation.state}">
         <div class="runtime-focus-heading">
-          <div>
-            <p class="provider-family">managed runtime</p>
-            <h2>${provider.displayName}</h2>
-            <p class="implementation">${provider.implementation} ${provider.nodeVersion}</p>
+          <div class="runtime-provider-identity">
+            ${providerIcon(provider, true)}
+            <div>
+              <p class="provider-family">managed runtime</p>
+              <h2>${provider.displayName}</h2>
+              <p class="implementation">${provider.implementation} ${provider.nodeVersion}</p>
+            </div>
           </div>
           <span class="status-pill">${stateLabel}</span>
         </div>
@@ -575,29 +630,66 @@ function renderProviders() {
   );
 
   grid.innerHTML = providers.map((provider) => {
+    const availabilityLabel =
+      providerAvailabilityLabel(provider);
+
     return `
       <article class="provider-card catalog-card ${provider.availability}">
         <div class="card-top">
-          <div class="coin-badge">${provider.ticker}</div>
-          <span class="status-pill">Coming soon</span>
+          ${providerIcon(provider)}
+          <span class="status-pill">
+            ${availabilityLabel}
+          </span>
         </div>
+
         <div>
-          <p class="provider-family">${provider.family}</p>
-          <h2>${provider.displayName}</h2>
+          <p class="provider-family">
+            ${provider.family}
+          </p>
+
+          <h2>
+            ${provider.displayName}
+            <span class="provider-ticker">
+              ${provider.ticker}
+            </span>
+          </h2>
+
           <p class="implementation">
-            ${provider.implementation} ${provider.nodeVersion}
+            ${provider.implementation}
+            ${provider.nodeVersion || ""}
           </p>
         </div>
+
         <dl class="metadata">
-          <div><dt>Mining</dt><dd>${provider.miningAlgorithm}</dd></div>
-          <div><dt>Disk estimate</dt><dd>${formatBytes(provider.estimatedDiskBytes)}</dd></div>
-          <div><dt>Architecture</dt><dd>${provider.supportedArchitectures.join(" · ")}</dd></div>
+          <div>
+            <dt>Mining</dt>
+            <dd>${provider.miningAlgorithm || "—"}</dd>
+          </div>
+
+          <div>
+            <dt>Disk estimate</dt>
+            <dd>${formatBytes(provider.estimatedDiskBytes)}</dd>
+          </div>
+
+          <div>
+            <dt>Architecture</dt>
+            <dd>
+              ${(provider.supportedArchitectures || []).join(" · ") || "—"}
+            </dd>
+          </div>
         </dl>
+
         <div class="card-actions catalog-actions">
-          <button class="secondary" data-details="${provider.providerId}">
+          <button
+            class="secondary"
+            data-details="${provider.providerId}"
+          >
             View details
           </button>
-          <button class="disabled" disabled>Coming soon</button>
+
+          <button class="disabled" disabled>
+            ${availabilityLabel}
+          </button>
         </div>
       </article>
     `;

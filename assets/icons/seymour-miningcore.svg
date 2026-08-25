@@ -1,15 +1,115 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-  <title id="title">Seymour MiningCore</title>
-  <desc id="desc">Emerald mining pickaxe and mountain icon for Seymour MiningCore.</desc>
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#06150D"/><stop offset="1" stop-color="#020617"/></linearGradient>
-    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#86EFAC"/><stop offset=".5" stop-color="#22C55E"/><stop offset="1" stop-color="#16A34A"/></linearGradient>
-    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="9" result="b"/><feColorMatrix in="b" type="matrix" values="0 0 0 0 .13 0 0 0 0 .77 0 0 0 0 .37 0 0 0 .8 0"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-  </defs>
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <path d="M256 42 439 148v216L256 470 73 364V148Z" fill="#0F172A" stroke="url(#green)" stroke-width="16" filter="url(#glow)"/>
-  <path d="M118 370 203 285l40 40 52-62 99 107" fill="none" stroke="url(#green)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>
-  <path d="M154 348 336 166l36 36-182 182z" fill="url(#green)" filter="url(#glow)"/>
-  <path d="M293 132c58 10 99 43 121 95-49-25-91-24-126 4Z" fill="#BBF7D0" opacity=".95"/>
-  <path d="M126 395h260" stroke="url(#green)" stroke-width="18" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg"
+ viewBox="0 0 512 512" role="img">
+ <defs>
+   <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+     <stop offset="0" stop-color="#111827"/>
+     <stop offset="1" stop-color="#020617"/>
+   </linearGradient>
+
+   <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1">
+     <stop offset="0" stop-color="#7E22CE"/>
+     <stop offset="1" stop-color="#D8B4FE"/>
+   </linearGradient>
+
+   <radialGradient id="shine" cx="32%" cy="22%" r="78%">
+     <stop offset="0" stop-color="#FFFFFF" stop-opacity=".34"/>
+     <stop offset=".36" stop-color="#FFFFFF" stop-opacity=".07"/>
+     <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+   </radialGradient>
+
+   <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+     <feDropShadow dx="0" dy="18" stdDeviation="20"
+       flood-color="#000000" flood-opacity=".48"/>
+   </filter>
+
+   <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+     <feGaussianBlur stdDeviation="16" result="blur"/>
+     <feMerge>
+       <feMergeNode in="blur"/>
+       <feMergeNode in="SourceGraphic"/>
+     </feMerge>
+   </filter>
+ </defs>
+
+ <rect
+   x="8"
+   y="8"
+   width="496"
+   height="496"
+   rx="112"
+   fill="url(#tile)"
+   stroke="#FFFFFF"
+   stroke-opacity=".08"
+   stroke-width="4"/>
+
+ <circle
+   cx="256"
+   cy="224"
+   r="160"
+   fill="#7E22CE"
+   opacity=".14"
+   filter="url(#glow)"/>
+
+ <circle
+   cx="256"
+   cy="224"
+   r="148"
+   fill="url(#brand)"
+   filter="url(#shadow)"/>
+
+ <circle
+   cx="256"
+   cy="224"
+   r="123"
+   fill="#07101F"
+   fill-opacity=".36"
+   stroke="#FFFFFF"
+   stroke-opacity=".20"
+   stroke-width="4"/>
+
+ <circle
+   cx="256"
+   cy="224"
+   r="146"
+   fill="url(#shine)"/>
+
+ <path
+   d="M157 332 C207 362 305 362 355 332"
+   fill="none"
+   stroke="#FFFFFF"
+   stroke-opacity=".18"
+   stroke-width="4"
+   stroke-linecap="round"/>
+
+ <text
+   x="256"
+   y="273"
+   text-anchor="middle"
+   font-family="Arial,Helvetica,sans-serif"
+   font-size="148"
+   font-weight="800"
+   fill="#FFFFFF"
+   filter="url(#shadow)">M</text>
+
+ <rect
+   x="136"
+   y="397"
+   width="240"
+   height="58"
+   rx="29"
+   fill="#FFFFFF"
+   fill-opacity=".08"
+   stroke="#FFFFFF"
+   stroke-opacity=".15"
+   stroke-width="2"/>
+
+ <text
+   x="256"
+   y="435"
+   text-anchor="middle"
+   font-family="Arial,Helvetica,sans-serif"
+   font-size="24"
+   font-weight="800"
+   letter-spacing="3"
+   fill="#FFFFFF">CORE</text>
 </svg>
