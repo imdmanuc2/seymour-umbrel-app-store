@@ -1,14 +1,23 @@
 manifestVersion: 1
 id: seymour-bch-node
 name: Seymour Bitcoin Cash Node
-tagline: Managed Bitcoin Cash infrastructure for Seymour
+tagline: Bitcoin Cash full node with simple local Umbrel installation
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/bitcoin-cash-node.png
 category: Blockchain
 version: "0.2.4-alpha"
 port: 8563
 description: >-
-  Managed Bitcoin Cash full-node foundation with persistent storage, RPC,
-  ZMQ, health reporting, sync monitoring, and Seymour service discovery.
+  Run a Seymour-supported Bitcoin Cash full node on Umbrel.
+  
+  Installing Bitcoin Cash directly from the Seymour Umbrel App Store uses local Umbrel
+  storage with standard deployment defaults.
+  
+  For advanced deployment, install Nexus Command Center and open Blockchain. Nexus supports
+  storage-target selection, remote or network storage, centralized monitoring, lifecycle
+  operations, diagnostics, recovery workflows and CMDB-backed infrastructure management.
+  
+  Mining Bitcoin Cash? Seymour Pool Engine provides the Seymour-managed mining pool and
+  Stratum platform for supported Bitcoin Cash mining workflows.
 developer: Seymour Mining Suite
 website: https://github.com/imdmanuc2/seymour-umbrel-app-store
 submitter: Seymour Mitchell

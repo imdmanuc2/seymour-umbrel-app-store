@@ -1,15 +1,19 @@
 manifestVersion: 1
 id: seymour-nexus-command-center
 name: Nexus Command Center
-tagline: Complete command center for miners, pools, nodes and infrastructure
+tagline: Advanced management for miners, pools, blockchain nodes and infrastructure
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/nexus-command-center.png
-category: Mining Infrastructure
+category: Platform
 version: "0.1.2"
 port: 8560
 description: >-
-  Nexus Command Center is the central management platform for the Seymour Mining Suite.
-  Monitor miners, pools, blockchain nodes, wallets, infrastructure, alerts,
-  analytics and system health from a single interface.
+  Nexus Command Center is the primary management platform for the Seymour Mining Suite.
+  Use Nexus to monitor and operate miners, pools, blockchain nodes, storage, infrastructure,
+  alerts, health, topology and system relationships from one interface.
+  
+  For blockchain deployments, Nexus provides advanced installation features including
+  storage-target selection, remote or network storage, lifecycle management, diagnostics,
+  recovery workflows and CMDB-backed infrastructure relationships.
 developer: Seymour Mining Suite
 website: https://github.com/imdmanuc2/seymour-umbrel-app-store
 submitter: Seymour Mitchell

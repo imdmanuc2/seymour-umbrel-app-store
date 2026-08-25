@@ -3,7 +3,7 @@ id: seymour-diagnostics
 name: Seymour Diagnostics
 tagline: Mining infrastructure diagnostics and health checks
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/seymour-diagnostics.png
-category: Development
+category: Tools
 version: "0.1.1"
 port: 8570
 description: >-

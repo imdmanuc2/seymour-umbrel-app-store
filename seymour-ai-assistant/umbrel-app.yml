@@ -3,7 +3,7 @@ id: seymour-ai-assistant
 name: Seymour AI Assistant
 tagline: AI operations and engineering assistant
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/seymour-ai-assistant.png
-category: Development
+category: Tools
 version: "0.1.1"
 port: 8567
 description: >-

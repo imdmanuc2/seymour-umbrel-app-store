@@ -1,14 +1,23 @@
 manifestVersion: 1
 id: seymour-bitcoin-node
 name: Bitcoin Core
-tagline: Seymour-managed Bitcoin Core full node
+tagline: Bitcoin Core full node with simple local Umbrel installation
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/bitcoin-core.png
 category: Blockchain
 version: "0.2.1"
 port: 8562
 description: >-
-  Seymour-managed Bitcoin Core full node for mining,
-  blockchain infrastructure, RPC services, and Nexus integration.
+  Run a Seymour-supported Bitcoin Core full node on Umbrel.
+  
+  Installing Bitcoin Core directly from the Seymour Umbrel App Store uses local Umbrel
+  storage with standard deployment defaults.
+  
+  For advanced deployment, install Nexus Command Center and open Blockchain. Nexus supports
+  storage-target selection, remote or network storage, centralized monitoring, lifecycle
+  operations, diagnostics, recovery workflows and CMDB-backed infrastructure management.
+  
+  Mining Bitcoin? Seymour Pool Engine provides the Seymour-managed mining pool and Stratum
+  platform for supported Bitcoin mining workflows.
 developer: Seymour Mining Suite
 website: https://github.com/imdmanuc2/seymour-umbrel-app-store
 submitter: Seymour Mitchell

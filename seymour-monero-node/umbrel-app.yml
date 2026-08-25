@@ -1,14 +1,22 @@
 manifestVersion: 1
 id: seymour-monero-node
-category: bitcoin
+category: Blockchain
 name: Seymour Monero Node
 version: "0.18.5.2"
-tagline: Managed Monero mainnet runtime for the Seymour platform
+tagline: Monero full node with simple local Umbrel installation
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/monero-node.png
 description: >-
-  Canonical Seymour-managed Monero mainnet node runtime foundation.
-  This app is activated only after the provider is promoted from planned
-  to live/selectable in the Seymour Blockchain Manager catalog.
+  Run a Seymour-supported Monero mainnet node on Umbrel.
+  
+  Installing Monero directly from the Seymour Umbrel App Store uses local Umbrel storage
+  with standard deployment defaults.
+  
+  For advanced deployment, install Nexus Command Center and open Blockchain. Nexus provides
+  storage-target selection, remote or network storage, centralized monitoring, lifecycle
+  operations, diagnostics, recovery workflows and CMDB-backed infrastructure management.
+  
+  For supported Monero mining workflows, Seymour Pool Engine is the Seymour-managed mining
+  and Stratum platform.
 developer: Seymour
 website: https://www.getmonero.org/
 dependencies: []

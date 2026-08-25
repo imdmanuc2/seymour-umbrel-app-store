@@ -3,7 +3,7 @@ id: seymour-explorer
 name: Seymour Explorer
 tagline: Infrastructure topology and mining relationship explorer
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/seymour-explorer.png
-category: Development
+category: Tools
 version: "0.1.1"
 port: 8569
 description: >-

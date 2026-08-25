@@ -1,13 +1,16 @@
 manifestVersion: 1
 id: seymour-pool-engine
 name: Seymour Pool Engine
-tagline: Native Seymour pool engine and Stratum platform
+tagline: Seymour-managed mining pool and Stratum platform
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/seymour-pool-engine.png
-category: Mining Infrastructure
+category: Mining
 version: "0.1.1"
 port: 8564
 description: >-
-  Native Seymour mining pool engine with Stratum, telemetry, worker management, recovery, and Nexus integration.
+  Seymour Pool Engine is the primary Seymour mining-pool and Stratum platform.
+  
+  Use it to connect miners to supported blockchain infrastructure, manage workers and
+  shares, and integrate mining telemetry with Nexus Command Center.
 developer: Seymour Mining Suite
 website: https://github.com/imdmanuc2/seymour-umbrel-app-store
 submitter: Seymour Mitchell

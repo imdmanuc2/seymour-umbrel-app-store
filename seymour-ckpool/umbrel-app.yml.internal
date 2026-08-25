@@ -1,13 +1,17 @@
 manifestVersion: 1
 id: seymour-ckpool
 name: Seymour CKPool
-tagline: High-performance Bitcoin solo mining pool
+tagline: Legacy Bitcoin pool component; Seymour Pool Engine is recommended
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/seymour-ckpool.png
-category: Mining Infrastructure
+category: Mining
 version: "0.1.1"
 port: 8565
 description: >-
-  Seymour-managed CKPool deployment for high-performance Bitcoin solo mining.
+  CKPool remains available for compatibility with existing Seymour Bitcoin mining
+  deployments.
+  
+  New users should install Seymour Pool Engine, the primary Seymour-managed mining-pool
+  and Stratum platform.
 developer: Seymour Mining Suite
 website: https://github.com/imdmanuc2/seymour-umbrel-app-store
 submitter: Seymour Mitchell

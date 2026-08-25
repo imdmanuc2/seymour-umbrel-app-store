@@ -1,14 +1,18 @@
 manifestVersion: 1
 id: seymour-blockchain-manager
 name: Seymour Blockchain Manager
-tagline: Install and manage supported blockchain nodes
+tagline: Blockchain management backend for Nexus Command Center
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/seymour-blockchain-manager.png
-category: bitcoin
+category: Platform
 version: "0.1.2-alpha"
 port: 8570
 description: >-
-  Catalog-driven blockchain management for Bitcoin, Bitcoin Cash, Litecoin,
-  Dogecoin, Dash, Zcash, Monero, Kaspa, and Ergo.
+  Seymour Blockchain Manager provides the blockchain runtime and provider-management
+  services used by Nexus Command Center.
+  
+  For normal management and advanced blockchain deployment, use Nexus Command Center and
+  open the Blockchain section. The standalone Blockchain Manager interface is retained
+  temporarily while the Nexus integration is finalized.
 developer: Seymour
 website: https://github.com/imdmanuc2
 submitter: Seymour
