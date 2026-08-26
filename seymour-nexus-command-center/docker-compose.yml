@@ -50,6 +50,36 @@ services:
       postgres:
         condition: service_healthy
 
+  peer:
+    image: ghcr.io/imdmanuc2/nexus-command-center:dev
+    restart: on-failure
+
+    env_file:
+      - path: ${APP_DATA_DIR}/data/private/nexus-identity.env
+        required: false
+      - path: ${APP_DATA_DIR}/data/private/nexus-peer.env
+        required: false
+
+    environment:
+      NEXUS_PEER_HTTP_HOST: 0.0.0.0
+      NEXUS_PEER_HTTP_PORT: "8561"
+
+    command:
+      - python
+      - -m
+      - backend.api.nexus_peer_server
+
+    ports:
+      - "8561:8561"
+
+    volumes:
+      - /etc/machine-id:/etc/machine-id:ro
+
+    networks:
+      default:
+        aliases:
+          - seymour-nexus-command-center-peer
+
   web:
     image: ghcr.io/imdmanuc2/nexus-command-center:dev
     restart: on-failure
