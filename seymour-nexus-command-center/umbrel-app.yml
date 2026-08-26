@@ -4,7 +4,7 @@ name: Nexus Command Center
 tagline: Advanced management for miners, pools, blockchain nodes and infrastructure
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/nexus-command-center.png
 category: Platform
-version: "0.1.3-alpha"
+version: "0.1.4-alpha"
 port: 8560
 description: >-
   Nexus Command Center is the primary management platform for the Seymour Mining Suite.
@@ -22,10 +22,9 @@ repo: https://github.com/imdmanuc2/seymour-umbrel-app-store
 support: https://github.com/imdmanuc2/seymour-umbrel-app-store/issues
 gallery: []
 releaseNotes: >-
-  Adds the native Nexus Command Center Umbrel runtime foundation with
-  PostgreSQL persistence, automatic canonical database migrations,
-  multi-architecture container deployment, and the integrated Nexus
-  management interface.
+  Adds persistent Nexus instance identity support for multi-Nexus
+  deployments, including host-stable instance identity, organization
+  and site scope, automatic startup registration, and instance APIs.
 dependencies: []
 path: ""
 defaultUsername: ""
