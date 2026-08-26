@@ -1,9 +1,76 @@
 services:
   app_proxy:
     environment:
-      APP_HOST: seymour-nexus-command-center_web_1
-      APP_PORT: 80
+      APP_HOST: seymour-nexus-command-center-web
+      APP_PORT: 8080
+
+  postgres:
+    image: postgres:18
+    restart: on-failure
+
+    environment:
+      POSTGRES_DB: nexus_platform
+      POSTGRES_USER: nexus_app
+      POSTGRES_PASSWORD: nexus_umbrel_local
+
+    volumes:
+      - ${APP_DATA_DIR}/data/postgres:/var/lib/postgresql
+
+    networks:
+      default:
+        aliases:
+          - seymour-nexus-command-center-postgres
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U nexus_app -d nexus_platform
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  migrate:
+    image: ghcr.io/imdmanuc2/nexus-command-center:dev
+    restart: "no"
+
+    environment:
+      NEXUS_DB_HOST: seymour-nexus-command-center-postgres
+      NEXUS_DB_PORT: "5432"
+      NEXUS_DB_NAME: nexus_platform
+      NEXUS_DB_USER: nexus_app
+      NEXUS_DB_PASSWORD: nexus_umbrel_local
+
+    command:
+      - python
+      - /opt/nexus/scripts/run_nexus_migrations.py
+      - --apply
+
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   web:
-    image: nginx:alpine
+    image: ghcr.io/imdmanuc2/nexus-command-center:dev
     restart: on-failure
+
+    environment:
+      NEXUS_HTTP_HOST: 0.0.0.0
+      NEXUS_HTTP_PORT: "8080"
+
+      NEXUS_DB_HOST: seymour-nexus-command-center-postgres
+      NEXUS_DB_PORT: "5432"
+      NEXUS_DB_NAME: nexus_platform
+      NEXUS_DB_USER: nexus_app
+      NEXUS_DB_PASSWORD: nexus_umbrel_local
+
+    networks:
+      default:
+        aliases:
+          - seymour-nexus-command-center-web
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
