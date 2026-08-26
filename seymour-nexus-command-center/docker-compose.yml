@@ -57,6 +57,8 @@ services:
     env_file:
       - path: ${APP_DATA_DIR}/data/private/nexus-identity.env
         required: false
+      - path: ${APP_DATA_DIR}/data/private/nexus-peer.env
+        required: false
 
     environment:
       NEXUS_HTTP_HOST: 0.0.0.0
