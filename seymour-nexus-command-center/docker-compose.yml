@@ -64,6 +64,12 @@ services:
       NEXUS_PEER_HTTP_HOST: 0.0.0.0
       NEXUS_PEER_HTTP_PORT: "8561"
 
+      NEXUS_DB_HOST: seymour-nexus-command-center-postgres
+      NEXUS_DB_PORT: "5432"
+      NEXUS_DB_NAME: nexus_platform
+      NEXUS_DB_USER: nexus_app
+      NEXUS_DB_PASSWORD: nexus_umbrel_local
+
     command:
       - python
       - -m
@@ -92,6 +98,12 @@ services:
       default:
         aliases:
           - seymour-nexus-command-center-peer
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   web:
     image: ghcr.io/imdmanuc2/nexus-command-center:dev
