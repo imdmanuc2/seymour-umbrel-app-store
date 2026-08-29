@@ -93,6 +93,7 @@ services:
 
     volumes:
       - /etc/machine-id:/etc/machine-id:ro
+      - ${APP_DATA_DIR}/data/private:/opt/nexus/backend/data/private
 
     networks:
       default:
@@ -127,6 +128,7 @@ services:
 
     volumes:
       - /etc/machine-id:/etc/machine-id:ro
+      - ${APP_DATA_DIR}/data/private:/opt/nexus/backend/data/private
 
     networks:
       default:
