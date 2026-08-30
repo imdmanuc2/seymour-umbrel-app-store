@@ -4,7 +4,7 @@ name: Nexus Command Center
 tagline: Advanced management for miners, pools, blockchain nodes and infrastructure
 icon: https://raw.githubusercontent.com/imdmanuc2/seymour-umbrel-app-store/develop/assets/icons/nexus-command-center.png
 category: Platform
-version: "0.1.12-alpha"
+version: "0.1.13-alpha"
 port: 8560
 description: >-
   Nexus Command Center is the primary management platform for the Seymour Mining Suite.
@@ -22,7 +22,7 @@ repo: https://github.com/imdmanuc2/seymour-umbrel-app-store
 support: https://github.com/imdmanuc2/seymour-umbrel-app-store/issues
 gallery: []
 releaseNotes: >-
-  Adds the Ed25519 machine identity foundation for Nexus peer pairing, including public-key binding during approved enrollment and durable peer registration. Private machine keys remain local to each Nexus instance. Federation, CMDB exchange, discovery exchange, management, and authority delegation remain disabled.
+  Adds signed Ed25519 authentication for ongoing Nexus peer requests, replay protection with migration 045, and the authenticated peer-status transport used after approved peer enrollment. Federation, CMDB exchange, discovery exchange, management, and authority delegation remain disabled.
 dependencies: []
 path: ""
 defaultUsername: ""
