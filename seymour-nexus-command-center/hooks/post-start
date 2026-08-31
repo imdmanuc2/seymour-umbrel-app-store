@@ -1,0 +1,39 @@
+#!/bin/sh
+
+APP_ID="seymour-nexus-command-center"
+APP_DATA_DIR="/home/umbrel/umbrel/app-data/$APP_ID"
+ADVERTISER="$APP_DATA_DIR/hooks/nexus-discovery-advertiser.sh"
+RUNTIME_DIR="$APP_DATA_DIR/data/runtime"
+PID_FILE="$RUNTIME_DIR/nexus-discovery-advertiser.pid"
+
+mkdir -p "$RUNTIME_DIR"
+chown umbrel:umbrel "$RUNTIME_DIR"
+chmod 0755 "$RUNTIME_DIR"
+
+if [ ! -x "$ADVERTISER" ]; then
+    exit 0
+fi
+
+if [ -r "$PID_FILE" ]; then
+    OLD_PID="$(cat "$PID_FILE" 2>/dev/null || true)"
+
+    if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
+        OWNER="$(ps -o user= -p "$OLD_PID" 2>/dev/null | tr -d ' ')"
+        COMMAND="$(ps -o args= -p "$OLD_PID" 2>/dev/null || true)"
+
+        case "$COMMAND" in
+            *"$ADVERTISER"*)
+                if [ "$OWNER" = "umbrel" ]; then
+                    exit 0
+                fi
+                ;;
+        esac
+    fi
+
+    rm -f "$PID_FILE"
+fi
+
+runuser -u umbrel -- \
+    env APP_DATA_DIR="$APP_DATA_DIR" \
+    "$ADVERTISER" \
+    >/dev/null 2>&1 &
