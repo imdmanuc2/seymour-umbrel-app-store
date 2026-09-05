@@ -35,6 +35,7 @@ class StorageTarget:
     reachable: bool
     mount_point: str | None = None
     remote_host: str | None = None
+    filesystem_uuid: str | None = None
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
         data["type"] = self.target_type.value

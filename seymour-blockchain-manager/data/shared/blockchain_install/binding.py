@@ -48,14 +48,25 @@ def build_binding_plan(
     runtime_host: str,
     storage_target: StorageTarget,
     data_root_name: str = "seymour-data",
+    target_is_data_root: bool = False,
 ) -> StorageBindingPlan:
     provider_name = provider_storage_name(provider_id)
-    root_name = str(data_root_name).strip()
 
-    if not SAFE_COMPONENT.fullmatch(root_name):
-        raise ValueError(f"Unsafe data root name: {data_root_name!r}")
+    if target_is_data_root:
+        storage_root = Path(storage_target.path)
+    else:
+        root_name = str(data_root_name).strip()
 
-    storage_root = Path(storage_target.path) / root_name
+        if not SAFE_COMPONENT.fullmatch(root_name):
+            raise ValueError(
+                f"Unsafe data root name: {data_root_name!r}"
+            )
+
+        storage_root = (
+            Path(storage_target.path)
+            / root_name
+        )
+
     data_path = storage_root / provider_name
 
     errors: list[str] = []
