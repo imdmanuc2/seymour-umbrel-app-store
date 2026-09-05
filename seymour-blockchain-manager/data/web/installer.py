@@ -18,6 +18,7 @@ from uuid import uuid4
 from shared.blockchain_install import (
     HostProfile,
     InstallRequest,
+    InstallResult,
     StorageTarget,
     evaluate as evaluate_install_preflight,
 )
@@ -598,6 +599,27 @@ class Installer:
         self.evidence_path.parent.mkdir(parents=True, exist_ok=True)
         with self.evidence_path.open("a") as handle:
             handle.write(json.dumps(operation.to_dict(), sort_keys=True) + "\n")
+
+    def execute_shared(
+        self,
+        value: InstallRequest,
+    ) -> InstallResult:
+        """
+        Shared provider-neutral execution surface.
+
+        The standalone Blockchain Manager continues to own its UI and
+        HTTP routes. This adapter exposes the existing installation
+        implementation through the common Seymour install contract.
+        """
+        operation = self.execute(value)
+
+        return InstallResult(
+            operation_id=operation.operation_id,
+            status=operation.status.value,
+            result=operation.result,
+            verification=operation.verification,
+            error=operation.error,
+        )
 
     def load(self, operation_id: str) -> dict[str, Any]:
         path = self.operations_path / f"{operation_id}.json"
