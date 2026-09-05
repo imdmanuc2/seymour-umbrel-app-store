@@ -31,3 +31,9 @@ from .target import (
     TargetInstallVerification,
 )
 from .orchestrator import SharedInstallOrchestrator
+
+from .umbrel_target import (
+    UmbrelCommandResult,
+    UmbrelProviderControl,
+    UmbrelTargetInstallAdapter,
+)

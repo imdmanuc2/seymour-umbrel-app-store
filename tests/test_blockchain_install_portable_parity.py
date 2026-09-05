@@ -28,6 +28,7 @@ PORTABLE_PARITY_FILES = (
     "readiness.py",
     "target.py",
     "orchestrator.py",
+    "umbrel_target.py",
     "storage.py",
     "binding.py",
     "materialize.py",
