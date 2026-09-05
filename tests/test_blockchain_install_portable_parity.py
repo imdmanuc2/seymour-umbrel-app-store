@@ -39,6 +39,7 @@ PORTABLE_PARITY_FILES = (
     "runtime_binding.py",
     "runtime_binding_materializer.py",
     "runtime_binding_reconciler.py",
+    "storage_inventory.py",
 )
 
 
