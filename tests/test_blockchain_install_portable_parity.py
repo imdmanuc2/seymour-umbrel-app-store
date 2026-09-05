@@ -25,6 +25,7 @@ PORTABLE_PARITY_FILES = (
     "host.py",
     "models.py",
     "preflight.py",
+    "readiness.py",
     "storage.py",
     "binding.py",
     "materialize.py",

@@ -21,6 +21,13 @@ from shared.blockchain_install import (
     InstallResult,
     StorageTarget,
     evaluate as evaluate_install_preflight,
+    evaluate_provider_readiness,
+    p2p_contract,
+    provider_from_catalog,
+    rpc_authentication,
+    rpc_contract,
+    runtime_contract,
+    runtime_port,
     validate_install_request,
 )
 from shared.blockchain_install.host import profile as host_profile
@@ -60,7 +67,6 @@ BCH_LOCAL_DATA_PATH = Path(
 
 INSTALL_ADAPTERS = {
     "bitcoin-mainnet": {
-        "appId": os.environ.get("BTC_APP_ID", "seymour-bitcoin-node"),
         "installScript": Path(os.environ.get(
             "SEYMOUR_BTC_INSTALL_SCRIPT",
             "/control/seymour-install-btc",
@@ -68,7 +74,6 @@ INSTALL_ADAPTERS = {
         "rpcPrefix": "BTC",
     },
     "bitcoin-cash-mainnet": {
-        "appId": os.environ.get("BCH_APP_ID", "seymour-bch-node"),
         "installScript": Path(os.environ.get(
             "SEYMOUR_BCH_INSTALL_SCRIPT",
             "/control/seymour-install-bch",
@@ -76,7 +81,6 @@ INSTALL_ADAPTERS = {
         "rpcPrefix": "BCH",
     },
     "monero-mainnet": {
-        "appId": os.environ.get("XMR_APP_ID", "seymour-monero-node"),
         "installScript": Path(os.environ.get(
             "SEYMOUR_XMR_INSTALL_SCRIPT",
             "/control/seymour-install-monero",
@@ -147,62 +151,30 @@ def _port_available(port: int) -> bool:
         except OSError:
             return False
 
-def _provider(provider_id: str) -> dict[str, Any]:
-    catalog = json.loads(CATALOG_PATH.read_text())
-    return next(
-        item for item in catalog["providers"]
-        if item["providerId"] == provider_id
-    )
-
-def _runtime_contract(provider: dict[str, Any]) -> dict[str, Any]:
-    runtime = provider.get("runtime")
-    if not isinstance(runtime, dict):
-        raise ValueError("Provider runtime contract is missing.")
-    return runtime
-
-
-def _rpc_contract(provider: dict[str, Any]) -> dict[str, Any]:
-    rpc = _runtime_contract(provider).get("rpc")
-    if not isinstance(rpc, dict):
-        raise ValueError("Provider RPC contract is missing.")
-    return rpc
-
-
-def _p2p_contract(provider: dict[str, Any]) -> dict[str, Any]:
-    p2p = _runtime_contract(provider).get("p2p")
-    if not isinstance(p2p, dict):
-        raise ValueError("Provider P2P contract is missing.")
-    return p2p
-
-
-def _runtime_port(contract: dict[str, Any], name: str) -> int:
-    value = int(contract.get("port", 0))
-    if not 1 <= value <= 65535:
-        raise ValueError(f"Provider {name} port is invalid.")
-    return value
-
-
-def _rpc_authentication(provider: dict[str, Any]) -> str:
-    value = str(_rpc_contract(provider).get("authentication") or "").strip()
-    if value not in {"none", "username-password"}:
-        raise ValueError("Provider RPC authentication contract is unsupported.")
-    return value
-
-
 def provider_runtime(provider_id: str) -> dict[str, Any]:
-    provider = _provider(provider_id)
-    runtime = _runtime_contract(provider)
+    provider = provider_from_catalog(
+        CATALOG_PATH,
+        provider_id,
+    )
+    runtime = runtime_contract(provider)
 
     adapter = INSTALL_ADAPTERS.get(provider_id)
 
     result = dict(runtime)
     result["providerId"] = provider_id
-    result["selectable"] = bool(provider.get("selectable"))
-    result["productionImage"] = provider.get("productionImage")
-    result["installAdapterEnabled"] = adapter is not None
+    result["selectable"] = bool(
+        provider.get("selectable")
+    )
+    result["productionImage"] = provider.get(
+        "productionImage"
+    )
+    result["installAdapterEnabled"] = (
+        adapter is not None
+    )
 
     if adapter is not None:
         result.update(adapter)
+        result["appId"] = runtime.get("appId")
 
     return result
 
@@ -439,60 +411,134 @@ def _docker_container_mounts(
 def preflight(
     storage_target_id: str | None = None,
     provider_id: str = "bitcoin-cash-mainnet",
+    *,
+    allow_storage_fallback: bool = True,
 ) -> dict[str, Any]:
-    provider = _provider(provider_id)
+    provider = provider_from_catalog(
+        CATALOG_PATH,
+        provider_id,
+    )
+
     inventory = storage_targets()
     targets = inventory.get("targets", [])
-    selected = target_by_id(storage_target_id) if storage_target_id else None
-    if selected is None and targets:
-        for item in sorted(targets, key=lambda value: int(value.get("free_bytes", 0)), reverse=True):
-            candidate = target_by_id(item["target_id"])
+
+    selected = (
+        target_by_id(storage_target_id)
+        if storage_target_id
+        else None
+    )
+
+    if (
+        selected is None
+        and not storage_target_id
+        and allow_storage_fallback
+        and targets
+    ):
+        for item in sorted(
+            targets,
+            key=lambda value: int(
+                value.get("free_bytes", 0)
+            ),
+            reverse=True,
+        ):
+            candidate = target_by_id(
+                item["target_id"]
+            )
             if candidate is not None:
                 selected = candidate
                 break
+
+    provider_readiness = (
+        evaluate_provider_readiness(provider)
+    )
+
+    rpc_port = runtime_port(
+        rpc_contract(provider),
+        "RPC",
+    )
+
+    p2p_port = runtime_port(
+        p2p_contract(provider),
+        "P2P",
+    )
+
     checks = {
-        "providerSelectable": provider["selectable"],
-        "productionImage": provider["productionImage"],
+        "providerSelectable": bool(
+            provider.get("selectable")
+        ),
+        "productionImage": provider.get(
+            "productionImage"
+        ),
         "networkAvailable": _network_available(),
         "ports": {
             "rpc": {
-                "port": _runtime_port(_rpc_contract(provider), "RPC"),
+                "port": rpc_port,
                 "available": _port_available(
-                    _runtime_port(_rpc_contract(provider), "RPC")
+                    rpc_port
                 ),
             },
             "p2p": {
-                "port": _runtime_port(_p2p_contract(provider), "P2P"),
+                "port": p2p_port,
                 "available": _port_available(
-                    _runtime_port(_p2p_contract(provider), "P2P")
+                    p2p_port
                 ),
             },
         },
-        "rpcAuthentication": _rpc_authentication(provider),
+        "rpcAuthentication": (
+            rpc_authentication(provider)
+        ),
         "storageTargets": inventory,
-        "selectedStorageTargetId": selected.target_id if selected else None,
+        "selectedStorageTargetId": (
+            selected.target_id
+            if selected
+            else None
+        ),
+        "providerReadiness": (
+            provider_readiness
+        ),
     }
-    errors = []
-    if not checks["providerSelectable"]: errors.append(f"{provider_id} is not selectable.")
-    if not checks["productionImage"]: errors.append(f"{provider_id} has no production image.")
-    if not checks["networkAvailable"]: errors.append("Container registry is unreachable.")
+
+    errors = list(
+        provider_readiness["errors"]
+    )
+
+    if not checks["networkAvailable"]:
+        errors.append(
+            "Container registry is unreachable."
+        )
+
     common = None
+
     if selected is None:
-        errors.append("No storage target is selected.")
+        if storage_target_id:
+            errors.append(
+                "Selected storage target is unavailable."
+            )
+        else:
+            errors.append(
+                "No storage target is selected."
+            )
     else:
         common = evaluate_install_preflight(
             provider=provider,
             host=_preflight_host_profile(),
-            storage_target=_preflight_storage_target(
-                selected
+            storage_target=(
+                _preflight_storage_target(
+                    selected
+                )
             ),
         )
         errors.extend(common.errors)
+
     return {
         "compatible": not errors,
         "checks": checks,
         "errors": errors,
-        "storagePreflight": common.to_dict() if common is not None else None,
+        "storagePreflight": (
+            common.to_dict()
+            if common is not None
+            else None
+        ),
     }
 
 def validate_request(value: InstallRequest) -> None:
@@ -674,7 +720,11 @@ class Installer:
             )
             self._save(operation)
             return operation
-        checks = preflight(value.storage_target_id, value.provider_id)
+        checks = preflight(
+            value.storage_target_id,
+            value.provider_id,
+            allow_storage_fallback=False,
+        )
         now = utc_now()
         operation = InstallOperation(str(uuid4()), InstallStatus.PLANNED, now, now, asdict(value), checks)
         self._save(operation)
