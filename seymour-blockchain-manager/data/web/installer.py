@@ -21,6 +21,7 @@ from shared.blockchain_install import (
     InstallResult,
     StorageTarget,
     evaluate as evaluate_install_preflight,
+    validate_install_request,
 )
 from shared.blockchain_install.host import profile as host_profile
 from shared.blockchain_install.binding import build_binding_plan
@@ -495,41 +496,10 @@ def preflight(
     }
 
 def validate_request(value: InstallRequest) -> None:
-    runtime = provider_runtime(value.provider_id)
-    expected_app_id = runtime["appId"]
-    expected_confirmation = f"INSTALL-{expected_app_id}"
-
-    if value.app_id != expected_app_id:
-        raise ValueError("App ID does not match the selected provider.")
-    if value.confirmation != expected_confirmation:
-        raise ValueError("Installation confirmation token did not match.")
-    if not value.node_name:
-        raise ValueError("Node name is required.")
-    if not value.storage_target_id:
-        raise ValueError("Storage target is required.")
-    provider = _provider(value.provider_id)
-    rpc_authentication = _rpc_authentication(provider)
-
-    if rpc_authentication == "username-password":
-        if not value.rpc_user:
-            raise ValueError("RPC user is required.")
-        if len(value.rpc_password) < 24:
-            raise ValueError(
-                "RPC password must contain at least 24 characters."
-            )
-
-    expected_rpc_port = _runtime_port(_rpc_contract(provider), "RPC")
-    expected_p2p_port = _runtime_port(_p2p_contract(provider), "P2P")
-
-    if value.rpc_port != expected_rpc_port:
-        raise ValueError(
-            f"RPC port does not match provider contract: expected {expected_rpc_port}."
-        )
-
-    if value.p2p_port != expected_p2p_port:
-        raise ValueError(
-            f"P2P port does not match provider contract: expected {expected_p2p_port}."
-        )
+    validate_install_request(
+        value,
+        CATALOG_PATH,
+    )
 
 def _write_runtime_binding_config(
     binding: RuntimeBinding,
