@@ -23,3 +23,11 @@ from .validation import (
     runtime_port,
     validate_install_request,
 )
+
+from .target import (
+    TargetInstallAdapter,
+    TargetInstallExecution,
+    TargetInstallPreflight,
+    TargetInstallVerification,
+)
+from .orchestrator import SharedInstallOrchestrator
