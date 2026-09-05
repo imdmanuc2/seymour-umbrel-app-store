@@ -11,6 +11,11 @@ def test_portable_compose():
 
 def test_payload_exists():
     control = Path("seymour-blockchain-manager/data/control")
-    for name in ("seymour-umbrel-app", "seymour-install-bch", "seymour-install-btc"):
+    for name in (
+        "seymour-umbrel-app",
+        "seymour-install-bch",
+        "seymour-install-btc",
+        "seymour-install-monero",
+    ):
         assert (control / name).is_file()
     assert Path("seymour-blockchain-manager/data/shared/blockchain_install").is_dir()
