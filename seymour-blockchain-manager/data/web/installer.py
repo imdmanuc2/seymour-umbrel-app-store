@@ -17,6 +17,7 @@ from uuid import uuid4
 
 from shared.blockchain_install import (
     HostProfile,
+    InstallRequest,
     StorageTarget,
     evaluate as evaluate_install_preflight,
 )
@@ -88,31 +89,6 @@ class InstallStatus(StrEnum):
     SUCCEEDED = "succeeded"
     FAILED = "failed"
 
-@dataclass
-class InstallRequest:
-    provider_id: str
-    app_id: str
-    node_name: str
-    rpc_user: str
-    rpc_password: str
-    rpc_port: int
-    p2p_port: int
-    storage_target_id: str
-    confirmation: str
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "InstallRequest":
-        return cls(
-            provider_id=str(data.get("providerId", "")),
-            app_id=str(data.get("appId", "")),
-            node_name=str(data.get("nodeName", "")).strip(),
-            rpc_user=str(data.get("rpcUser", "")).strip(),
-            rpc_password=str(data.get("rpcPassword", "")),
-            rpc_port=int(data.get("rpcPort", 8332)),
-            p2p_port=int(data.get("p2pPort", 8333)),
-            storage_target_id=str(data.get("storageTargetId", "")).strip(),
-            confirmation=str(data.get("confirmation", "")),
-        )
 
 @dataclass
 class InstallOperation:
