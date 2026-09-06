@@ -94,6 +94,7 @@ class UmbrelAppControlBridge:
         data_directory: Path = Path("/home/umbrel/umbrel"),
         endpoint: str = "ws://localhost/trpc",
         evidence_directory: Path | None = None,
+        runtime_binding_directory: Path | None = None,
     ) -> None:
         self.helper_path = helper_path
         self.data_directory = data_directory
@@ -101,6 +102,18 @@ class UmbrelAppControlBridge:
         self.evidence_directory = (
             evidence_directory
             or Path("/home/umbrel/umbrel/seymour-evidence/app-control")
+        )
+        self.runtime_binding_directory = (
+            Path(runtime_binding_directory)
+            if runtime_binding_directory is not None
+            else (
+                self.data_directory
+                / "app-data"
+                / "seymour-blockchain-manager"
+                / "data"
+                / "evidence"
+                / "runtime-bindings"
+            )
         )
 
     @staticmethod
@@ -321,12 +334,7 @@ class UmbrelAppControlBridge:
 
             if action == "install" and app_id is not None:
                 binding_path = (
-                    self.data_directory
-                    / "app-data"
-                    / "seymour-blockchain-manager"
-                    / "data"
-                    / "evidence"
-                    / "runtime-bindings"
+                    self.runtime_binding_directory
                     / f"{app_id}.env"
                 )
 
