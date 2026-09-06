@@ -14,6 +14,7 @@ from .models import (
     StorageTarget,
     StorageTargetType,
 )
+from .preflight import capacity_policy
 from .request import InstallRequest
 from .runtime_binding import (
     RuntimeBinding,
@@ -288,12 +289,31 @@ class UmbrelTargetInstallAdapter:
         request: InstallRequest,
         provider: dict[str, Any],
     ) -> TargetInstallPreflight:
-        del provider
-
         errors: list[str] = []
         checks: dict[str, Any] = {}
 
         try:
+            estimated_disk_bytes = int(
+                provider.get(
+                    "estimatedDiskBytes",
+                    0,
+                )
+            )
+
+            if estimated_disk_bytes <= 0:
+                raise ValueError(
+                    "Provider estimated disk capacity "
+                    "is missing or invalid."
+                )
+
+            capacity = capacity_policy(
+                estimated_disk_bytes
+            )
+
+            checks["storageCapacity"] = (
+                capacity.to_dict()
+            )
+
             (
                 control,
                 target,
@@ -349,7 +369,9 @@ class UmbrelTargetInstallAdapter:
         storage_guard = (
             self.storage_verifier(
                 target,
-                minimum_free_bytes=0,
+                minimum_free_bytes=(
+                    capacity.required_bytes
+                ),
                 data_path=guard_data_path,
             )
         )

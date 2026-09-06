@@ -42,6 +42,16 @@ def request(
     })
 
 
+def provider(
+    *,
+    estimated_disk_bytes=800_000_000_000,
+):
+    return {
+        "estimatedDiskBytes":
+            estimated_disk_bytes,
+    }
+
+
 def target(
     *,
     target_id="storage-local",
@@ -101,6 +111,7 @@ class Fixture:
         self.runner_code = runner_code
 
         self.runner_calls = []
+        self.verifier_calls = []
         self.prepared = []
         self.mounts = []
         self.state = {
@@ -156,6 +167,11 @@ class Fixture:
         return None
 
     def verifier(self, value, **kwargs):
+        self.verifier_calls.append({
+            "value": value,
+            "kwargs": dict(kwargs),
+        })
+
         return {
             "healthy":
                 self.storage_healthy,
@@ -256,7 +272,7 @@ class UmbrelTargetInstallAdapterTests(
 
             result = fixture.adapter().preflight(
                 value,
-                {},
+                provider(),
             )
 
             self.assertTrue(
@@ -275,6 +291,119 @@ class UmbrelTargetInstallAdapterTests(
         finally:
             fixture.close()
 
+    def test_preflight_enforces_provider_capacity(self):
+        fixture = Fixture()
+
+        try:
+            result = fixture.adapter().preflight(
+                request(),
+                provider(
+                    estimated_disk_bytes=
+                        800_000_000_000,
+                ),
+            )
+
+            self.assertTrue(
+                result.compatible
+            )
+
+            self.assertEqual(
+                result.checks[
+                    "storageCapacity"
+                ][
+                    "estimated_bytes"
+                ],
+                800_000_000_000,
+            )
+
+            self.assertEqual(
+                result.checks[
+                    "storageCapacity"
+                ][
+                    "reserve_bytes"
+                ],
+                160_000_000_000,
+            )
+
+            self.assertEqual(
+                result.checks[
+                    "storageCapacity"
+                ][
+                    "required_bytes"
+                ],
+                960_000_000_000,
+            )
+
+            self.assertEqual(
+                fixture.verifier_calls[0][
+                    "kwargs"
+                ][
+                    "minimum_free_bytes"
+                ],
+                960_000_000_000,
+            )
+
+        finally:
+            fixture.close()
+
+    def test_preflight_fails_missing_capacity_contract(self):
+        fixture = Fixture()
+
+        try:
+            result = fixture.adapter().preflight(
+                request(),
+                {},
+            )
+
+            self.assertFalse(
+                result.compatible
+            )
+
+            self.assertIn(
+                "estimated disk capacity",
+                " ".join(
+                    result.errors
+                ).lower(),
+            )
+
+            self.assertEqual(
+                fixture.verifier_calls,
+                [],
+            )
+
+        finally:
+            fixture.close()
+
+    def test_preflight_fails_nonpositive_capacity_contract(self):
+        fixture = Fixture()
+
+        try:
+            result = fixture.adapter().preflight(
+                request(),
+                provider(
+                    estimated_disk_bytes=0,
+                ),
+            )
+
+            self.assertFalse(
+                result.compatible
+            )
+
+            self.assertIn(
+                "estimated disk capacity",
+                " ".join(
+                    result.errors
+                ).lower(),
+            )
+
+            self.assertEqual(
+                fixture.verifier_calls,
+                [],
+            )
+
+        finally:
+            fixture.close()
+
     def test_preflight_fails_missing_exact_target(self):
         fixture = Fixture()
 
@@ -285,7 +414,7 @@ class UmbrelTargetInstallAdapterTests(
 
             result = fixture.adapter().preflight(
                 value,
-                {},
+                provider(),
             )
 
             self.assertFalse(
@@ -310,7 +439,7 @@ class UmbrelTargetInstallAdapterTests(
         try:
             result = fixture.adapter().preflight(
                 request(),
-                {},
+                provider(),
             )
 
             self.assertFalse(
