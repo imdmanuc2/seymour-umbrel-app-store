@@ -617,6 +617,53 @@ class UmbrelTargetInstallAdapterTests(
         finally:
             fixture.close()
 
+    def test_handoff_failure_prevents_provider_command(self):
+        fixture = Fixture()
+
+        try:
+            runner_calls = []
+
+            def failing_handoff(**kwargs):
+                del kwargs
+                raise RuntimeError(
+                    "simulated runtime binding handoff failure"
+                )
+
+            def guarded_runner(
+                argv,
+                environment,
+                timeout_seconds,
+            ):
+                runner_calls.append(
+                    (
+                        argv,
+                        environment,
+                        timeout_seconds,
+                    )
+                )
+                return UmbrelCommandResult(
+                    return_code=0,
+                )
+
+            adapter = fixture.adapter()
+            adapter.binding_handoff = failing_handoff
+            adapter.command_runner = guarded_runner
+
+            result = adapter.execute(
+                request(),
+                {},
+            )
+
+            self.assertFalse(result.success)
+            self.assertEqual(runner_calls, [])
+            self.assertIn(
+                "simulated runtime binding handoff failure",
+                result.error or "",
+            )
+
+        finally:
+            fixture.close()
+
     def test_execute_handoff_precedes_runner(self):
         fixture = Fixture()
         order = []
