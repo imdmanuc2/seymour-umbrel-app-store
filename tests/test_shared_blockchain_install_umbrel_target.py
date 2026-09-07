@@ -492,7 +492,9 @@ class UmbrelTargetInstallAdapterTests(
         try:
             value = request()
 
-            result = fixture.adapter().execute(
+            adapter = fixture.adapter()
+
+            result = adapter.execute(
                 value,
                 {},
             )
@@ -518,6 +520,10 @@ class UmbrelTargetInstallAdapterTests(
                     "--execute",
                     "--confirm",
                     "INSTALL-seymour-bitcoin-node",
+                    "--data-directory",
+                    str(
+                        adapter.umbrel_data_directory
+                    ),
                 ],
             )
 

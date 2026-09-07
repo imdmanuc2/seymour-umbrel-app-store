@@ -610,6 +610,10 @@ class UmbrelTargetInstallAdapter:
                 "--execute",
                 "--confirm",
                 request.confirmation,
+                "--data-directory",
+                str(
+                    self.umbrel_data_directory
+                ),
             ]
 
             completed = (

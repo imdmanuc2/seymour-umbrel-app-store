@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from shared.blockchain_install.umbrel_execution import (
+    discover_node_container,
     inspect_container_mounts,
     run_guarded_command,
     script_available,
@@ -88,6 +89,12 @@ class UmbrelExecutionPrimitiveTests(unittest.TestCase):
 
         self.assertEqual(result.return_code, 127)
         self.assertFalse(result.succeeded)
+
+    def test_node_container_resolver_rejects_empty_app_id(self):
+        with self.assertRaises(
+            ValueError
+        ):
+            discover_node_container("")
 
     def test_mount_inspector_rejects_empty_name(self):
         with self.assertRaises(ValueError):

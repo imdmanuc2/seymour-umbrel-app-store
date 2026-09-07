@@ -128,6 +128,171 @@ def _decode_chunked(body: bytes) -> bytes:
         position += 2
 
 
+
+def discover_node_container(
+    app_id: str,
+    *,
+    socket_path: Path | None = None,
+    timeout_seconds: int = 10,
+) -> str | None:
+    """
+    Resolve the Umbrel node container for an application through
+    Docker Compose identity labels.
+
+    This is a read-only Docker API query. It performs no lifecycle
+    operation and does not assume that the app id is the container
+    name.
+    """
+    identity = str(app_id).strip()
+
+    if not identity:
+        raise ValueError(
+            "Application id is required."
+        )
+
+    docker_socket = (
+        Path(socket_path)
+        if socket_path is not None
+        else Path(
+            os.environ.get(
+                "DOCKER_SOCKET",
+                "/var/run/docker.sock",
+            )
+        )
+    )
+
+    filters = json.dumps(
+        {
+            "label": [
+                (
+                    "com.docker.compose.project="
+                    + identity
+                ),
+                "com.docker.compose.service=node",
+            ]
+        },
+        separators=(",", ":"),
+    )
+
+    from urllib.parse import quote
+
+    request_path = (
+        "/containers/json?all=1&filters="
+        + quote(filters, safe="")
+    )
+
+    client = socket.socket(
+        socket.AF_UNIX,
+        socket.SOCK_STREAM,
+    )
+
+    try:
+        client.settimeout(
+            int(timeout_seconds)
+        )
+        client.connect(
+            str(docker_socket)
+        )
+
+        request = (
+            f"GET {request_path} HTTP/1.1\r\n"
+            "Host: docker\r\n"
+            "Connection: close\r\n"
+            "\r\n"
+        )
+
+        client.sendall(
+            request.encode()
+        )
+
+        chunks: list[bytes] = []
+
+        while True:
+            chunk = client.recv(65536)
+
+            if not chunk:
+                break
+
+            chunks.append(chunk)
+
+    finally:
+        client.close()
+
+    raw = b"".join(chunks)
+
+    if b"\r\n\r\n" not in raw:
+        raise RuntimeError(
+            "Docker API returned an invalid response."
+        )
+
+    header, body = raw.split(
+        b"\r\n\r\n",
+        1,
+    )
+
+    status_line = (
+        header.splitlines()[0]
+        .decode(errors="replace")
+    )
+
+    if " 200 " not in status_line:
+        raise RuntimeError(
+            "Docker API container discovery failed: "
+            + status_line
+        )
+
+    if (
+        b"transfer-encoding: chunked"
+        in header.lower()
+    ):
+        body = _decode_chunked(
+            body
+        )
+
+    payload = json.loads(
+        body.decode()
+    )
+
+    if not isinstance(
+        payload,
+        list,
+    ):
+        raise RuntimeError(
+            "Docker API container discovery returned "
+            "an invalid payload."
+        )
+
+    for item in payload:
+        if not isinstance(
+            item,
+            dict,
+        ):
+            continue
+
+        names = item.get(
+            "Names"
+        )
+
+        if (
+            isinstance(names, list)
+            and names
+        ):
+            value = str(
+                names[0]
+            ).lstrip("/").strip()
+
+            if value:
+                return value
+
+        container_id = str(
+            item.get("Id") or ""
+        ).strip()
+
+        if container_id:
+            return container_id
+
+    return None
+
 def inspect_container_mounts(
     container_name: str,
     *,
