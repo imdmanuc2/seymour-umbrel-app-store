@@ -21,6 +21,9 @@ from .runtime_binding import (
     RuntimeBindingMode,
     serialize_runtime_binding,
 )
+from .runtime_binding_handoff import (
+    stage_runtime_binding,
+)
 from .target import (
     TargetInstallExecution,
     TargetInstallPreflight,
@@ -103,7 +106,12 @@ class UmbrelTargetInstallAdapter:
         ],
         runtime_host: str,
         binding_config_root: Path,
+        umbrel_data_directory: Path,
         bch_local_data_path: Path,
+        binding_handoff: Callable[
+            ...,
+            dict[str, object],
+        ] = stage_runtime_binding,
         environment_provider: Callable[
             [],
             Mapping[str, str],
@@ -137,9 +145,13 @@ class UmbrelTargetInstallAdapter:
         self.binding_config_root = Path(
             binding_config_root
         )
+        self.umbrel_data_directory = Path(
+            umbrel_data_directory
+        )
         self.bch_local_data_path = Path(
             bch_local_data_path
         )
+        self.binding_handoff = binding_handoff
         self.environment_provider = (
             environment_provider
         )
@@ -147,6 +159,11 @@ class UmbrelTargetInstallAdapter:
         if not self.runtime_host:
             raise ValueError(
                 "runtime_host is required"
+            )
+
+        if not self.umbrel_data_directory.is_absolute():
+            raise ValueError(
+                "umbrel_data_directory must be absolute"
             )
 
     def _control(
@@ -568,6 +585,18 @@ class UmbrelTargetInstallAdapter:
                 )
             )
 
+            binding_handoff = (
+                self.binding_handoff(
+                    binding_path=Path(
+                        binding_config["path"]
+                    ),
+                    data_directory=(
+                        self.umbrel_data_directory
+                    ),
+                    app_id=binding.app_id,
+                )
+            )
+
             env = self._environment(
                 request=request,
                 control=control,
@@ -599,6 +628,8 @@ class UmbrelTargetInstallAdapter:
                             plan.to_dict(),
                         "runtimeBindingConfig":
                             binding_config,
+                        "runtimeBindingHandoff":
+                            binding_handoff,
                         "storagePreparation":
                             preparation,
                         "command": command,
@@ -631,6 +662,8 @@ class UmbrelTargetInstallAdapter:
                             plan.to_dict(),
                         "runtimeBindingConfig":
                             binding_config,
+                        "runtimeBindingHandoff":
+                            binding_handoff,
                         "storagePreparation":
                             preparation,
                         "command": command,
@@ -651,6 +684,8 @@ class UmbrelTargetInstallAdapter:
                         plan.to_dict(),
                     "runtimeBindingConfig":
                         binding_config,
+                    "runtimeBindingHandoff":
+                        binding_handoff,
                     "storagePreparation":
                         preparation,
                     "command": command,

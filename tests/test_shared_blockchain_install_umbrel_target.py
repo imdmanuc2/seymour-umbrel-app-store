@@ -113,6 +113,7 @@ class Fixture:
         self.runner_calls = []
         self.verifier_calls = []
         self.prepared = []
+        self.handoff_calls = []
         self.mounts = []
         self.state = {
             "success": True,
@@ -196,6 +197,32 @@ class Fixture:
                 binding.mode.value,
         }
 
+    def handoff(
+        self,
+        *,
+        binding_path,
+        data_directory,
+        app_id,
+    ):
+        call = {
+            "binding_path": Path(binding_path),
+            "data_directory": Path(data_directory),
+            "app_id": app_id,
+        }
+        self.handoff_calls.append(call)
+
+        return {
+            "appId": app_id,
+            "bindingFile": str(
+                Path(data_directory)
+                / "app-data"
+                / app_id
+                / "data"
+                / "runtime-binding.env"
+            ),
+            "staged": True,
+        }
+
     def runner(
         self,
         command,
@@ -246,6 +273,10 @@ class Fixture:
                 self.root
                 / "bindings"
             ),
+            umbrel_data_directory=(
+                self.root
+                / "umbrel"
+            ),
             bch_local_data_path=(
                 self.root
                 / "umbrel-app-data"
@@ -253,6 +284,7 @@ class Fixture:
                 / "data"
                 / "node"
             ),
+            binding_handoff=self.handoff,
             environment_provider=(
                 lambda: {
                     "PATH": "/usr/bin",
@@ -527,6 +559,128 @@ class UmbrelTargetInstallAdapterTests(
             self.assertTrue(
                 binding_file.is_file()
             )
+
+        finally:
+            fixture.close()
+
+    def test_execute_stages_binding_before_runner(self):
+        fixture = Fixture()
+
+        try:
+            result = fixture.adapter().execute(
+                request(),
+                provider(),
+            )
+
+            self.assertTrue(result.success)
+
+            self.assertEqual(
+                len(fixture.handoff_calls),
+                1,
+            )
+
+            call = fixture.handoff_calls[0]
+
+            self.assertEqual(
+                call["data_directory"],
+                fixture.root / "umbrel",
+            )
+
+            self.assertEqual(
+                call["app_id"],
+                "seymour-bitcoin-node",
+            )
+
+            self.assertEqual(
+                call["binding_path"],
+                fixture.root
+                / "bindings"
+                / "seymour-bitcoin-node.env",
+            )
+
+            self.assertTrue(
+                call["binding_path"].is_file()
+            )
+
+            self.assertEqual(
+                result.evidence[
+                    "runtimeBindingHandoff"
+                ]["staged"],
+                True,
+            )
+
+            self.assertEqual(
+                len(fixture.runner_calls),
+                1,
+            )
+
+        finally:
+            fixture.close()
+
+    def test_execute_handoff_precedes_runner(self):
+        fixture = Fixture()
+        order = []
+
+        original_handoff = fixture.handoff
+        original_runner = fixture.runner
+
+        def handoff(**kwargs):
+            order.append("handoff")
+            return original_handoff(**kwargs)
+
+        def runner(command, env, timeout):
+            order.append("runner")
+            return original_runner(
+                command,
+                env,
+                timeout,
+            )
+
+        try:
+            adapter = fixture.adapter()
+            adapter.binding_handoff = handoff
+            adapter.command_runner = runner
+
+            result = adapter.execute(
+                request(),
+                provider(),
+            )
+
+            self.assertTrue(result.success)
+            self.assertEqual(
+                order,
+                ["handoff", "runner"],
+            )
+
+        finally:
+            fixture.close()
+
+    def test_relative_umbrel_data_directory_fails_closed(self):
+        fixture = Fixture()
+
+        try:
+            with self.assertRaises(ValueError):
+                UmbrelTargetInstallAdapter(
+                    provider_controls=fixture.controls,
+                    storage_resolver=fixture.resolver,
+                    storage_verifier=fixture.verifier,
+                    storage_preparer=fixture.preparer,
+                    command_runner=fixture.runner,
+                    state_reader=lambda app_id: {},
+                    mount_inspector=lambda app_id: [],
+                    script_available=lambda path: True,
+                    runtime_host="umbrel-test",
+                    binding_config_root=(
+                        fixture.root / "bindings"
+                    ),
+                    umbrel_data_directory=Path(
+                        "relative-umbrel"
+                    ),
+                    bch_local_data_path=(
+                        fixture.root / "bch"
+                    ),
+                    binding_handoff=fixture.handoff,
+                )
 
         finally:
             fixture.close()
