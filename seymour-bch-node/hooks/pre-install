@@ -4,7 +4,14 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DATA_DIR="${APP_DATA_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 UMBREL_ROOT="${UMBREL_ROOT:-$(cd "$APP_DATA_DIR/../.." && pwd)}"
-BINDING_FILE="$UMBREL_ROOT/app-data/seymour-blockchain-manager/data/evidence/runtime-bindings/seymour-bch-node.env"
+APP_LOCAL_BINDING_FILE="$APP_DATA_DIR/data/runtime-binding.env"
+LEGACY_BINDING_FILE="$UMBREL_ROOT/app-data/seymour-blockchain-manager/data/evidence/runtime-bindings/seymour-bch-node.env"
+
+if [[ -f "$APP_LOCAL_BINDING_FILE" ]]; then
+  BINDING_FILE="$APP_LOCAL_BINDING_FILE"
+else
+  BINDING_FILE="$LEGACY_BINDING_FILE"
+fi
 COMPOSE="$APP_DATA_DIR/docker-compose.yml"
 
 # No Seymour binding file means use the portable compose defaults.

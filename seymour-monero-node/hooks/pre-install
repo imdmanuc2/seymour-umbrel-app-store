@@ -7,7 +7,14 @@ COMPOSE="$APP_DATA_DIR/docker-compose.yml"
 UMBREL_ROOT="${UMBREL_ROOT:-$(cd "$APP_DATA_DIR/../.." && pwd)}"
 
 app_id="$(basename "$APP_DATA_DIR")"
-BINDING_FILE="$UMBREL_ROOT/app-data/seymour-blockchain-manager/data/evidence/runtime-bindings/$app_id.env"
+APP_LOCAL_BINDING_FILE="$APP_DATA_DIR/data/runtime-binding.env"
+LEGACY_BINDING_FILE="$UMBREL_ROOT/app-data/seymour-blockchain-manager/data/evidence/runtime-bindings/$app_id.env"
+
+if [[ -f "$APP_LOCAL_BINDING_FILE" ]]; then
+  BINDING_FILE="$APP_LOCAL_BINDING_FILE"
+else
+  BINDING_FILE="$LEGACY_BINDING_FILE"
+fi
 
 if [[ ! "$app_id" =~ ^[a-z0-9][a-z0-9._-]*$ ]]; then
   echo "Seymour Monero identity: invalid app id: $app_id" >&2
