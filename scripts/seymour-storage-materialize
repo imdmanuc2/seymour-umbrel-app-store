@@ -8,6 +8,9 @@ import socket
 import sys
 
 REPO = Path(__file__).resolve().parents[1]
+UMBREL_DATA_DIRECTORY = Path(
+    "/home/umbrel/umbrel"
+)
 sys.path.insert(0, str(REPO))
 
 from shared.blockchain_install.materialize import (
@@ -17,6 +20,12 @@ from shared.blockchain_install.materialize import (
     run,
     verify_mount,
     write_evidence,
+)
+from shared.blockchain_install.storage_inventory import (
+    register_remote_target,
+)
+from shared.blockchain_install.umbrel_runtime import (
+    neutral_storage_targets_path,
 )
 
 
@@ -155,6 +164,50 @@ def main() -> None:
             mount_result["success"]
             and verification["healthy"]
         )
+
+        if payload["success"]:
+            registry_path = neutral_storage_targets_path(
+                UMBREL_DATA_DIRECTORY
+            )
+
+            try:
+                registry = register_remote_target(
+                    registry_path,
+                    mount_path=mount_path,
+                    remote_host=plan.storage_host,
+                    source=plan.nfs_source,
+                    filesystem="nfs4",
+                    persistent=True,
+                )
+
+                target_id = next(
+                    (
+                        str(item.get("targetId", "")).strip()
+                        for item in registry["targets"]
+                        if (
+                            str(item.get("mountPath", "")).strip()
+                            == plan.runtime_mount_path
+                        )
+                    ),
+                    "",
+                )
+            except Exception as exc:
+                payload["success"] = False
+                payload["error"] = (
+                    "storage-target-registration-failed"
+                )
+                payload["registrationError"] = str(exc)
+            else:
+                if not target_id:
+                    payload["success"] = False
+                    payload["error"] = (
+                        "storage-target-registration-failed"
+                    )
+                else:
+                    payload["storageTarget"] = {
+                        "targetId": target_id,
+                        "registryPath": str(registry_path),
+                    }
 
     write_evidence(args.evidence_path, payload)
     print(json.dumps(payload, indent=2))

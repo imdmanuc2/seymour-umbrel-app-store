@@ -1,0 +1,202 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+from typing import Sequence
+
+
+REPOSITORY = Path(__file__).resolve().parents[1]
+CATALOG_PATH = (
+    REPOSITORY
+    / "shared"
+    / "provider_catalog"
+    / "providers.v1.json"
+)
+
+UMBREL_DATA_DIRECTORY = Path(
+    "/home/umbrel/umbrel"
+)
+
+sys.path.insert(
+    0,
+    str(REPOSITORY),
+)
+
+from shared.blockchain_install.orchestrator import (
+    SharedInstallOrchestrator,
+)
+from shared.blockchain_install.request_materializer import (
+    materialize_install_request,
+)
+from shared.blockchain_install.umbrel_runtime import (
+    build_umbrel_target_install_adapter,
+    neutral_storage_targets_path,
+)
+
+
+def parser() -> argparse.ArgumentParser:
+    value = argparse.ArgumentParser(
+        description=(
+            "Fixed target-side Seymour blockchain "
+            "installation boundary."
+        )
+    )
+
+    value.add_argument(
+        "--provider-id",
+        required=True,
+    )
+
+    value.add_argument(
+        "--storage-target-id",
+        required=True,
+    )
+
+    value.add_argument(
+        "--execute",
+        action="store_true",
+    )
+
+    return value
+
+
+def plan_payload(
+    *,
+    provider_id: str,
+    storage_target_id: str,
+) -> dict:
+    return {
+        "contract":
+            "seymour.blockchain-install-target",
+        "version": "1.0",
+        "mode": "plan",
+        "executable": False,
+        "providerId": provider_id,
+        "storageTargetId": storage_target_id,
+        "requiredExecutionFlag": "--execute",
+    }
+
+
+def main(
+    argv: Sequence[str] | None = None,
+) -> int:
+    args = parser().parse_args(argv)
+
+    provider_id = str(
+        args.provider_id
+    ).strip()
+
+    storage_target_id = str(
+        args.storage_target_id
+    ).strip()
+
+    if not provider_id:
+        print(
+            json.dumps(
+                {
+                    "success": False,
+                    "error":
+                        "providerId is required.",
+                },
+                indent=2,
+            )
+        )
+        return 2
+
+    if not storage_target_id:
+        print(
+            json.dumps(
+                {
+                    "success": False,
+                    "error":
+                        "storageTargetId is required.",
+                },
+                indent=2,
+            )
+        )
+        return 2
+
+    data_directory = (
+        UMBREL_DATA_DIRECTORY
+    )
+    remote_targets_path = (
+        neutral_storage_targets_path(
+            data_directory
+        )
+    )
+
+    if not args.execute:
+        print(
+            json.dumps(
+                plan_payload(
+                    provider_id=provider_id,
+                    storage_target_id=(
+                        storage_target_id
+                    ),
+                ),
+                indent=2,
+            )
+        )
+        return 0
+
+    try:
+        request = materialize_install_request(
+            provider_id=provider_id,
+            storage_target_id=(
+                storage_target_id
+            ),
+            catalog_path=CATALOG_PATH,
+        )
+
+        adapter = (
+            build_umbrel_target_install_adapter(
+                repository=REPOSITORY,
+                umbrel_data_directory=(
+                    data_directory
+                ),
+                remote_targets_path=(
+                    remote_targets_path
+                ),
+            )
+        )
+
+        result = SharedInstallOrchestrator(
+            catalog_path=CATALOG_PATH,
+            target_adapter=adapter,
+        ).execute(
+            request
+        )
+
+        payload = result.to_dict()
+
+        print(
+            json.dumps(
+                payload,
+                indent=2,
+            )
+        )
+
+        return (
+            0
+            if result.succeeded
+            else 1
+        )
+
+    except Exception as exc:
+        print(
+            json.dumps(
+                {
+                    "success": False,
+                    "error": str(exc),
+                },
+                indent=2,
+            )
+        )
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

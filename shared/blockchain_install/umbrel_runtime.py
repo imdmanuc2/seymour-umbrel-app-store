@@ -93,6 +93,24 @@ def neutral_binding_config_root(
     )
 
 
+def neutral_storage_targets_path(
+    umbrel_data_directory: Path,
+) -> Path:
+    root = Path(umbrel_data_directory)
+
+    if not root.is_absolute():
+        raise ValueError(
+            "Umbrel data directory must be absolute."
+        )
+
+    return (
+        root
+        / "seymour-evidence"
+        / "blockchain-install"
+        / "storage-targets.json"
+    )
+
+
 def neutral_control_evidence_root(
     umbrel_data_directory: Path,
 ) -> Path:

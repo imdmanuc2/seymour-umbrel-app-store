@@ -9,6 +9,7 @@ from unittest.mock import (
 )
 
 from shared.blockchain_install.umbrel_runtime import (
+    neutral_storage_targets_path,
     build_umbrel_target_install_adapter,
     canonical_provider_controls,
     default_bch_local_data_path,
@@ -423,6 +424,28 @@ class SharedUmbrelRuntimeFactoryTests(
             self.assertEqual(
                 adapter.bch_local_data_path,
                 base / "bch",
+            )
+
+
+    def test_neutral_storage_targets_path(self):
+        self.assertEqual(
+            neutral_storage_targets_path(
+                Path("/home/umbrel/umbrel")
+            ),
+            Path(
+                "/home/umbrel/umbrel/"
+                "seymour-evidence/"
+                "blockchain-install/"
+                "storage-targets.json"
+            ),
+        )
+
+    def test_neutral_storage_targets_path_requires_absolute_root(
+        self,
+    ):
+        with self.assertRaises(ValueError):
+            neutral_storage_targets_path(
+                Path("relative/umbrel")
             )
 
 

@@ -308,8 +308,25 @@ def registered_remote_target(
     live = _mount_for_path(mount_path, read_mounts())
     if live is None or Path(live["mountPoint"]).resolve() != mount_path.resolve():
         raise ValueError(f"Remote storage path is not mounted: {mount_path}")
-    if filesystem and filesystem != "unknown" and live["filesystem"] != filesystem:
-        raise ValueError(f"Remote storage filesystem mismatch: expected {filesystem}, got {live['filesystem']}")
+    expected_filesystem = str(filesystem or "").strip()
+    live_filesystem = str(live["filesystem"]).strip()
+
+    filesystem_matches = (
+        not expected_filesystem
+        or expected_filesystem == "unknown"
+        or live_filesystem == expected_filesystem
+        or (
+            expected_filesystem in {"nfs", "nfs4"}
+            and live_filesystem in {"nfs", "nfs4"}
+        )
+    )
+
+    if not filesystem_matches:
+        raise ValueError(
+            "Remote storage filesystem mismatch: "
+            f"expected {expected_filesystem}, "
+            f"got {live_filesystem}"
+        )
     if source and live["source"] != source:
         raise ValueError(f"Remote storage source mismatch: expected {source}, got {live['source']}")
     return target_from_path(
