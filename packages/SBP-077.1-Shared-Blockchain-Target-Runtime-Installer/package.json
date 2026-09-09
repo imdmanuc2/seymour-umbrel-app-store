@@ -1,0 +1,7 @@
+{
+  "id": "SBP-077.1",
+  "name": "Shared Blockchain Target Runtime Installer",
+  "version": "1.0.0",
+  "description": "Atomically installs and rolls back a verified Seymour blockchain target runtime.",
+  "deployment": "target-local"
+}
