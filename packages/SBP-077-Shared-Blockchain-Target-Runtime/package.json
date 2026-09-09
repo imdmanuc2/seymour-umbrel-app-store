@@ -1,0 +1,7 @@
+{
+  "id": "SBP-077",
+  "name": "Shared Blockchain Target Runtime",
+  "version": "1.0.0",
+  "description": "Builds and verifies the provider-neutral Seymour blockchain target runtime payload.",
+  "deployment": "build-only"
+}
