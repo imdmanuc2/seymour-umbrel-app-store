@@ -24,6 +24,12 @@ BOOTSTRAP_PACKAGE = (
     / "SBP-077.2-Shared-Blockchain-Target-Runtime-Bootstrap"
 )
 
+INSTALLER_FILE = (
+    ROOT
+    / "packages/SBP-077.1-Shared-Blockchain-Target-Runtime-Installer"
+    / "scripts/runtime_installer.py"
+)
+
 BOOTSTRAP_FILE = (
     BOOTSTRAP_PACKAGE
     / "scripts"
@@ -144,6 +150,7 @@ class RealBundleIntegrationTests(unittest.TestCase):
 
         bootstrap = module.RuntimeBootstrap(
             umbrel_root=self.umbrel_root,
+            installer_module_path=INSTALLER_FILE,
         )
 
         result = bootstrap.install(
@@ -196,7 +203,8 @@ class RealBundleIntegrationTests(unittest.TestCase):
         installer_module = (
             module.load_installer_module(
                 module.RuntimeBootstrap(
-                    umbrel_root=self.umbrel_root
+                    umbrel_root=self.umbrel_root,
+                    installer_module_path=INSTALLER_FILE,
                 ).installer_module_path
             )
         )
@@ -286,6 +294,7 @@ class RealBundleIntegrationTests(unittest.TestCase):
 
         bootstrap = module.RuntimeBootstrap(
             umbrel_root=self.umbrel_root,
+            installer_module_path=INSTALLER_FILE,
         )
 
         with self.assertRaisesRegex(

@@ -20,9 +20,13 @@ def main() -> int:
     assert manifest["deployment"] == "target-local"
 
     bootstrap = PACKAGE / "scripts/bootstrap.py"
+    builder = PACKAGE / "scripts/build.py"
 
     assert bootstrap.is_file()
     assert bootstrap.stat().st_mode & 0o111
+
+    assert builder.is_file()
+    assert builder.stat().st_mode & 0o111
 
     result = subprocess.run(
         [

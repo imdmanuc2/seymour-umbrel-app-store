@@ -194,10 +194,9 @@ class RuntimeBootstrap:
         self.umbrel_root = umbrel_root
         self.installer_module_path = (
             installer_module_path
-            or Path(__file__).resolve().parents[2]
-            / "SBP-077.1-Shared-Blockchain-Target-Runtime-Installer"
-            / "scripts"
-            / "runtime_installer.py"
+            or Path(__file__).resolve().with_name(
+                "runtime_installer.py"
+            )
         )
 
     def install(
