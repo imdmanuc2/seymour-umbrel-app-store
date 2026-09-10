@@ -43,3 +43,23 @@ Excluded:
 - Python bytecode/cache
 - Git metadata
 - arbitrary shell/command execution surfaces
+
+
+## Transferable artifact
+
+The package builder emits a deterministic transport artifact:
+
+    build/seymour-runtime.tar.gz
+
+and trusted build metadata:
+
+    build/seymour-runtime.artifact.json
+
+The archive contains exactly one `seymour-runtime/` runtime tree with
+deterministic ordering, ownership metadata, timestamps, and gzip metadata.
+
+Artifact metadata records the archive SHA-256, the SBP-077.1-compatible
+payload manifest SHA-256, runtime version, and reviewed source revision.
+
+The archive SHA-256 protects transport integrity. The payload manifest
+SHA-256 independently protects the extracted runtime tree before promotion.
