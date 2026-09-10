@@ -1,0 +1,7 @@
+{
+  "id": "SBP-077.2",
+  "name": "Shared Blockchain Target Runtime Bootstrap",
+  "version": "1.0.0",
+  "description": "Safely extracts and hands a verified Seymour runtime bundle to the target-local runtime installer.",
+  "deployment": "target-local"
+}
