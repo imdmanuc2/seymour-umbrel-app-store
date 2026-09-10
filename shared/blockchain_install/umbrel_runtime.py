@@ -111,6 +111,29 @@ def neutral_storage_targets_path(
     )
 
 
+def neutral_installation_evidence_root(
+    umbrel_data_directory: Path,
+) -> Path:
+    """
+    Shared durable provider-installation evidence root.
+    """
+    root = Path(
+        umbrel_data_directory
+    )
+
+    if not root.is_absolute():
+        raise ValueError(
+            "Umbrel data directory must be absolute."
+        )
+
+    return (
+        root
+        / "seymour-evidence"
+        / "blockchain-install"
+        / "installations"
+    )
+
+
 def neutral_control_evidence_root(
     umbrel_data_directory: Path,
 ) -> Path:

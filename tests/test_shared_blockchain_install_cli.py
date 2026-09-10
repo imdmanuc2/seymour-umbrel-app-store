@@ -184,6 +184,10 @@ class BlockchainInstallCliTests(TestCase):
                 "SharedInstallOrchestrator",
                 return_value=orchestrator,
             ) as orchestrator_class,
+            patch.object(
+                module,
+                "ProviderInstallEvidenceWriter",
+            ) as evidence_writer_class,
             redirect_stdout(output),
         ):
             code = module.main(
@@ -226,6 +230,15 @@ class BlockchainInstallCliTests(TestCase):
 
         orchestrator.execute.assert_called_once_with(
             request
+        )
+
+        evidence_writer_class.assert_called_once_with(
+            umbrel_root=module.UMBREL_DATA_DIRECTORY,
+        )
+
+        evidence_writer_class.return_value.write.assert_called_once_with(
+            request=request,
+            result=result,
         )
 
         payload = json.loads(
@@ -272,6 +285,10 @@ class BlockchainInstallCliTests(TestCase):
                 module,
                 "SharedInstallOrchestrator",
                 return_value=orchestrator,
+            ),
+            patch.object(
+                module,
+                "ProviderInstallEvidenceWriter",
             ),
             redirect_stdout(
                 io.StringIO()

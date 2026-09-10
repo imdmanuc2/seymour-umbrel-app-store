@@ -1,0 +1,117 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+from pathlib import Path
+
+from shared.blockchain_install.install_evidence import (
+    CONTRACT,
+    CONTRACT_VERSION,
+    ProviderInstallEvidencePaths,
+)
+
+
+_PROVIDER_ID_RE = re.compile(
+    r"^[a-z0-9][a-z0-9-]{0,63}$"
+)
+
+UMBREL_DATA_DIRECTORY = Path(
+    "/home/umbrel/umbrel"
+)
+
+
+def parser() -> argparse.ArgumentParser:
+    value = argparse.ArgumentParser()
+
+    value.add_argument(
+        "--provider-id",
+        required=True,
+    )
+
+    return value
+
+
+def main(
+    argv: list[str] | None = None,
+) -> int:
+    args = parser().parse_args(argv)
+
+    provider_id = str(
+        args.provider_id or ""
+    ).strip()
+
+    if not _PROVIDER_ID_RE.fullmatch(
+        provider_id
+    ):
+        print(
+            json.dumps(
+                {
+                    "error": "invalid providerId",
+                },
+                separators=(",", ":"),
+            )
+        )
+        return 1
+
+    try:
+        paths = ProviderInstallEvidencePaths(
+            UMBREL_DATA_DIRECTORY
+        )
+
+        evidence_path = paths.current_path(
+            provider_id
+        )
+
+        payload = json.loads(
+            evidence_path.read_text(
+                encoding="utf-8"
+            )
+        )
+
+        if not isinstance(payload, dict):
+            raise ValueError(
+                "provider evidence is not an object"
+            )
+
+        if payload.get("contract") != CONTRACT:
+            raise ValueError(
+                "provider evidence contract mismatch"
+            )
+
+        if payload.get("version") != CONTRACT_VERSION:
+            raise ValueError(
+                "provider evidence version mismatch"
+            )
+
+        if payload.get("providerId") != provider_id:
+            raise ValueError(
+                "provider evidence identity mismatch"
+            )
+
+        print(
+            json.dumps(
+                payload,
+                separators=(",", ":"),
+                sort_keys=True,
+            )
+        )
+
+        return 0
+
+    except Exception as exc:
+        print(
+            json.dumps(
+                {
+                    "error": str(exc),
+                },
+                separators=(",", ":"),
+            )
+        )
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

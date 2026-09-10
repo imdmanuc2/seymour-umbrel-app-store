@@ -21,6 +21,7 @@ METADATA = BUILD / "seymour-runtime.artifact.json"
 
 FILES = (
     "scripts/seymour-blockchain-install",
+    "scripts/seymour-blockchain-install-evidence",
     "scripts/seymour-install-btc",
     "scripts/seymour-install-bch",
     "scripts/seymour-install-monero",

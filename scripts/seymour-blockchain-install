@@ -35,6 +35,9 @@ from shared.blockchain_install.umbrel_runtime import (
     build_umbrel_target_install_adapter,
     neutral_storage_targets_path,
 )
+from shared.blockchain_install.install_evidence import (
+    ProviderInstallEvidenceWriter,
+)
 
 
 def parser() -> argparse.ArgumentParser:
@@ -168,6 +171,13 @@ def main(
             target_adapter=adapter,
         ).execute(
             request
+        )
+
+        ProviderInstallEvidenceWriter(
+            umbrel_root=data_directory,
+        ).write(
+            request=request,
+            result=result,
         )
 
         payload = result.to_dict()
