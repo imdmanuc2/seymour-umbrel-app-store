@@ -36,6 +36,10 @@ from operations_center import (
 )
 from lifecycle import GuardedLifecycleService, LifecycleAction
 from lifecycle_routes import LIFECYCLE_HTTP
+from nexus_control import (
+    authorize as authorize_nexus_control,
+    execute_install as execute_nexus_install,
+)
 
 
 CATALOG_PATH = Path(
@@ -407,6 +411,57 @@ class Handler(BaseHTTPRequestHandler):
             result = ADOPTION.execute(str(body.get("operationId", "")), str(body.get("confirmation", "")))
             status = HTTPStatus.OK if result.status.value == "succeeded" else HTTPStatus.BAD_REQUEST
             self.send_json(result.to_dict(), status=status)
+            return
+
+        if self.path == "/api/nexus/install/execute":
+            authorized, auth_payload, auth_status = (
+                authorize_nexus_control(self.headers)
+            )
+
+            if not authorized:
+                self.send_json(
+                    auth_payload,
+                    status=auth_status,
+                )
+                return
+
+            try:
+                body = self.read_json_body()
+
+                payload, status = execute_nexus_install(
+                    body,
+                    INSTALLER,
+                )
+
+                self.send_json(
+                    payload,
+                    status=status,
+                )
+
+            except (ValueError, TypeError) as exc:
+                self.send_json(
+                    {
+                        "contract": "seymour.nexus-control-error",
+                        "version": 1,
+                        "error": "invalid-install-request",
+                        "message": str(exc),
+                    },
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+
+            except Exception:
+                self.send_json(
+                    {
+                        "contract": "seymour.nexus-control-error",
+                        "version": 1,
+                        "error": "installation-failure",
+                        "message": (
+                            "Blockchain installation execution failed."
+                        ),
+                    },
+                    status=HTTPStatus.INTERNAL_SERVER_ERROR,
+                )
+
             return
 
         if self.path == "/api/install/execute":
