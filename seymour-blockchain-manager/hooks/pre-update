@@ -10,23 +10,42 @@ fail()
 [[ -n "${SCRIPT_APP_REPO_DIR:-}" ]] ||
     fail "SCRIPT_APP_REPO_DIR is not set"
 
-[[ -n "${APP_DATA_DIR:-}" ]] ||
-    fail "APP_DATA_DIR is not set"
+if [[ -n "${APP_DATA_DIR:-}" ]]; then
+    RESOLVED_APP_DATA_DIR="${APP_DATA_DIR%/}"
+    APP_DATA_DIR_SOURCE="environment"
+else
+    HOOK_DIR="$(
+        cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 &&
+        pwd -P
+    )" ||
+        fail "unable to resolve installed hook directory"
+
+    RESOLVED_APP_DATA_DIR="$(
+        cd -- "${HOOK_DIR}/.." >/dev/null 2>&1 &&
+        pwd -P
+    )" ||
+        fail "unable to resolve installed app directory"
+
+    APP_DATA_DIR_SOURCE="hook-location"
+fi
 
 SOURCE_ROOT="${SCRIPT_APP_REPO_DIR%/}/data"
-DEST_ROOT="${APP_DATA_DIR%/}/data"
+DEST_ROOT="${RESOLVED_APP_DATA_DIR%/}/data"
 
 [[ "$SCRIPT_APP_REPO_DIR" = /* ]] ||
     fail "SCRIPT_APP_REPO_DIR must be absolute"
 
-[[ "$APP_DATA_DIR" = /* ]] ||
-    fail "APP_DATA_DIR must be absolute"
+[[ "$RESOLVED_APP_DATA_DIR" = /* ]] ||
+    fail "resolved app directory must be absolute"
+
+[[ "$(basename -- "$RESOLVED_APP_DATA_DIR")" = "seymour-blockchain-manager" ]] ||
+    fail "resolved app directory is not Seymour Blockchain Manager: $RESOLVED_APP_DATA_DIR"
 
 [[ -d "$SOURCE_ROOT" ]] ||
     fail "packaged data directory not found: $SOURCE_ROOT"
 
-[[ -d "$APP_DATA_DIR" ]] ||
-    fail "installed app directory not found: $APP_DATA_DIR"
+[[ -d "$RESOLVED_APP_DATA_DIR" ]] ||
+    fail "installed app directory not found: $RESOLVED_APP_DATA_DIR"
 
 command -v rsync >/dev/null 2>&1 ||
     fail "rsync is required"
@@ -50,4 +69,4 @@ do
         "$destination_dir/"
 done
 
-echo "Seymour Blockchain Manager pre-update: release payload synchronized."
+echo "Seymour Blockchain Manager pre-update: release payload synchronized via ${APP_DATA_DIR_SOURCE}."
