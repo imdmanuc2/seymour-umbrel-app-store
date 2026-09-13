@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+fail()
+{
+    echo "Seymour Blockchain Manager pre-update: $*" >&2
+    exit 1
+}
+
+[[ -n "${SCRIPT_APP_REPO_DIR:-}" ]] ||
+    fail "SCRIPT_APP_REPO_DIR is not set"
+
+[[ -n "${APP_DATA_DIR:-}" ]] ||
+    fail "APP_DATA_DIR is not set"
+
+SOURCE_ROOT="${SCRIPT_APP_REPO_DIR%/}/data"
+DEST_ROOT="${APP_DATA_DIR%/}/data"
+
+[[ "$SCRIPT_APP_REPO_DIR" = /* ]] ||
+    fail "SCRIPT_APP_REPO_DIR must be absolute"
+
+[[ "$APP_DATA_DIR" = /* ]] ||
+    fail "APP_DATA_DIR must be absolute"
+
+[[ -d "$SOURCE_ROOT" ]] ||
+    fail "packaged data directory not found: $SOURCE_ROOT"
+
+[[ -d "$APP_DATA_DIR" ]] ||
+    fail "installed app directory not found: $APP_DATA_DIR"
+
+command -v rsync >/dev/null 2>&1 ||
+    fail "rsync is required"
+
+mkdir -p "$DEST_ROOT"
+
+for component in catalog control shared web
+do
+    source_dir="$SOURCE_ROOT/$component"
+    destination_dir="$DEST_ROOT/$component"
+
+    [[ -d "$source_dir" ]] ||
+        fail "packaged component not found: $source_dir"
+
+    mkdir -p "$destination_dir"
+
+    rsync \
+        --archive \
+        --exclude '.gitkeep' \
+        "$source_dir/." \
+        "$destination_dir/"
+done
+
+echo "Seymour Blockchain Manager pre-update: release payload synchronized."
