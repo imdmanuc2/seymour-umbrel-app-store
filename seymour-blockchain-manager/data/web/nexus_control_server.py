@@ -4,6 +4,8 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
+from pathlib import Path
+import ssl
 from typing import Any
 
 from installer import Installer
@@ -15,6 +17,8 @@ from nexus_control import (
 
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 8571
+DEFAULT_TLS_CERTFILE = "/tls/server.crt"
+DEFAULT_TLS_KEYFILE = "/tls/server.key"
 INSTALL_PATH = "/api/nexus/install/execute"
 
 INSTALLER = Installer()
@@ -52,6 +56,75 @@ def _port() -> int:
         )
 
     return value
+
+
+def _tls_file(
+    environment_name: str,
+    default_path: str,
+) -> Path:
+    value = str(
+        os.environ.get(
+            environment_name,
+            default_path,
+        )
+    ).strip()
+
+    if not value:
+        raise ValueError(
+            f"{environment_name} is required."
+        )
+
+    path = Path(
+        value
+    )
+
+    if not path.is_absolute():
+        raise ValueError(
+            f"{environment_name} must be an absolute path."
+        )
+
+    if not path.is_file():
+        raise ValueError(
+            f"{environment_name} does not reference a file."
+        )
+
+    return path
+
+
+def _tls_context() -> ssl.SSLContext:
+    certfile = _tls_file(
+        "NEXUS_CONTROL_TLS_CERTFILE",
+        DEFAULT_TLS_CERTFILE,
+    )
+
+    keyfile = _tls_file(
+        "NEXUS_CONTROL_TLS_KEYFILE",
+        DEFAULT_TLS_KEYFILE,
+    )
+
+    context = ssl.SSLContext(
+        ssl.PROTOCOL_TLS_SERVER
+    )
+
+    context.minimum_version = (
+        ssl.TLSVersion.TLSv1_2
+    )
+
+    try:
+        context.load_cert_chain(
+            certfile=str(certfile),
+            keyfile=str(keyfile),
+        )
+    except (
+        OSError,
+        ssl.SSLError,
+    ) as exc:
+        raise ValueError(
+            "Nexus control TLS certificate/key "
+            "could not be loaded."
+        ) from exc
+
+    return context
 
 
 class NexusControlHandler(BaseHTTPRequestHandler):
@@ -218,12 +291,23 @@ class NexusControlHandler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
+    tls_context = _tls_context()
+
     server = ThreadingHTTPServer(
         (_host(), _port()),
         NexusControlHandler,
     )
 
-    server.serve_forever()
+    try:
+        server.socket = tls_context.wrap_socket(
+            server.socket,
+            server_side=True,
+        )
+
+        server.serve_forever()
+
+    finally:
+        server.server_close()
 
 
 if __name__ == "__main__":

@@ -17,6 +17,8 @@ services:
     environment:
       NEXUS_CONTROL_HTTP_HOST: 0.0.0.0
       NEXUS_CONTROL_HTTP_PORT: "8571"
+      NEXUS_CONTROL_TLS_CERTFILE: /tls/server.crt
+      NEXUS_CONTROL_TLS_KEYFILE: /tls/server.key
       PROVIDER_CATALOG_PATH: /catalog/providers.v1.json
       DOCKER_SOCKET: /var/run/docker.sock
       SEYMOUR_UMBREL_CONTROL_SCRIPT: /control/seymour-umbrel-app
@@ -30,8 +32,8 @@ services:
       test:
         - CMD-SHELL
         - >-
-          test "$$(wget -qO- --server-response
-          http://127.0.0.1:8571/ 2>&1 |
+          test "$$(wget --no-check-certificate -qO- --server-response
+          https://127.0.0.1:8571/ 2>&1 |
           awk '/HTTP\// {code=$$2} END {print code}')" = "404"
       interval: 30s
       timeout: 10s
@@ -40,6 +42,7 @@ services:
     volumes:
       - ${APP_DATA_DIR}/data/web:/app:ro
       - ${APP_DATA_DIR}/data/catalog:/catalog:ro
+      - ${APP_DATA_DIR}/data/private/nexus-control-tls:/tls:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${APP_DATA_DIR}/data/evidence:/evidence
       - ${APP_DATA_DIR}/data/control:/control:ro

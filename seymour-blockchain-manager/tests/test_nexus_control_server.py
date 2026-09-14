@@ -5,7 +5,9 @@ from http.client import HTTPConnection
 import json
 import os
 from pathlib import Path
+import ssl
 import sys
+import tempfile
 from threading import Thread
 import unittest
 from unittest.mock import patch
@@ -240,6 +242,133 @@ class NexusControlServerTests(unittest.TestCase):
         )
 
         execute.assert_called_once()
+
+    def test_tls_paths_must_be_absolute(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            cert = Path(
+                temporary
+            ) / "server.crt"
+
+            cert.write_text(
+                "certificate",
+                encoding="utf-8",
+            )
+
+            with patch.dict(
+                os.environ,
+                {
+                    "NEXUS_CONTROL_TLS_CERTFILE":
+                        "relative/server.crt",
+                },
+            ):
+                with self.assertRaisesRegex(
+                    ValueError,
+                    "absolute path",
+                ):
+                    control_server._tls_file(
+                        "NEXUS_CONTROL_TLS_CERTFILE",
+                        str(cert),
+                    )
+
+    def test_missing_tls_file_fails_closed(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            missing = str(
+                Path(temporary)
+                / "missing.crt"
+            )
+
+            with patch.dict(
+                os.environ,
+                {
+                    "NEXUS_CONTROL_TLS_CERTFILE":
+                        missing,
+                },
+            ):
+                with self.assertRaisesRegex(
+                    ValueError,
+                    "does not reference a file",
+                ):
+                    control_server._tls_file(
+                        "NEXUS_CONTROL_TLS_CERTFILE",
+                        missing,
+                    )
+
+    def test_tls_context_requires_server_certificate_and_key(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(
+                temporary
+            )
+
+            cert = root / "server.crt"
+            key = root / "server.key"
+
+            cert.write_text(
+                "not-a-valid-certificate",
+                encoding="utf-8",
+            )
+
+            key.write_text(
+                "not-a-valid-private-key",
+                encoding="utf-8",
+            )
+
+            with patch.dict(
+                os.environ,
+                {
+                    "NEXUS_CONTROL_TLS_CERTFILE":
+                        str(cert),
+                    "NEXUS_CONTROL_TLS_KEYFILE":
+                        str(key),
+                },
+            ):
+                with self.assertRaisesRegex(
+                    ValueError,
+                    "could not be loaded",
+                ):
+                    control_server._tls_context()
+
+    def test_tls_context_uses_server_mode_and_minimum_tls12(self):
+        context = unittest.mock.MagicMock(
+            spec=ssl.SSLContext
+        )
+
+        with (
+            patch.object(
+                control_server,
+                "_tls_file",
+                side_effect=[
+                    Path("/tls/server.crt"),
+                    Path("/tls/server.key"),
+                ],
+            ),
+            patch.object(
+                control_server.ssl,
+                "SSLContext",
+                return_value=context,
+            ) as constructor,
+        ):
+            result = (
+                control_server._tls_context()
+            )
+
+        constructor.assert_called_once_with(
+            ssl.PROTOCOL_TLS_SERVER
+        )
+
+        self.assertIs(
+            result,
+            context,
+        )
+
+        self.assertEqual(
+            context.minimum_version,
+            ssl.TLSVersion.TLSv1_2,
+        )
+
+        context.load_cert_chain.assert_called_once_with(
+            certfile="/tls/server.crt",
+            keyfile="/tls/server.key",
+        )
 
     def test_port_validation(self):
         with patch.dict(
