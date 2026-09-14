@@ -32,6 +32,12 @@ fi
 SOURCE_ROOT="${SCRIPT_APP_REPO_DIR%/}/data"
 DEST_ROOT="${RESOLVED_APP_DATA_DIR%/}/data"
 
+# This hook is invoked by Umbrel's native app lifecycle authority.
+# Prepare the persistent machine-control TLS bind source before Docker
+# can auto-create it as root:root. Keep this operation intentionally
+# bounded to Seymour Blockchain Manager's own private TLS directory.
+TLS_PRIVATE_DIR="${RESOLVED_APP_DATA_DIR%/}/data/private/nexus-control-tls"
+
 [[ "$SCRIPT_APP_REPO_DIR" = /* ]] ||
     fail "SCRIPT_APP_REPO_DIR must be absolute"
 
@@ -49,6 +55,29 @@ DEST_ROOT="${RESOLVED_APP_DATA_DIR%/}/data"
 
 command -v rsync >/dev/null 2>&1 ||
     fail "rsync is required"
+
+[[ "$TLS_PRIVATE_DIR" = "${RESOLVED_APP_DATA_DIR%/}/data/private/nexus-control-tls" ]] ||
+    fail "unexpected TLS private directory: $TLS_PRIVATE_DIR"
+
+[[ ! -L "$TLS_PRIVATE_DIR" ]] ||
+    fail "TLS private directory must not be a symlink: $TLS_PRIVATE_DIR"
+
+mkdir -p "$TLS_PRIVATE_DIR"
+
+[[ -d "$TLS_PRIVATE_DIR" ]] ||
+    fail "TLS private directory is not a directory: $TLS_PRIVATE_DIR"
+
+APP_DATA_UID="$(stat -c '%u' "$RESOLVED_APP_DATA_DIR")"
+APP_DATA_GID="$(stat -c '%g' "$RESOLVED_APP_DATA_DIR")"
+
+[[ "$APP_DATA_UID" =~ ^[0-9]+$ ]] ||
+    fail "invalid installed app uid: $APP_DATA_UID"
+
+[[ "$APP_DATA_GID" =~ ^[0-9]+$ ]] ||
+    fail "invalid installed app gid: $APP_DATA_GID"
+
+chown "${APP_DATA_UID}:${APP_DATA_GID}" "$TLS_PRIVATE_DIR"
+chmod 0700 "$TLS_PRIVATE_DIR"
 
 mkdir -p "$DEST_ROOT"
 
